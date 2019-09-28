@@ -1,5 +1,3 @@
-socket.emit("map");
-
 import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
 var myMap;
@@ -15,8 +13,10 @@ var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
+
 init();
 animate();
+
 function init() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
     camera.position.y = 200;
@@ -26,6 +26,11 @@ function init() {
     var light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
     light.position.set( 0.5, 1, 0.75 );
     scene.add( light );
+
+    add_crosshair(camera);
+
+
+
     controls = new PointerLockControls( camera );
     var blocker = document.getElementById( 'blocker' );
     var instructions = document.getElementById( 'instructions' );
@@ -40,9 +45,9 @@ function init() {
         blocker.style.display = 'block';
         instructions.style.display = '';
     } );
-    controls.getObject().position.x = 50;
-    controls.getObject().position.y = 200;
-    controls.getObject().position.z = 50;
+    controls.getObject().position.x = 200;
+    controls.getObject().position.y = 120;
+    controls.getObject().position.z = 200;
     scene.add( controls.getObject() );
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
@@ -89,11 +94,9 @@ function init() {
         }
     };
     var onClick = function ( event ) {
-        console.log("CLICK!");
-        
         var vector = new THREE.Vector3( 0, 0, - 1 );
         vector.applyQuaternion( camera.quaternion );
-        
+
         socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
 
     }
@@ -142,14 +145,51 @@ function init() {
     //
     window.addEventListener( 'resize', onWindowResize, false );
 }
+function add_crosshair(camera) {
+  var material = new THREE.LineBasicMaterial({ color: 0xAAFFAA });
+  // crosshair size
+  var x = 0.1, y = 0.1;
+
+  var geometry = new THREE.Geometry();
+
+  // crosshair
+  geometry.vertices.push(new THREE.Vector3(0, y, 0));
+  geometry.vertices.push(new THREE.Vector3(0, -y, 0));
+  geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+  geometry.vertices.push(new THREE.Vector3(x, 0, 0));
+  geometry.vertices.push(new THREE.Vector3(-x, 0, 0));
+
+  var crosshair = new THREE.Line( geometry, material );
+
+  // place it in the center
+  var crosshairPercentX = 50;
+  var crosshairPercentY = 50;
+  var crosshairPositionX = (crosshairPercentX / 100) * 2 - 1;
+  var crosshairPositionY = (crosshairPercentY / 100) * 2 - 1;
+
+  crosshair.position.x = crosshairPositionX * camera.aspect;
+  crosshair.position.y = crosshairPositionY;
+
+  crosshair.position.z = -5;
+
+  camera.add( crosshair );
+}
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
-function get_spaces(x,y,z) {
-  return [[x + 1, y, z + 1], [x + 1, y, z], [x + 1, y, z - 1], [x, y, z - 1], [x - 1, y, z - 1],
-          [x - 1, y, z], [x - 1, y, z + 1], [x, y, z + 1]]
+function checkCollisions(caster) {
+  // Maximum distance from the origin before we consider collision
+  var max_dist = 5;
+  var collisions;
+  // Test if we intersect with any obstacle mesh
+  collisions = caster.intersectObjects(objects);
+
+  if(collisions.length > 0 && collisions[0].distance <= max_dist) {
+    velocity.x = 0;
+    velocity.z = 0;
+  }
 }
 function horizontalCollision() {
   var rays = [
@@ -160,27 +200,24 @@ function horizontalCollision() {
   ];
 
   var caster = new THREE.Raycaster();
-  var collisions, i;
-  // Maximum distance from the origin before we consider collision
-  var max_dist = 5;
+  var i;
   // For each ray
   for (i = 0; i < rays.length; i += 1) {
     caster.set(controls.getObject().position, rays[i]);
+    checkCollisions(caster)
+    // Do it for ground level too
     caster.ray.origin.y -= 20;
-    // Test if we intersect with any obstacle mesh
-    collisions = caster.intersectObjects(objects);
-
-    if(collisions.length > 0 && collisions[0].distance <= max_dist) {
-      return true;
-    }
+    checkCollisions(caster)
   }
-
-  return false;
 }
 function animate() {
     requestAnimationFrame( animate );
 
     if ( controls.isLocked === true ) {
+        if(controls.getObject().position.y <= 15) {
+            respawn();
+        }
+
         raycaster.ray.origin.copy( controls.getObject().position );
         raycaster.ray.origin.y -= 24;
         var intersections = raycaster.intersectObjects( objects );
@@ -209,19 +246,18 @@ function animate() {
             canJump = true;
         }
 
-        var collision = horizontalCollision();
-        if(collision) {
-          velocity.x = 0;
-          velocity.z = 0;
-        }
+        horizontalCollision();
         prevTime = time;
     }
-    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
+    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
 
+var mAP;
 
 socket.on("map", function(map){
+    mAP = map;
+
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
     // objects
@@ -268,8 +304,7 @@ var players = {};
 var projectiles = {};
 
 socket.on("new player", function(player){
-    console.log(player);
-    var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 28, 32);
+    var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 32);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
     var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
@@ -287,15 +322,16 @@ socket.on("new player", function(player){
 })
 
 socket.on("player", function(player){
-    let p = players[player.id];
+    var p = players[player.id];
     p.model.position.x = player.position.x;
     p.model.position.y = player.position.y;
     p.model.position.z = player.position.z;
 });
 
 socket.on("player left", function(id){
-    scene.delete(players[id].model);
+    scene.remove(players[id].model);
     delete players[id];
+    console.log("player",id,"left");
 });
 
 
@@ -304,11 +340,11 @@ socket.on("projectile", function(p){
         var geometry = new THREE.SphereBufferGeometry( 2, 32, 32 );
         var material = new THREE.MeshLambertMaterial( {color: 0xaaaaaa} );
         var sphere = new THREE.Mesh( geometry, material );
-        
+
         sphere.position.x = p.x;
         sphere.position.y = p.y;
         sphere.position.z = p.z;
-        
+
         p.object = sphere;
         scene.add( sphere );
         projectiles[p.id] = p;
@@ -319,8 +355,24 @@ socket.on("projectile", function(p){
         o.position.y = p.y;
         o.position.z = p.z;
     }
-
-
-
 });
 
+function respawn(){
+    controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
+    controls.getObject().position.z = Math.random()*mAP[0].length*20;
+    controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +100;
+}
+
+socket.on("hit", function(){
+    respawn();
+});
+
+socket.on("projectile burst", function(p){
+    projectiles[p.id].object.material = new THREE.MeshLambertMaterial( {color: 0xFF5511} );
+    setTimeout(function(){
+        scene.remove(projectiles[p.id].object);
+    }, 1500);
+    
+});
+
+socket.emit("map");

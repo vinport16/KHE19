@@ -85,43 +85,49 @@ var players = [];
 var nextId = 0;
 
 var pSpeed = 20;
-var grav = 1;
+var pGrav = 10;
+var pLife = 800;
 
 io.on("connection", function(socket){
-  player = {};
+  var player = {};
   player.id = nextId++;
   player.socket = socket;
   player.position = {x:0,y:0,z:0};
 
   console.log("player "+player.id+" logged in");
 
-  for(sendto in players){
-      players[sendto].socket.emit("new player", {id:player.id, position:player.position});
-      player.socket.emit("new player", {id:players[sendto].id, position:players[sendto].position});
+  for(i in players){
+      players[i].socket.emit("new player", {id:player.id, position:player.position});
+      console.log("sent player",player.id,"to",players[i].id);
   }
 
   players.push(player);
 
   socket.on("map", function(){
     socket.emit("map",map);
-    console.log("Sent Map");
+    console.log("Sent Map to ",player.id);
+    for(i in players){
+      player.socket.emit("new player", {id:players[i].id, position:players[i].position});
+      console.log("sent player",players[i].id,"to",player.id);
+  }
   });
 
   socket.on("player position", function(position){
     player.position = position;
-    for(sendto in players){
-      if(players[sendto].id != player.id){
-        players[sendto].socket.emit("player", {id:player.id, position:player.position});
+    for(i in players){
+      if(players[i].id != player.id){
+        players[i].socket.emit("player", {id:player.id, position:player.position});
       }
     }
   });
 
   socket.on("disconnect",function(){
-    for(sendto in players){
-      if(players[sendto].id == player.id){
-        players.splice(sendto,1);
-      }else{
-        players[sendto].socket.emit("player left", player.id);
+    for(i in players){
+      if(players[i].id == player.id){
+        players.splice(i,1);
+      }
+      if(i < players.length){
+        players[i].socket.emit("player left", player.id);
       }
     }
     console.log("player "+player.id+" left");
@@ -135,9 +141,9 @@ io.on("connection", function(socket){
 
     p.position = {};
     p.position.x = player.position.x;
-    p.position.y = player.position.y;
+    p.position.y = player.position.y + 14;
     p.position.z = player.position.z;
-    
+
     p.velocity = {};
     p.velocity.x = angle.dx * pSpeed;
     p.velocity.y = angle.dy * pSpeed;
@@ -168,12 +174,30 @@ function projCollision(p,map){
       }
     }
   }
+  for(i in players){
+    var player = players[i].position;
+    var dz = player.z - p.position.z;
+    var dx = player.x - p.position.x;
+
+    var bottom = player.y - (35/2);
+    var top = player.y + (35/2);
+    if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
+      console.log("PLAYER",players[i].id,"WAS HIT");
+      players[i].socket.emit("hit");
+    }
+  }
   return false;
 }
 
 function announcePosition(p){
-  for(sendto in players){
-    players[sendto].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});    
+  for(i in players){
+    players[i].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});
+  }
+}
+
+function announceBurst(p){
+  for(i in players){
+    players[i].socket.emit("projectile burst",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});
   }
 }
 
@@ -185,10 +209,10 @@ wait = 8; //in ms
 
 async function moveProjectile(p){
   var hit = false;
-  while(!hit && p.count < 200){
+  while(!hit && p.count < pLife){
     await sleep(10);
-    
-    p.velocity.y -= grav * wait/1000;
+
+    p.velocity.y -= pGrav * wait/1000;
 
     p.position.x += p.velocity.x * pSpeed * wait/1000;
     p.position.y += p.velocity.y * pSpeed * wait/1000;
@@ -202,8 +226,5 @@ async function moveProjectile(p){
 
     p.count++;
   }
-  announcePosition(p)
+  announceBurst(p);
 }
-
-
-
