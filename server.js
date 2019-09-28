@@ -23,6 +23,17 @@ app.get('/three.js', function(req, res){
   res.sendFile(__dirname + '/node_modules/three/three.js');
 });
 
+app.get('/three.module.js', function(req, res){
+    res.sendFile(__dirname + '/node_modules/three/three.module.js');
+  });
+
+app.get('/pointerlock.js', function(req, res){
+    res.sendFile(__dirname + '/pointerLock.js');
+});
+
+app.get('/client/stolenExample.js', function(req, res){
+    res.sendFile(__dirname + '/client/stolenExample.js');
+});
 
 app.get("/", function(req, res){
   res.sendFile(__dirname + '/client/index.html');

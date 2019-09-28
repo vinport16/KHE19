@@ -7,7 +7,7 @@ import {
 	Euler,
 	EventDispatcher,
 	Vector3
-} from "../../../build/three.module.js";
+} from "/three.module.js";
 
 var PointerLockControls = function ( camera, domElement ) {
 
@@ -24,7 +24,7 @@ var PointerLockControls = function ( camera, domElement ) {
 	var lockEvent = { type: 'lock' };
 	var unlockEvent = { type: 'unlock' };
 
-	var euler = new Euler( 0, 0, 0, 'YXZ' );
+	var euler = new THREE.Euler( 0, 0, 0);
 
 	var PI_2 = Math.PI / 2;
 
