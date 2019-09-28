@@ -91,7 +91,10 @@ var pLife = 800;
 io.on("connection", function(socket){
   var player = {};
   player.id = nextId++;
+  player.name = player.id;
   player.socket = socket;
+  player.kills = [];
+  player.deaths = [];
   player.position = {x:0,y:0,z:0};
 
   console.log("player "+player.id+" logged in");
@@ -100,6 +103,7 @@ io.on("connection", function(socket){
       players[i].socket.emit("new player", {id:player.id, position:player.position});
       console.log("sent player",player.id,"to",players[i].id);
   }
+
 
   players.push(player);
 
@@ -146,7 +150,7 @@ io.on("connection", function(socket){
 
     p.velocity = {};
     p.velocity.x = angle.dx * pSpeed;
-    p.velocity.y = angle.dy * pSpeed;
+    p.velocity.y = angle.dy * pSpeed + 2;
     p.velocity.z = angle.dz * pSpeed;
 
     p.position.x += angle.dx * 10;
@@ -182,11 +186,27 @@ function projCollision(p,map){
     var bottom = player.y - (35/2);
     var top = player.y + (35/2);
     if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
-      console.log("PLAYER",players[i].id,"WAS HIT");
+      console.log("PLAYER",players[i].name,"WAS HIT BY",p.owner.name);
+      players[i].deaths.push(p.owner.id);
+      p.owner.kills.push(players[i].id);
       players[i].socket.emit("hit");
+      updateLeaderboard();
+      return 1;
     }
   }
   return false;
+}
+
+function updateLeaderboard(){
+  var board = players.map(function(p){
+    return {name:p.name,kills:p.kills,deaths:p.deaths};
+  });
+  board = board.sort(function(a,b){
+    return b.kills.length - a.kills.length;
+  });
+  for(i in players){
+    players[i].socket.emit("leaderboard",board);
+  }
 }
 
 function announcePosition(p){

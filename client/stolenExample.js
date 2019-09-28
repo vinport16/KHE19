@@ -200,15 +200,15 @@ function isColliding(){
     mapPos.ox = false;
     mapPos.oz = false;
 
-    if(mapPos.x % 1 > 0.55){
+    if(mapPos.x % 1 > 0.675){
         mapPos.ox = mapPos.x+1;
-    }else if(mapPos.x < 0.45){
+    }else if(mapPos.x < 0.325){
         mapPos.ox = mapPos.x-1;
     }
 
-    if(mapPos.z % 1 > 0.55){
+    if(mapPos.z % 1 > 0.675){
         mapPos.oz = mapPos.z+1;
-    }else if(mapPos.z < 0.45){
+    }else if(mapPos.z < 0.325){
         mapPos.oz = mapPos.z-1;
     }
 
