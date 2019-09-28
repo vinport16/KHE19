@@ -10,6 +10,7 @@ var moveRight = false;
 var canJump = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
+var terminalVelocityY = -250;
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
@@ -215,6 +216,7 @@ function animate() {
 
     if ( controls.isLocked === true ) {
         if(controls.getObject().position.y <= 15) {
+            velocity.y = 0;
             respawn();
         }
 
@@ -228,6 +230,9 @@ function animate() {
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
         velocity.y -= 9.8 * 50.0 * delta; // 100.0 = mass
+        if(velocity.y < terminalVelocityY) {
+          velocity.y = terminalVelocityY;
+        }
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
@@ -235,16 +240,12 @@ function animate() {
         if ( moveLeft || moveRight ) velocity.x -= direction.x * 800.0 * delta;
         if ( onObject === true ) {
             velocity.y = Math.max( 0, velocity.y );
+            console.log(velocity.y);
             canJump = true;
         }
         controls.moveRight( - velocity.x * delta );
         controls.moveForward( - velocity.z * delta );
         controls.getObject().position.y += ( velocity.y * delta ); // new behavior
-        if ( controls.getObject().position.y < 10 ) {
-            velocity.y = 0;
-            controls.getObject().position.y = 10;
-            canJump = true;
-        }
 
         horizontalCollision();
         prevTime = time;
@@ -372,7 +373,7 @@ socket.on("projectile burst", function(p){
     setTimeout(function(){
         scene.remove(projectiles[p.id].object);
     }, 1500);
-    
+
 });
 
 socket.emit("map");
