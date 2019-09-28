@@ -18,3 +18,12 @@ app.get('/socket.io/socket.io.js', function(req, res){
 app.get('/client/script.js', function(req, res){
   res.sendFile(__dirname + '/client/script.js');
 });
+
+app.get('/three.js', function(req, res){
+  res.sendFile(__dirname + '/node_modules/three/three.js');
+});
+
+
+app.get("/", function(req, res){
+  res.sendFile(__dirname + '/client/index.html');
+})
