@@ -252,9 +252,11 @@ function animate() {
     socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
-var MAP;
+
+var mAP;
+
 socket.on("map", function(map){
-    MAP = map;
+    mAP = map;
 
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
@@ -356,13 +358,21 @@ socket.on("projectile", function(p){
 });
 
 function respawn(){
-    controls.getObject().position.x = Math.random()*MAP[0][0].length*20;
-    controls.getObject().position.z = Math.random()*MAP[0].length*20;
-    controls.getObject().position.y = Math.random()*(MAP.length-4)*20 +100;
+    controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
+    controls.getObject().position.z = Math.random()*mAP[0].length*20;
+    controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +100;
 }
 
 socket.on("hit", function(){
     respawn();
+});
+
+socket.on("projectile burst", function(p){
+    projectiles[p.id].object.material = new THREE.MeshLambertMaterial( {color: 0xFF5511} );
+    setTimeout(function(){
+        scene.remove(projectiles[p.id].object);
+    }, 1500);
+    
 });
 
 socket.emit("map");

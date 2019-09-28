@@ -141,7 +141,7 @@ io.on("connection", function(socket){
 
     p.position = {};
     p.position.x = player.position.x;
-    p.position.y = player.position.y;
+    p.position.y = player.position.y + 14;
     p.position.z = player.position.z;
 
     p.velocity = {};
@@ -164,7 +164,7 @@ io.on("connection", function(socket){
 function projCollision(p,map){
   mapPos = {};
   mapPos.x = Math.floor((p.position.x+10)/20);
-  mapPos.y = Math.floor((p.position.y+20)/20);
+  mapPos.y = Math.floor((p.position.y+10)/20);
   mapPos.z = Math.floor((p.position.z+10)/20);
 
   if(mapPos.x >= 0 && mapPos.y >= 0 && mapPos.z >= 0){
@@ -191,7 +191,13 @@ function projCollision(p,map){
 
 function announcePosition(p){
   for(i in players){
-    players[i].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y+14, z:p.position.z});
+    players[i].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});
+  }
+}
+
+function announceBurst(p){
+  for(i in players){
+    players[i].socket.emit("projectile burst",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});
   }
 }
 
@@ -220,5 +226,5 @@ async function moveProjectile(p){
 
     p.count++;
   }
-  announcePosition(p)
+  announceBurst(p);
 }
