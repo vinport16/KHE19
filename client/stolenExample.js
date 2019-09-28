@@ -18,7 +18,7 @@ init();
 animate();
 function init() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.y = 10;
+    camera.position.y = 200;
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0xffffff );
     scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
@@ -39,6 +39,9 @@ function init() {
         blocker.style.display = 'block';
         instructions.style.display = '';
     } );
+    controls.getObject().position.x = 50;
+    controls.getObject().position.y = 200;
+    controls.getObject().position.z = 50;
     scene.add( controls.getObject() );
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
@@ -59,7 +62,7 @@ function init() {
                 moveRight = true;
                 break;
             case 32: // space
-                if ( canJump === true ) velocity.y += 350;
+                if ( canJump === true ) velocity.y += 180;
                 canJump = false;
                 break;
         }
@@ -84,8 +87,12 @@ function init() {
                 break;
         }
     };
+    var onClick = function ( event ) {
+        console.log("CLICK!");
+    }
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
+    document.addEventListener( 'click', onClick, false);
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
     // floor
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
@@ -144,7 +151,7 @@ function animate() {
         var delta = ( time - prevTime ) / 1000;
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
-        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+        velocity.y -= 9.8 * 50.0 * delta; // 100.0 = mass
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
@@ -188,7 +195,6 @@ socket.on("map", function(map){
     
     
     map.forEach(function(layer, i) {
-        console.log(map);
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
                 if(map[i][j][k] != 0){
@@ -243,6 +249,7 @@ socket.on("new player", function(player){
     player.model = model;
     players[player.id] = player;
     scene.add(model);
+    console.log("added player "+player.id);
 })
 
 socket.on("player", function(player){
@@ -250,6 +257,11 @@ socket.on("player", function(player){
     p.model.position.x = player.position.x;
     p.model.position.y = player.position.y;
     p.model.position.z = player.position.z;
+});
+
+socket.on("player left", function(id){
+    scene.delete(players[id].model);
+    delete players[id];
 });
 
 
