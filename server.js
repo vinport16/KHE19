@@ -82,11 +82,14 @@ function readMap(file_name) {
 }
 
 var players = [];
-var nextPlayerId = 0;
+var nextId = 0;
+
+var pSpeed = 20;
+var grav = 1;
 
 io.on("connection", function(socket){
   player = {};
-  player.id = nextPlayerId++;
+  player.id = nextId++;
   player.socket = socket;
   player.position = {x:0,y:0,z:0};
 
@@ -124,4 +127,83 @@ io.on("connection", function(socket){
     console.log("player "+player.id+" left");
   });
 
+  socket.on("launch", function(angle){
+    var p = {};
+    p.id = nextId++;
+    p.owner = player;
+    p.count = 0;
+
+    p.position = {};
+    p.position.x = player.position.x;
+    p.position.y = player.position.y;
+    p.position.z = player.position.z;
+    
+    p.velocity = {};
+    p.velocity.x = angle.dx * pSpeed;
+    p.velocity.y = angle.dy * pSpeed;
+    p.velocity.z = angle.dz * pSpeed;
+
+    p.position.x += angle.dx * 10;
+    p.position.y += angle.dy * 10;
+    p.position.z += angle.dz * 10;
+
+    if(p.position.x != NaN && p.position.y != NaN && p.position.z != NaN){
+      moveProjectile(p);
+    }
+
+  });
+
 });
+
+function projCollision(p,map){
+  mapPos = {};
+  mapPos.x = Math.floor((p.position.x+10)/20);
+  mapPos.y = Math.floor((p.position.y+10)/20);
+  mapPos.z = Math.floor((p.position.z+10)/20);
+
+  if(mapPos.x >= 0 && mapPos.y >= 0 && mapPos.z >= 0){
+    if(map.length > mapPos.y && map[0].length > mapPos.z && map[0][0].length > mapPos.x){
+      if(map[mapPos.y][mapPos.z][mapPos.x] != 0){
+        return 1;
+      }
+    }
+  }
+  return false;
+}
+
+function announcePosition(p){
+  for(sendto in players){
+    players[sendto].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});    
+  }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+wait = 8; //in ms
+
+async function moveProjectile(p){
+  var hit = false;
+  while(!hit && p.count < 200){
+    await sleep(10);
+    
+    p.velocity.y -= grav * wait/1000;
+
+    p.position.x += p.velocity.x * pSpeed * wait/1000;
+    p.position.y += p.velocity.y * pSpeed * wait/1000;
+    p.position.z += p.velocity.z * pSpeed * wait/1000;
+
+    announcePosition(p);
+
+    if(projCollision(p,map)){
+      hit = true;
+    }
+
+    p.count++;
+  }
+  announcePosition(p)
+}
+
+
+
