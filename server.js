@@ -40,14 +40,40 @@ app.get("/", function(req, res){
 });
 
 
+var players = [];
+var nextPlayerId = 0;
+
 io.on("connection", function(socket){
-  
+  player = {};
+  player.id = nextPlayerId++;
+  player.socket = socket;
+  player.position = {x:0,y:0,z:0};
+
+  console.log("player "+player.id+" logged in");
+
+  for(sendto in players){
+      players[sendto].socket.emit("new player", {id:player.id, position:player.position});
+      player.socket.emit("new player", {id:players[sendto].id, position:players[sendto].position});
+  }
+
+  players.push(player);
 
   socket.on("map", function(){
     socket.emit("map",map);
     console.log("Sent Map");
   });
+
+  socket.on("player position", function(position){
+    player.position = position;
+    for(sendto in players){
+      if(players[sendto].id != player.id){
+        players[sendto].socket.emit("player", {id:player.id, position:player.position});
+      }
+    }
+  });
+
 });
+
 
 
 
@@ -75,10 +101,10 @@ function readMap(file_name) {
   map.forEach(function(layer, i) {
     layer.forEach(function(line, j) {
       line.forEach(function(char, k) {
-        map[i][j][k] = map[i][j][k] == '1' ? 1 : 0
-      })
-    })
-  })
+        map[i][j][k] = map[i][j][k] == '1' ? 1 : 0;
+      });
+    });
+  });
 
   return map;
 }

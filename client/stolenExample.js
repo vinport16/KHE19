@@ -1,4 +1,3 @@
-var socket = io();
 socket.emit("map");
 
 import { PointerLockControls } from '../pointerlock.js';
@@ -165,6 +164,7 @@ function animate() {
         }
         prevTime = time;
     }
+    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
 
@@ -196,6 +196,33 @@ socket.on("map", function(map){
         });
     });
 
+});
+
+var players = {};
+
+socket.on("new player", function(player){
+    console.log(player);
+    var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 28, 32);
+    cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
+    
+    var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
+    material.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+
+    var model = new THREE.Mesh( cylinderGeometry, material );
+    model.position.x = player.position.x;
+    model.position.y = player.position.y;
+    model.position.z = player.position.z;
+    
+    player.model = model;
+    players[player.id] = player;
+    scene.add(model);
+})
+
+socket.on("player", function(player){
+    let p = players[player.id];
+    p.model.position.x = player.position.x;
+    p.model.position.y = player.position.y;
+    p.model.position.z = player.position.z;
 });
 
 
