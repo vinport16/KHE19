@@ -1,3 +1,6 @@
+var socket = io();
+socket.emit("map");
+
 import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
 var objects = [];
@@ -99,35 +102,10 @@ function init() {
     }
     floorGeometry = floorGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = floorGeometry.attributes.position;
-    //var colors = [];
-    // for ( var i = 0, l = position.count; i < l; i ++ ) {
-    //     color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-    //     colors.push( color.r, color.g, color.b );
-    // }
-    //floorGeometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
+
     var floorMaterial = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
     var floor = new THREE.Mesh( floorGeometry, floorMaterial );
     scene.add( floor );
-    // objects
-     var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
-     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
-     position = boxGeometry.attributes.position;
-    // colors = [];
-    // for ( var i = 0, l = position.count; i < l; i ++ ) {
-    //     color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-    //     colors.push( color.r, color.g, color.b );
-    // }
-    //boxGeometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
-    for ( var i = 0; i < 500; i ++ ) {
-        var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, vertexColors: THREE.VertexColors } );
-        boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        var box = new THREE.Mesh( boxGeometry, boxMaterial );
-        box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-        box.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
-        box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
-        scene.add( box );
-        objects.push( box );
-    }
 
 
     var light = new THREE.DirectionalLight(0xffffff, 1);
@@ -141,6 +119,19 @@ function init() {
         light.shadow.camera.bottom = -20; // CHANGED
 
         light.position.set(-60, 20, 100); // CHANGED
+        scene.add(light);
+        scene.add(new THREE.DirectionalLightHelper(light, 0.2));
+    light = new THREE.DirectionalLight(0xffffff, 1);
+        light.castShadow = true;
+        light.shadowCameraVisible = true;
+        light.shadow.camera.near = 100;
+        light.shadow.camera.far = 200;
+        light.shadow.camera.left = -20; // CHANGED
+        light.shadow.camera.right = 20; // CHANGED
+        light.shadow.camera.top = 20; // CHANGED
+        light.shadow.camera.bottom = -20; // CHANGED
+
+        light.position.set(60, 220, 10); // CHANGED
         scene.add(light);
         scene.add(new THREE.DirectionalLightHelper(light, 0.2));
     //
@@ -189,3 +180,34 @@ function animate() {
     }
     renderer.render( scene, camera );
 }
+
+
+socket.on("map", function(map){
+    var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
+    var position = floorGeometry.attributes.position;
+    // objects
+    var boxGeometry = new THREE.BoxBufferGeometry( 2, 2, 2 );
+    boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
+    position = boxGeometry.attributes.position;
+    
+    var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, vertexColors: THREE.VertexColors } );
+    boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+    
+    map.forEach(function(layer, i) {
+        layer.forEach(function(line, j) {
+            line.forEach(function(char, k) {
+                var box = new THREE.Mesh( boxGeometry, boxMaterial );
+                box.position.x = i*2;
+                box.position.y = j*2;
+                box.position.z = k*2;
+                scene.add(box);
+                objects.push(box);
+            });
+        });
+    });
+
+});
+
+
+
+
