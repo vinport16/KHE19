@@ -184,31 +184,21 @@ socket.on("map", function(map){
     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = boxGeometry.attributes.position;
     
-    //var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    //boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-    //Stick in for loop for random
-    //boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
-
-    
-    
-    
-    
-    
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
                 if(map[i][j][k] != 0){
                     if(map[i][j][k] == 1){ //grass
                         var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
-                        grassMaterial.color.setHSL( Math.random() * 0.2 + 0.3, 0.75, Math.random() * 0.25 + 0.3 );
+                        grassMaterial.color.setHSL( 0.3333, 1, Math.random() * 0.1 + 0.25 );
                         var boxMaterial = grassMaterial;
                     }else if(map[i][j][k] == 2){//brick
-                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
-                        brickMaterial.color.setHSL( Math.random() * 0.2 + 0, 0.75, Math.random() * 0.25 + 0.3 ); 
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xcb4154 });
+                        brickMaterial.color.setHSL( 0, 1, Math.random() * 0.1 + 0.4 ); 
                         var boxMaterial = brickMaterial;
                     }else if(map[i][j][k] == 3){//dirt
                         var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
-                        dirtMaterial.color.setHSL( Math.random() * 0.2 + 0.9, 0.75, Math.random() * 0.25 + 0.3 ); 
+                        dirtMaterial.color.setHSL( 0.111111, 1, Math.random() * 0.05 + 0.15 ); 
                         var boxMaterial = dirtMaterial;
                     }else{//sky/wall
                         var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
@@ -222,8 +212,6 @@ socket.on("map", function(map){
 
                     scene.add(box);
                     objects.push(box);
-
-
                 }
             });
         });
