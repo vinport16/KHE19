@@ -24,7 +24,7 @@ var PointerLockControls = function ( camera, domElement ) {
 	var lockEvent = { type: 'lock' };
 	var unlockEvent = { type: 'unlock' };
 
-	var euler = new THREE.Euler( 0, 0, 0);
+	var euler = new THREE.Euler(0, 0, 0, 'YXZ');
 
 	var PI_2 = Math.PI / 2;
 
@@ -41,11 +41,11 @@ var PointerLockControls = function ( camera, domElement ) {
 
         euler.y -= movementX * 0.002;
 		euler.x -= movementY * 0.002;
-        
+
 		euler.x = Math.max( - PI_2, Math.min( PI_2, euler.x ) );
 
 		camera.quaternion.setFromEuler( euler );
-        
+
 		scope.dispatchEvent( changeEvent );
 
 	}
