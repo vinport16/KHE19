@@ -13,6 +13,8 @@ var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
+var sprint = false;
+var startTime;
 
 init();
 animate();
@@ -53,6 +55,11 @@ function init() {
         switch ( event.keyCode ) {
             case 38: // up
             case 87: // w
+                var elapsedTime = ((Date.now() - startTime)/ 1000).toFixed(3);
+                console.log(elapsedTime);
+                if(elapsedTime < 0.5){
+                    sprint = true;
+                }
                 moveForward = true;
                 break;
             case 37: // left
@@ -77,6 +84,8 @@ function init() {
         switch ( event.keyCode ) {
             case 38: // up
             case 87: // w
+                startTime = Date.now();
+                sprint = false;
                 moveForward = false;
                 break;
             case 37: // left
@@ -231,7 +240,10 @@ function animate() {
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
-        if ( moveForward || moveBackward ) velocity.z -= direction.z * 800.0 * delta;
+        if(sprint && (moveForward || moveBackward)){
+            velocity.z -= direction.z * 1600.0 * delta;
+        }
+        else if ( moveForward || moveBackward ){velocity.z -= direction.z * 800.0 * delta;}
         if ( moveLeft || moveRight ) velocity.x -= direction.x * 800.0 * delta;
         if ( onObject === true ) {
             velocity.y = Math.max( 0, velocity.y );
