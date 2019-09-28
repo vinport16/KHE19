@@ -156,7 +156,7 @@ function horizontalCollision() {
   var caster = new THREE.Raycaster();
   var collisions, i;
   // Maximum distance from the origin before we consider collision
-  var max_dist = 8;
+  var max_dist = 5;
   // For each ray
   for (i = 0; i < rays.length; i += 1) {
     caster.set(controls.getObject().position, rays[i]);
