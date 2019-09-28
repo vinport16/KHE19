@@ -1,5 +1,3 @@
-socket.emit("map");
-
 import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
 var myMap;
@@ -15,8 +13,10 @@ var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
+
 init();
 animate();
+
 function init() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
     camera.position.y = 200;
@@ -88,9 +88,7 @@ function init() {
                 break;
         }
     };
-    var onClick = function ( event ) {
-        console.log("CLICK!");
-        
+    var onClick = function ( event ) {        
         var vector = new THREE.Vector3( 0, 0, - 1 );
         vector.applyQuaternion( camera.quaternion );
         
@@ -216,10 +214,9 @@ function animate() {
         }
         prevTime = time;
     }
-    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
+    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
-
 
 socket.on("map", function(map){
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
@@ -268,8 +265,7 @@ var players = {};
 var projectiles = {};
 
 socket.on("new player", function(player){
-    console.log(player);
-    var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 28, 32);
+    var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 32);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
     var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
@@ -287,15 +283,16 @@ socket.on("new player", function(player){
 })
 
 socket.on("player", function(player){
-    let p = players[player.id];
+    var p = players[player.id];
     p.model.position.x = player.position.x;
     p.model.position.y = player.position.y;
     p.model.position.z = player.position.z;
 });
 
 socket.on("player left", function(id){
-    scene.delete(players[id].model);
+    scene.remove(players[id].model);
     delete players[id];
+    console.log("player",id,"left");
 });
 
 
@@ -323,4 +320,7 @@ socket.on("projectile", function(p){
 
 
 });
+
+socket.emit("map");
+
 
