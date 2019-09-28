@@ -26,6 +26,11 @@ function init() {
     var light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
     light.position.set( 0.5, 1, 0.75 );
     scene.add( light );
+
+    add_crosshair(camera);
+
+
+
     controls = new PointerLockControls( camera );
     var blocker = document.getElementById( 'blocker' );
     var instructions = document.getElementById( 'instructions' );
@@ -88,10 +93,10 @@ function init() {
                 break;
         }
     };
-    var onClick = function ( event ) {        
+    var onClick = function ( event ) {
         var vector = new THREE.Vector3( 0, 0, - 1 );
         vector.applyQuaternion( camera.quaternion );
-        
+
         socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
 
     }
@@ -139,6 +144,35 @@ function init() {
     document.body.appendChild( renderer.domElement );
     //
     window.addEventListener( 'resize', onWindowResize, false );
+}
+function add_crosshair(camera) {
+  var material = new THREE.LineBasicMaterial({ color: 0xAAFFAA });
+  // crosshair size
+  var x = 0.1, y = 0.1;
+
+  var geometry = new THREE.Geometry();
+
+  // crosshair
+  geometry.vertices.push(new THREE.Vector3(0, y, 0));
+  geometry.vertices.push(new THREE.Vector3(0, -y, 0));
+  geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+  geometry.vertices.push(new THREE.Vector3(x, 0, 0));
+  geometry.vertices.push(new THREE.Vector3(-x, 0, 0));
+
+  var crosshair = new THREE.Line( geometry, material );
+
+  // place it in the center
+  var crosshairPercentX = 50;
+  var crosshairPercentY = 50;
+  var crosshairPositionX = (crosshairPercentX / 100) * 2 - 1;
+  var crosshairPositionY = (crosshairPercentY / 100) * 2 - 1;
+
+  crosshair.position.x = crosshairPositionX * camera.aspect;
+  crosshair.position.y = crosshairPositionY;
+
+  crosshair.position.z = -5;
+
+  camera.add( crosshair );
 }
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -301,11 +335,11 @@ socket.on("projectile", function(p){
         var geometry = new THREE.SphereBufferGeometry( 2, 32, 32 );
         var material = new THREE.MeshLambertMaterial( {color: 0xaaaaaa} );
         var sphere = new THREE.Mesh( geometry, material );
-        
+
         sphere.position.x = p.x;
         sphere.position.y = p.y;
         sphere.position.z = p.z;
-        
+
         p.object = sphere;
         scene.add( sphere );
         projectiles[p.id] = p;
@@ -322,5 +356,3 @@ socket.on("projectile", function(p){
 });
 
 socket.emit("map");
-
-
