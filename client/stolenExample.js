@@ -177,26 +177,62 @@ socket.on("map", function(map){
     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = boxGeometry.attributes.position;
     
-    var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
-    boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+    //var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    //boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+    //Stick in for loop for random
+    //boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
+
+    
+    
+    
+    
     
     map.forEach(function(layer, i) {
+        console.log(map);
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
-                if(map[i][j][k] == 1){
+                if(map[i][j][k] != 0){
+                    if(map[i][j][k] == 1){ //grass
+                        var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
+                        grassMaterial.color.setHSL( Math.random() * 0.2 + 0.3, 0.75, Math.random() * 0.25 + 0.3 );
+                        var boxMaterial = grassMaterial;
+                    }else if(map[i][j][k] == 2){//brick
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+                        brickMaterial.color.setHSL( Math.random() * 0.2 + 0, 0.75, Math.random() * 0.25 + 0.3 ); 
+                        var boxMaterial = brickMaterial;
+                    }else if(map[i][j][k] == 3){//dirt
+                        var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
+                        dirtMaterial.color.setHSL( Math.random() * 0.2 + 0.9, 0.75, Math.random() * 0.25 + 0.3 ); 
+                        var boxMaterial = dirtMaterial;
+                    }else{//sky/wall
+                        var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
+                        skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
+                        var boxMaterial = skyMaterial;
+                    }
                     var box = new THREE.Mesh( boxGeometry, boxMaterial );
                     box.position.x = k*20;
                     box.position.y = i*20;
                     box.position.z = j*20;
+
                     scene.add(box);
                     objects.push(box);
+
+
                 }
-                
             });
         });
     });
 
 });
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '0x';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
 
 
 

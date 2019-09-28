@@ -75,7 +75,17 @@ function readMap(file_name) {
   map.forEach(function(layer, i) {
     layer.forEach(function(line, j) {
       line.forEach(function(char, k) {
-        map[i][j][k] = map[i][j][k] == '1' ? 1 : 0
+          if(map[i][j][k] == ' '){
+            map[i][j][k] = 0;
+          }else if(map[i][j][k] == '1'){
+              map[i][j][k] = 1;
+          }else if(map[i][j][k] == '2'){
+            map[i][j][k] = 2;
+        }else if(map[i][j][k] == '3'){
+            map[i][j][k] = 3;
+        }else if(map[i][j][k] == '4'){
+            map[i][j][k] = 4;
+        }
       })
     })
   })
