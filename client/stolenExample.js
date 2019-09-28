@@ -3,6 +3,7 @@ socket.emit("map");
 
 import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
+var myMap;
 var objects = [];
 var raycaster;
 var moveForward = false;
@@ -134,13 +135,45 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
+function get_spaces(x,y,z) {
+  return [[x + 1, y, z + 1], [x + 1, y, z], [x + 1, y, z - 1], [x, y, z - 1], [x - 1, y, z - 1],
+          [x - 1, y, z], [x - 1, y, z + 1], [x, y, z + 1]]
+}
+function horizontalCollision() {
+  var rays = [
+      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(0, 0, -1),
+      new THREE.Vector3(-1, 0, 0)
+  ];
+
+  var caster = new THREE.Raycaster();
+  var collisions, i;
+  // Maximum distance from the origin before we consider collision
+  var max_dist = 8;
+  // For each ray
+  for (i = 0; i < rays.length; i += 1) {
+    caster.set(controls.getObject().position, rays[i]);
+    caster.ray.origin.y -= 20;
+    // Test if we intersect with any obstacle mesh
+    collisions = caster.intersectObjects(objects);
+
+    if(collisions.length > 0 && collisions[0].distance <= max_dist) {
+      return true;
+    }
+  }
+
+  return false;
+}
 function animate() {
     requestAnimationFrame( animate );
+
     if ( controls.isLocked === true ) {
         raycaster.ray.origin.copy( controls.getObject().position );
         raycaster.ray.origin.y -= 24;
         var intersections = raycaster.intersectObjects( objects );
         var onObject = intersections.length > 0;
+
         var time = performance.now();
         var delta = ( time - prevTime ) / 1000;
         velocity.x -= velocity.x * 10.0 * delta;
@@ -163,6 +196,13 @@ function animate() {
             controls.getObject().position.y = 10;
             canJump = true;
         }
+
+        var collision = horizontalCollision();
+        console.log(collision)
+        if(collision) {
+          velocity.x = 0;
+          velocity.z = 0;
+        }
         prevTime = time;
     }
     renderer.render( scene, camera );
@@ -176,10 +216,12 @@ socket.on("map", function(map){
     var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = boxGeometry.attributes.position;
-    
+
     var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
     boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-    
+
+    myMap = map;
+
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
@@ -191,13 +233,9 @@ socket.on("map", function(map){
                     scene.add(box);
                     objects.push(box);
                 }
-                
+
             });
         });
     });
 
 });
-
-
-
-
