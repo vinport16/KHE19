@@ -143,7 +143,7 @@ io.on("connection", function(socket){
     p.position.x = player.position.x;
     p.position.y = player.position.y;
     p.position.z = player.position.z;
-    
+
     p.velocity = {};
     p.velocity.x = angle.dx * pSpeed;
     p.velocity.y = angle.dy * pSpeed;
@@ -181,7 +181,7 @@ function projCollision(p,map){
 
     var bottom = player.y - (35/2);
     var top = player.y + (35/2);
-    if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom){
+    if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
       console.log("PLAYER",players[i].id,"WAS HIT");
       players[i].socket.emit("hit");
     }
@@ -191,7 +191,7 @@ function projCollision(p,map){
 
 function announcePosition(p){
   for(i in players){
-    players[i].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y+14, z:p.position.z});    
+    players[i].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y+14, z:p.position.z});
   }
 }
 
@@ -205,7 +205,7 @@ async function moveProjectile(p){
   var hit = false;
   while(!hit && p.count < pLife){
     await sleep(10);
-    
+
     p.velocity.y -= pGrav * wait/1000;
 
     p.position.x += p.velocity.x * pSpeed * wait/1000;
@@ -222,6 +222,3 @@ async function moveProjectile(p){
   }
   announcePosition(p)
 }
-
-
-

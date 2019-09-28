@@ -179,10 +179,6 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
-function get_spaces(x,y,z) {
-  return [[x + 1, y, z + 1], [x + 1, y, z], [x + 1, y, z - 1], [x, y, z - 1], [x - 1, y, z - 1],
-          [x - 1, y, z], [x - 1, y, z + 1], [x, y, z + 1]]
-}
 function horizontalCollision() {
   var rays = [
       new THREE.Vector3(0, 0, 1),
@@ -213,6 +209,10 @@ function animate() {
     requestAnimationFrame( animate );
 
     if ( controls.isLocked === true ) {
+        if(controls.getObject().position.y <= 15) {
+            respawn();
+        }
+
         raycaster.ray.origin.copy( controls.getObject().position );
         raycaster.ray.origin.y -= 24;
         var intersections = raycaster.intersectObjects( objects );
@@ -352,15 +352,12 @@ socket.on("projectile", function(p){
         o.position.y = p.y;
         o.position.z = p.z;
     }
-
-
-
 });
 
 function respawn(){
     controls.getObject().position.x = Math.random()*MAP[0][0].length*20;
     controls.getObject().position.z = Math.random()*MAP[0].length*20;
-    controls.getObject().position.x = Math.random()*(MAP.length-4)*20 +4;
+    controls.getObject().position.y = Math.random()*(MAP.length-4)*20 +100;
 }
 
 socket.on("hit", function(){
