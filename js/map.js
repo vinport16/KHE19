@@ -24,7 +24,7 @@ function ff(file_name) {
 	map.forEach(function(layer, i) {
 		layer.forEach(function(line, j) {
 			line.forEach(function(char, k) {
-				map[i][j][k] = map[i][j][k] == '1' ? 1 : 0
+				map[i][j][k] = map[i][j][k] == ' ' ? 0 : 3;
 			})
 		})
 	})

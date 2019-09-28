@@ -39,18 +39,6 @@ app.get("/", function(req, res){
   res.sendFile(__dirname + '/client/index.html');
 });
 
-
-io.on("connection", function(socket){
-  
-
-  socket.on("map", function(){
-    socket.emit("map",map);
-    console.log("Sent Map");
-  });
-});
-
-
-
 function readMap(file_name) {
   var fs = require('fs');
   var contents = fs.readFileSync(file_name).toString();
@@ -75,10 +63,65 @@ function readMap(file_name) {
   map.forEach(function(layer, i) {
     layer.forEach(function(line, j) {
       line.forEach(function(char, k) {
-        map[i][j][k] = map[i][j][k] == '1' ? 1 : 0
+          if(map[i][j][k] == ' '){
+            map[i][j][k] = 0;
+          }else if(map[i][j][k] == '1'){
+              map[i][j][k] = 1;
+          }else if(map[i][j][k] == '2'){
+            map[i][j][k] = 2;
+        }else if(map[i][j][k] == '3'){
+            map[i][j][k] = 3;
+        }else if(map[i][j][k] == '4'){
+            map[i][j][k] = 4;
+        }
       })
     })
   })
 
   return map;
 }
+
+var players = [];
+var nextPlayerId = 0;
+
+io.on("connection", function(socket){
+  player = {};
+  player.id = nextPlayerId++;
+  player.socket = socket;
+  player.position = {x:0,y:0,z:0};
+
+  console.log("player "+player.id+" logged in");
+
+  for(sendto in players){
+      players[sendto].socket.emit("new player", {id:player.id, position:player.position});
+      player.socket.emit("new player", {id:players[sendto].id, position:players[sendto].position});
+  }
+
+  players.push(player);
+
+  socket.on("map", function(){
+    socket.emit("map",map);
+    console.log("Sent Map");
+  });
+
+  socket.on("player position", function(position){
+    player.position = position;
+    for(sendto in players){
+      if(players[sendto].id != player.id){
+        players[sendto].socket.emit("player", {id:player.id, position:player.position});
+      }
+    }
+  });
+
+  socket.on("disconnect",function(){
+    for(sendto in players){
+      if(players[sendto].id == player.id){
+        players.splice(sendto,1);
+      }else{
+        players[sendto].socket.emit("player left", player.id);
+      }
+    }
+    console.log("player "+player.id+" left");
+  });
+
+});

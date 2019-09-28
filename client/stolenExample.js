@@ -1,4 +1,3 @@
-var socket = io();
 socket.emit("map");
 
 import { PointerLockControls } from '../pointerlock.js';
@@ -20,7 +19,7 @@ init();
 animate();
 function init() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.y = 10;
+    camera.position.y = 200;
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0xffffff );
     scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
@@ -41,6 +40,9 @@ function init() {
         blocker.style.display = 'block';
         instructions.style.display = '';
     } );
+    controls.getObject().position.x = 50;
+    controls.getObject().position.y = 200;
+    controls.getObject().position.z = 50;
     scene.add( controls.getObject() );
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
@@ -61,7 +63,7 @@ function init() {
                 moveRight = true;
                 break;
             case 32: // space
-                if ( canJump === true ) velocity.y += 350;
+                if ( canJump === true ) velocity.y += 180;
                 canJump = false;
                 break;
         }
@@ -86,8 +88,12 @@ function init() {
                 break;
         }
     };
+    var onClick = function ( event ) {
+        console.log("CLICK!");
+    }
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
+    document.addEventListener( 'click', onClick, false);
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
     // floor
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
@@ -178,7 +184,7 @@ function animate() {
         var delta = ( time - prevTime ) / 1000;
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
-        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+        velocity.y -= 9.8 * 50.0 * delta; // 100.0 = mass
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
@@ -205,6 +211,7 @@ function animate() {
         }
         prevTime = time;
     }
+    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
 
@@ -217,25 +224,70 @@ socket.on("map", function(map){
     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = boxGeometry.attributes.position;
 
-    var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
-    boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-
-    myMap = map;
-
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
-                if(map[i][j][k] == 1){
+                if(map[i][j][k] != 0){
+                    if(map[i][j][k] == 1){ //grass
+                        var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
+                        grassMaterial.color.setHSL( 0.3333, 1, Math.random() * 0.1 + 0.25 );
+                        var boxMaterial = grassMaterial;
+                    }else if(map[i][j][k] == 2){//brick
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xcb4154 });
+                        brickMaterial.color.setHSL( 0, 1, Math.random() * 0.1 + 0.4 );
+                        var boxMaterial = brickMaterial;
+                    }else if(map[i][j][k] == 3){//dirt
+                        var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
+                        dirtMaterial.color.setHSL( 0.111111, 1, Math.random() * 0.05 + 0.15 );
+                        var boxMaterial = dirtMaterial;
+                    }else{//sky/wall
+                        var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
+                        skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
+                        var boxMaterial = skyMaterial;
+                    }
                     var box = new THREE.Mesh( boxGeometry, boxMaterial );
                     box.position.x = k*20;
                     box.position.y = i*20;
                     box.position.z = j*20;
+
                     scene.add(box);
                     objects.push(box);
                 }
-
             });
         });
     });
 
+});
+
+var players = {};
+
+socket.on("new player", function(player){
+    console.log(player);
+    var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 28, 32);
+    cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
+
+    var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
+    material.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+
+    var model = new THREE.Mesh( cylinderGeometry, material );
+    model.position.x = player.position.x;
+    model.position.y = player.position.y;
+    model.position.z = player.position.z;
+
+    player.model = model;
+    players[player.id] = player;
+    scene.add(model);
+    console.log("added player "+player.id);
+})
+
+socket.on("player", function(player){
+    let p = players[player.id];
+    p.model.position.x = player.position.x;
+    p.model.position.y = player.position.y;
+    p.model.position.z = player.position.z;
+});
+
+socket.on("player left", function(id){
+    scene.delete(players[id].model);
+    delete players[id];
 });
