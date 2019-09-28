@@ -89,6 +89,12 @@ function init() {
     };
     var onClick = function ( event ) {
         console.log("CLICK!");
+        
+        var vector = new THREE.Vector3( 0, 0, - 1 );
+        vector.applyQuaternion( camera.quaternion );
+        
+        socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
+
     }
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
@@ -232,6 +238,7 @@ socket.on("map", function(map){
 });
 
 var players = {};
+var projectiles = {};
 
 socket.on("new player", function(player){
     console.log(player);
@@ -264,5 +271,31 @@ socket.on("player left", function(id){
     delete players[id];
 });
 
+socket.on("projectile", function(p){
+    if(projectiles[p.id] == null){
+        var geometry = new THREE.SphereBufferGeometry( 2, 32, 32 );
+        var material = new THREE.MeshLambertMaterial( {color: 0xaaaaaa} );
+        var sphere = new THREE.Mesh( geometry, material );
+        
+        sphere.position.x = p.x;
+        sphere.position.y = p.y;
+        sphere.position.z = p.z;
+        
+        p.object = sphere;
+        scene.add( sphere );
+        projectiles[p.id] = p;
+
+        console.log("added projectile");
+    }else{
+        var o = projectiles[p.id].object;
+        o.position.x = p.x
+        o.position.y = p.y;
+        o.position.z = p.z;
+        console.log("moved projectile");
+    }
+
+
+
+});
 
 
