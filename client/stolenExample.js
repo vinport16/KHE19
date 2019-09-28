@@ -2,6 +2,7 @@ socket.emit("map");
 
 import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
+var myMap;
 var objects = [];
 var raycaster;
 var moveForward = false;
@@ -146,13 +147,45 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
+function get_spaces(x,y,z) {
+  return [[x + 1, y, z + 1], [x + 1, y, z], [x + 1, y, z - 1], [x, y, z - 1], [x - 1, y, z - 1],
+          [x - 1, y, z], [x - 1, y, z + 1], [x, y, z + 1]]
+}
+function horizontalCollision() {
+  var rays = [
+      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(0, 0, -1),
+      new THREE.Vector3(-1, 0, 0)
+  ];
+
+  var caster = new THREE.Raycaster();
+  var collisions, i;
+  // Maximum distance from the origin before we consider collision
+  var max_dist = 5;
+  // For each ray
+  for (i = 0; i < rays.length; i += 1) {
+    caster.set(controls.getObject().position, rays[i]);
+    caster.ray.origin.y -= 20;
+    // Test if we intersect with any obstacle mesh
+    collisions = caster.intersectObjects(objects);
+
+    if(collisions.length > 0 && collisions[0].distance <= max_dist) {
+      return true;
+    }
+  }
+
+  return false;
+}
 function animate() {
     requestAnimationFrame( animate );
+
     if ( controls.isLocked === true ) {
         raycaster.ray.origin.copy( controls.getObject().position );
         raycaster.ray.origin.y -= 24;
         var intersections = raycaster.intersectObjects( objects );
         var onObject = intersections.length > 0;
+
         var time = performance.now();
         var delta = ( time - prevTime ) / 1000;
         velocity.x -= velocity.x * 10.0 * delta;
@@ -175,6 +208,12 @@ function animate() {
             controls.getObject().position.y = 10;
             canJump = true;
         }
+
+        var collision = horizontalCollision();
+        if(collision) {
+          velocity.x = 0;
+          velocity.z = 0;
+        }
         prevTime = time;
     }
     socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
@@ -189,32 +228,22 @@ socket.on("map", function(map){
     var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = boxGeometry.attributes.position;
-    
-    //var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    //boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-    //Stick in for loop for random
-    //boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
 
-    
-    
-    
-    
-    
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
                 if(map[i][j][k] != 0){
                     if(map[i][j][k] == 1){ //grass
                         var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
-                        grassMaterial.color.setHSL( Math.random() * 0.2 + 0.3, 0.75, Math.random() * 0.25 + 0.3 );
+                        grassMaterial.color.setHSL( 0.3333, 1, Math.random() * 0.1 + 0.25 );
                         var boxMaterial = grassMaterial;
                     }else if(map[i][j][k] == 2){//brick
-                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
-                        brickMaterial.color.setHSL( Math.random() * 0.2 + 0, 0.75, Math.random() * 0.25 + 0.3 ); 
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xcb4154 });
+                        brickMaterial.color.setHSL( 0, 1, Math.random() * 0.1 + 0.4 );
                         var boxMaterial = brickMaterial;
                     }else if(map[i][j][k] == 3){//dirt
                         var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
-                        dirtMaterial.color.setHSL( Math.random() * 0.2 + 0.9, 0.75, Math.random() * 0.25 + 0.3 ); 
+                        dirtMaterial.color.setHSL( 0.111111, 1, Math.random() * 0.05 + 0.15 );
                         var boxMaterial = dirtMaterial;
                     }else{//sky/wall
                         var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
@@ -228,8 +257,6 @@ socket.on("map", function(map){
 
                     scene.add(box);
                     objects.push(box);
-
-
                 }
             });
         });
@@ -244,7 +271,7 @@ socket.on("new player", function(player){
     console.log(player);
     var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 28, 32);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
-    
+
     var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
     material.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
 
@@ -252,7 +279,7 @@ socket.on("new player", function(player){
     model.position.x = player.position.x;
     model.position.y = player.position.y;
     model.position.z = player.position.z;
-    
+
     player.model = model;
     players[player.id] = player;
     scene.add(model);
@@ -271,6 +298,7 @@ socket.on("player left", function(id){
     delete players[id];
 });
 
+
 socket.on("projectile", function(p){
     if(projectiles[p.id] == null){
         var geometry = new THREE.SphereBufferGeometry( 2, 32, 32 );
@@ -285,17 +313,14 @@ socket.on("projectile", function(p){
         scene.add( sphere );
         projectiles[p.id] = p;
 
-        console.log("added projectile");
     }else{
         var o = projectiles[p.id].object;
         o.position.x = p.x
         o.position.y = p.y;
         o.position.z = p.z;
-        console.log("moved projectile");
     }
 
 
 
 });
-
 

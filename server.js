@@ -181,7 +181,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-wait = 10; //in ms
+wait = 8; //in ms
 
 async function moveProjectile(p){
   var hit = false;
