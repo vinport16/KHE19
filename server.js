@@ -54,7 +54,6 @@ io.on("connection", function(socket){
 function readMap(file_name) {
   var fs = require('fs');
   var contents = fs.readFileSync(file_name).toString();
-  console.log(contents);
 
   var map = [];
   map.push([]);

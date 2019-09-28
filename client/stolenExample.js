@@ -186,22 +186,25 @@ socket.on("map", function(map){
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
     // objects
-    var boxGeometry = new THREE.BoxBufferGeometry( 2, 2, 2 );
+    var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
     boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
     position = boxGeometry.attributes.position;
     
-    var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, vertexColors: THREE.VertexColors } );
+    var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
     boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
     
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
-                var box = new THREE.Mesh( boxGeometry, boxMaterial );
-                box.position.x = i*2;
-                box.position.y = j*2;
-                box.position.z = k*2;
-                scene.add(box);
-                objects.push(box);
+                if(map[i][j][k] == 1){
+                    var box = new THREE.Mesh( boxGeometry, boxMaterial );
+                    box.position.x = k*20;
+                    box.position.y = i*20;
+                    box.position.z = j*20;
+                    scene.add(box);
+                    objects.push(box);
+                }
+                
             });
         });
     });
