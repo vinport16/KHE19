@@ -1,0 +1,32 @@
+{
+  "name": "khe19",
+  "version": "1.0.0",
+  "description": "3d js fps",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mes258/KHE19.git"
+  },
+  "keywords": [
+    "hackathon",
+    "kent",
+    "hack",
+    "enough",
+    "khe"
+  ],
+  "author": "vincent, michael, dan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mes258/KHE19/issues"
+  },
+  "homepage": "https://github.com/mes258/KHE19#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "http": "0.0.0",
+    "socket.io": "^2.3.0"
+  }
+}
