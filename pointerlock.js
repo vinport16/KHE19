@@ -39,13 +39,13 @@ var PointerLockControls = function ( camera, domElement ) {
 
 		euler.setFromQuaternion( camera.quaternion );
 
-		euler.y -= movementX * 0.002;
+        euler.y -= movementX * 0.002;
 		euler.x -= movementY * 0.002;
-
+        
 		euler.x = Math.max( - PI_2, Math.min( PI_2, euler.x ) );
 
 		camera.quaternion.setFromEuler( euler );
-
+        
 		scope.dispatchEvent( changeEvent );
 
 	}
