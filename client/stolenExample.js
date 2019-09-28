@@ -179,6 +179,18 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
+function checkCollisions(caster) {
+  // Maximum distance from the origin before we consider collision
+  var max_dist = 5;
+  var collisions;
+  // Test if we intersect with any obstacle mesh
+  collisions = caster.intersectObjects(objects);
+
+  if(collisions.length > 0 && collisions[0].distance <= max_dist) {
+    velocity.x = 0;
+    velocity.z = 0;
+  }
+}
 function horizontalCollision() {
   var rays = [
       new THREE.Vector3(0, 0, 1),
@@ -188,22 +200,15 @@ function horizontalCollision() {
   ];
 
   var caster = new THREE.Raycaster();
-  var collisions, i;
-  // Maximum distance from the origin before we consider collision
-  var max_dist = 5;
+  var i;
   // For each ray
   for (i = 0; i < rays.length; i += 1) {
     caster.set(controls.getObject().position, rays[i]);
+    checkCollisions(caster)
+    // Do it for ground level too
     caster.ray.origin.y -= 20;
-    // Test if we intersect with any obstacle mesh
-    collisions = caster.intersectObjects(objects);
-
-    if(collisions.length > 0 && collisions[0].distance <= max_dist) {
-      return true;
-    }
+    checkCollisions(caster)
   }
-
-  return false;
 }
 function animate() {
     requestAnimationFrame( animate );
@@ -241,11 +246,7 @@ function animate() {
             canJump = true;
         }
 
-        var collision = horizontalCollision();
-        if(collision) {
-          velocity.x = 0;
-          velocity.z = 0;
-        }
+        horizontalCollision();
         prevTime = time;
     }
     socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
