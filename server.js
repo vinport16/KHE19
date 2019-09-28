@@ -164,7 +164,7 @@ io.on("connection", function(socket){
 function projCollision(p,map){
   mapPos = {};
   mapPos.x = Math.floor((p.position.x+10)/20);
-  mapPos.y = Math.floor((p.position.y+10)/20);
+  mapPos.y = Math.floor((p.position.y+20)/20);
   mapPos.z = Math.floor((p.position.z+10)/20);
 
   if(mapPos.x >= 0 && mapPos.y >= 0 && mapPos.z >= 0){
@@ -172,6 +172,18 @@ function projCollision(p,map){
       if(map[mapPos.y][mapPos.z][mapPos.x] != 0){
         return 1;
       }
+    }
+  }
+  for(i in players){
+    var player = players[i].position;
+    var dz = player.z - p.position.z;
+    var dx = player.x - p.position.x;
+
+    var bottom = player.y - (35/2);
+    var top = player.y + (35/2);
+    if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom){
+      console.log("PLAYER",players[i].id,"WAS HIT");
+      players[i].socket.emit("hit");
     }
   }
   return false;

@@ -40,9 +40,9 @@ function init() {
         blocker.style.display = 'block';
         instructions.style.display = '';
     } );
-    controls.getObject().position.x = 50;
-    controls.getObject().position.y = 200;
-    controls.getObject().position.z = 50;
+    controls.getObject().position.x = 200;
+    controls.getObject().position.y = 120;
+    controls.getObject().position.z = 200;
     scene.add( controls.getObject() );
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
@@ -217,8 +217,10 @@ function animate() {
     socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
-
+var MAP;
 socket.on("map", function(map){
+    MAP = map;
+
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
     // objects
@@ -319,6 +321,16 @@ socket.on("projectile", function(p){
 
 
 
+});
+
+function respawn(){
+    controls.getObject().position.x = Math.random()*MAP[0][0].length*20;
+    controls.getObject().position.z = Math.random()*MAP[0].length*20;
+    controls.getObject().position.x = Math.random()*(MAP.length-4)*20 +4;
+}
+
+socket.on("hit", function(){
+    respawn();
 });
 
 socket.emit("map");
