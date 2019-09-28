@@ -179,41 +179,72 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
-function checkCollisions(caster) {
-  // Maximum distance from the origin before we consider collision
-  var max_dist = 5;
-  var collisions;
-  // Test if we intersect with any obstacle mesh
-  collisions = caster.intersectObjects(objects);
 
-  if(collisions.length > 0 && collisions[0].distance <= max_dist) {
-    velocity.x = 0;
-    velocity.z = 0;
-  }
+function getFromMap(mapPos){
+    if(mapPos.x >= 0 && mapPos.y >= 0 && mapPos.z >= 0){
+        if(mAP.length > mapPos.y && mAP[0].length > mapPos.z && mAP[0][0].length > mapPos.x){
+            return mAP[mapPos.y][mapPos.z][mapPos.x];
+        }
+    }
+    return 0;
 }
-function horizontalCollision() {
-  var rays = [
-      new THREE.Vector3(0, 0, 1),
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(0, 0, -1),
-      new THREE.Vector3(-1, 0, 0)
-  ];
 
-  var caster = new THREE.Raycaster();
-  var i;
-  // For each ray
-  for (i = 0; i < rays.length; i += 1) {
-    caster.set(controls.getObject().position, rays[i]);
-    checkCollisions(caster)
-    // Do it for ground level too
-    caster.ray.origin.y -= 20;
-    checkCollisions(caster)
-  }
+function isColliding(){
+    var collidingWith = [];
+    var checkspots = [];
+    var p = controls.getObject();
+    var mapPos = {};
+    mapPos.x = ((p.position.x+10)/20);
+    mapPos.y = ((p.position.y-5)/20);
+    mapPos.z = ((p.position.z+10)/20);
+    mapPos.ox = false;
+    mapPos.oz = false;
+
+    if(mapPos.x % 1 > 0.55){
+        mapPos.ox = mapPos.x+1;
+    }else if(mapPos.x < 0.45){
+        mapPos.ox = mapPos.x-1;
+    }
+
+    if(mapPos.z % 1 > 0.55){
+        mapPos.oz = mapPos.z+1;
+    }else if(mapPos.z < 0.45){
+        mapPos.oz = mapPos.z-1;
+    }
+
+    checkspots.push({x:Math.floor(mapPos.x),y:Math.floor(mapPos.y),z:Math.floor(mapPos.z)});
+    if(mapPos.ox){checkspots.push({x:Math.floor(mapPos.ox),y:Math.floor(mapPos.y),z:Math.floor(mapPos.z)});}
+    if(mapPos.oz){checkspots.push({x:Math.floor(mapPos.x),y:Math.floor(mapPos.y),z:Math.floor(mapPos.oz)});}
+    if(mapPos.ox && mapPos.oz){checkspots.push({x:Math.floor(mapPos.ox),y:Math.floor(mapPos.y),z:Math.floor(mapPos.oz)});}
+
+    checkspots.push({x:Math.floor(mapPos.x),y:Math.floor(mapPos.y)+1,z:Math.floor(mapPos.z)});
+    if(mapPos.ox){checkspots.push({x:Math.floor(mapPos.ox),y:Math.floor(mapPos.y)+1,z:Math.floor(mapPos.z)});}
+    if(mapPos.oz){checkspots.push({x:Math.floor(mapPos.x),y:Math.floor(mapPos.y)+1,z:Math.floor(mapPos.oz)});}
+    if(mapPos.ox && mapPos.oz){checkspots.push({x:Math.floor(mapPos.ox),y:Math.floor(mapPos.y)+1,z:Math.floor(mapPos.oz)});}
+
+    var collision = false;
+
+    for(var i in checkspots){
+        if(getFromMap(checkspots[i]) != 0){
+            collision = true;
+            collidingWith.push(checkspots[i])
+            console.log("colliding");
+            return true;
+        }
+    }
+    return false;
 }
+
 function animate() {
     requestAnimationFrame( animate );
 
     if ( controls.isLocked === true ) {
+
+        var op = {};
+        op.x = controls.getObject().position.x;
+        op.y = controls.getObject().position.y;
+        op.z = controls.getObject().position.z;
+
         if(controls.getObject().position.y <= 15) {
             respawn();
         }
@@ -246,14 +277,25 @@ function animate() {
             canJump = true;
         }
 
-        horizontalCollision();
+        if(isColliding()){
+            controls.getObject().position.x = op.x;
+            //controls.getObject().position.y = op.y;
+            controls.getObject().position.z = op.z;
+        }
+
+        if ( controls.getObject().position.y < 10 ) {
+            velocity.y = 0;
+            respawn();
+            canJump = true;
+        }
         prevTime = time;
+
     }
     socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
 
-var mAP;
+var mAP = [[[]]];
 
 socket.on("map", function(map){
     mAP = map;
@@ -358,9 +400,11 @@ socket.on("projectile", function(p){
 });
 
 function respawn(){
-    controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
-    controls.getObject().position.z = Math.random()*mAP[0].length*20;
-    controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +100;
+    do{
+        controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
+        controls.getObject().position.z = Math.random()*mAP[0].length*20;
+        controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +100;
+    }while(!isColliding())
 }
 
 socket.on("hit", function(){
