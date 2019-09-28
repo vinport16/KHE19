@@ -118,20 +118,7 @@ function init() {
         light.shadow.camera.top = 20; // CHANGED
         light.shadow.camera.bottom = -20; // CHANGED
 
-        light.position.set(-60, 20, 100); // CHANGED
-        scene.add(light);
-        scene.add(new THREE.DirectionalLightHelper(light, 0.2));
-    light = new THREE.DirectionalLight(0xffffff, 1);
-        light.castShadow = true;
-        light.shadowCameraVisible = true;
-        light.shadow.camera.near = 100;
-        light.shadow.camera.far = 200;
-        light.shadow.camera.left = -20; // CHANGED
-        light.shadow.camera.right = 20; // CHANGED
-        light.shadow.camera.top = 20; // CHANGED
-        light.shadow.camera.bottom = -20; // CHANGED
-
-        light.position.set(60, 220, 10); // CHANGED
+        light.position.set(-60, 200, 100); // CHANGED
         scene.add(light);
         scene.add(new THREE.DirectionalLightHelper(light, 0.2));
     //
@@ -151,7 +138,7 @@ function animate() {
     requestAnimationFrame( animate );
     if ( controls.isLocked === true ) {
         raycaster.ray.origin.copy( controls.getObject().position );
-        raycaster.ray.origin.y -= 10;
+        raycaster.ray.origin.y -= 24;
         var intersections = raycaster.intersectObjects( objects );
         var onObject = intersections.length > 0;
         var time = performance.now();
@@ -162,8 +149,8 @@ function animate() {
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
-        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-        if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+        if ( moveForward || moveBackward ) velocity.z -= direction.z * 800.0 * delta;
+        if ( moveLeft || moveRight ) velocity.x -= direction.x * 800.0 * delta;
         if ( onObject === true ) {
             velocity.y = Math.max( 0, velocity.y );
             canJump = true;
