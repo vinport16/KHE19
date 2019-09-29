@@ -14,7 +14,7 @@ var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
 var sprint = false;
-var startTime = 0;
+var startTime = Date.now();
 
 init();
 animate();
@@ -60,7 +60,6 @@ function init() {
             case 38: // up
             case 87: // w
                 var elapsedTime = ((Date.now() - startTime)/ 1000).toFixed(3);
-                //console.log(elapsedTime);
                 if(elapsedTime < 0.5){
                     sprint = true;
                 }
@@ -88,7 +87,7 @@ function init() {
         switch ( event.keyCode ) {
             case 38: // up
             case 87: // w
-                startTime = Date.now;
+                startTime = Date.now();
                 sprint = false;
                 moveForward = false;
                 break;
