@@ -37,16 +37,19 @@ function init() {
     controls = new PointerLockControls( camera );
     var blocker = document.getElementById( 'blocker' );
     var instructions = document.getElementById( 'instructions' );
+    var leaderboard = document.getElementById( 'leaderboard' );
     instructions.addEventListener( 'click', function () {
         controls.lock();
     }, false );
     controls.addEventListener( 'lock', function () {
         instructions.style.display = 'none';
+        leaderboard.style.display = '';
         blocker.style.display = 'none';
     } );
     controls.addEventListener( 'unlock', function () {
         blocker.style.display = 'block';
         instructions.style.display = '';
+        leaderboard.style.display = '';
     } );
     controls.getObject().position.x = 200;
     controls.getObject().position.y = 120;
