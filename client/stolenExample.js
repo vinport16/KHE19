@@ -57,7 +57,7 @@ function init() {
             case 38: // up
             case 87: // w
                 var elapsedTime = ((Date.now() - startTime)/ 1000).toFixed(3);
-                console.log(elapsedTime);
+                //console.log(elapsedTime);
                 if(elapsedTime < 0.5){
                     sprint = true;
                 }
@@ -238,7 +238,7 @@ function isColliding(){
         if(getFromMap(checkspots[i]) != 0){
             collision = true;
             collidingWith.push(checkspots[i])
-            console.log("colliding");
+            //console.log("colliding");
             return true;
         }
     }
@@ -283,7 +283,6 @@ function animate() {
         if ( moveLeft || moveRight ) velocity.x -= direction.x * 800.0 * delta;
         if ( onObject === true ) {
             velocity.y = Math.max( 0, velocity.y );
-            console.log(velocity.y);
             canJump = true;
         }
         controls.moveRight( - velocity.x * delta );
@@ -373,7 +372,7 @@ socket.on("new player", function(player){
     player.model = model;
     players[player.id] = player;
     scene.add(model);
-    console.log("added player "+player.id);
+    //console.log("added player "+player.id);
 })
 
 socket.on("player", function(player){
@@ -386,7 +385,7 @@ socket.on("player", function(player){
 socket.on("player left", function(id){
     scene.remove(players[id].model);
     delete players[id];
-    console.log("player",id,"left");
+    //console.log("player",id,"left");
 });
 
 
@@ -433,10 +432,12 @@ socket.on("projectile burst", function(p){
 });
 
 socket.on("leaderboard", function(board) {
-  //List of objs with .name, .kills, .deaths
-  var leaderboard = "Leaderboard:\n";
-  leaderboard += "hello\n"
-  document.getElementById("leaderboard").innerHTML(leaderboard)
+    //List of objs with .name, .kills, .deaths
+    var leaderboard = "Leaderboard:<br>";
+    for(var i = 0; i < board.length; i++) {
+        leaderboard += board[i].name + ", " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
+    }
+    document.getElementById('leaderboard').innerHTML = leaderboard;
 })
 
 socket.emit("map");
