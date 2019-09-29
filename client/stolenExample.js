@@ -432,4 +432,11 @@ socket.on("projectile burst", function(p){
 
 });
 
+socket.on("leaderboard", function(board) {
+  //List of objs with .name, .kills, .deaths
+  var leaderboard = "Leaderboard:\n";
+  leaderboard += "hello\n"
+  document.getElementById("leaderboard").innerHTML(leaderboard)
+})
+
 socket.emit("map");
