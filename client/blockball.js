@@ -10,7 +10,7 @@ var moveRight = false;
 var canJump = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
-var terminalVelocityY = -250;
+var terminalVelocityY = -200;
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
@@ -33,13 +33,14 @@ function init() {
 
     add_crosshair(camera);
 
-
-
     controls = new PointerLockControls( camera );
     var blocker = document.getElementById( 'blocker' );
     var instructions = document.getElementById( 'instructions' );
     var leaderboard = document.getElementById( 'leaderboard' );
-    instructions.addEventListener( 'click', function () {
+    var startButton = document.getElementById('startButton');
+    startButton.addEventListener( 'click', function () {
+        var username = document.getElementById('userName').value;
+        socket.emit("setName", username);
         controls.lock();
     }, false );
     controls.addEventListener( 'lock', function () {
@@ -361,11 +362,18 @@ socket.on("new player", function(player){
     model.position.y = player.position.y;
     model.position.z = player.position.z;
 
+    player.username = document.getElementById('userName').value
+
     player.model = model;
     players[player.id] = player;
     scene.add(model);
     //console.log("added player "+player.id);
 })
+
+socket.on("setName", function(userName){
+    var p = players[player.id];
+    p.userName = userName;
+});
 
 socket.on("player", function(player){
     var p = players[player.id];
@@ -407,7 +415,7 @@ function respawn(){
     do{
         controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
         controls.getObject().position.z = Math.random()*mAP[0].length*20;
-        controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +100;
+        controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +200;
     }while(!isColliding())
 }
 

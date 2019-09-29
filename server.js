@@ -111,6 +111,10 @@ io.on("connection", function(socket){
 
   players.push(player);
 
+  socket.on("setName", function(userName){
+    player.name = userName;
+  });
+
   socket.on("map", function(){
     socket.emit("map",map);
     console.log("Sent Map to ",player.id);
