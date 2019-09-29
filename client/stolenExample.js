@@ -10,6 +10,7 @@ var moveRight = false;
 var canJump = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
+var terminalVelocityY = -250;
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
@@ -242,6 +243,7 @@ function animate() {
         op.z = controls.getObject().position.z;
 
         if(controls.getObject().position.y <= 15) {
+            velocity.y = 0;
             respawn();
         }
 
@@ -255,6 +257,9 @@ function animate() {
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
         velocity.y -= 9.8 * 50.0 * delta; // 100.0 = mass
+        if(velocity.y < terminalVelocityY) {
+            velocity.y = terminalVelocityY;
+          }
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
@@ -282,11 +287,11 @@ function animate() {
             controls.getObject().position.z = op.z;
         }
 
-        if ( controls.getObject().position.y < 10 ) {
-            velocity.y = 0;
-            respawn();
-            canJump = true;
-        }
+        // if ( controls.getObject().position.y < 10 ) {
+        //     velocity.y = 0;
+        //     respawn();
+        //     canJump = true;
+        // }
         prevTime = time;
 
     }
