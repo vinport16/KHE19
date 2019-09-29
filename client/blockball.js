@@ -118,7 +118,7 @@ function init() {
     document.addEventListener( 'keyup', onKeyUp, false );
     document.addEventListener( 'click', onClick, false);
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-    
+
 
 
     var light = new THREE.DirectionalLight(0xffffff, 1);
@@ -235,6 +235,11 @@ function isColliding(){
 
 function animate() {
     requestAnimationFrame( animate );
+    
+    if(controls.getObject().position.y <= 15) {
+        velocity.y = 0;
+        respawn();
+    }
 
     if ( controls.isLocked === true ) {
 
@@ -242,11 +247,6 @@ function animate() {
         op.x = controls.getObject().position.x;
         op.y = controls.getObject().position.y;
         op.z = controls.getObject().position.z;
-
-        if(controls.getObject().position.y <= 15) {
-            velocity.y = 0;
-            respawn();
-        }
 
         raycaster.ray.origin.copy( controls.getObject().position );
         raycaster.ray.origin.y -= 24;
@@ -276,11 +276,6 @@ function animate() {
         controls.moveRight( - velocity.x * delta );
         controls.moveForward( - velocity.z * delta );
         controls.getObject().position.y += ( velocity.y * delta ); // new behavior
-        if ( controls.getObject().position.y < 10 ) {
-            velocity.y = 0;
-            controls.getObject().position.y = 10;
-            canJump = true;
-        }
 
         if(isColliding()){
             controls.getObject().position.x = op.x;
@@ -428,7 +423,7 @@ socket.on("projectile burst", function(p){
     setTimeout(function(){
         scene.remove(projectiles[p.id].object);
     }, 1500);
-    
+
 });
 
 socket.on("leaderboard", function(board) {
