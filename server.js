@@ -35,6 +35,10 @@ app.get('/client/stolenExample.js', function(req, res){
     res.sendFile(__dirname + '/client/stolenExample.js');
 });
 
+app.get('/bg.jpg', function(req,res){
+    res.sendFile(__dirname + '/client/hdri.jpg');
+});
+
 app.get("/", function(req, res){
   res.sendFile(__dirname + '/client/index.html');
 });
