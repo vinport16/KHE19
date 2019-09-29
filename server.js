@@ -31,8 +31,8 @@ app.get('/pointerlock.js', function(req, res){
     res.sendFile(__dirname + '/pointerLock.js');
 });
 
-app.get('/client/stolenExample.js', function(req, res){
-    res.sendFile(__dirname + '/client/stolenExample.js');
+app.get('/client/blockball.js', function(req, res){
+    res.sendFile(__dirname + '/client/blockball.js');
 });
 
 app.get('/bg.jpg', function(req,res){
@@ -110,6 +110,10 @@ io.on("connection", function(socket){
 
 
   players.push(player);
+
+  socket.on("setName", function(userName){
+    player.name = userName;
+  });
 
   socket.on("map", function(){
     socket.emit("map",map);

@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 
 <head>
-    <title>three.js - pointerlock controls</title>
+    <title>Blockball - A Blocky Snowball Battle</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
@@ -20,7 +20,7 @@
 
         #leaderboard {
             position: absolute;
-            left: 750px;
+            left: -200px;
             top: 10px;
             z-index: 2;
             width: 50%;
@@ -31,6 +31,7 @@
             font-family: Arial;
             font-size: 20px;
             line-height: 20px;
+            border: 3px, solid, red;
         }
 
         #instructions {
@@ -64,18 +65,24 @@
     <div id="blocker">
 
         <div id="instructions">
-            <span style="font-size:36px">Click to play</span>
+            <span style="font-size: 50px">Welcome to BlockBall!</span>
+            <br /><br /><br />
+            <input id="userName" type="text" name="userName" value="userName">
             <br /><br />
             Move: WASD<br />
             Jump: SPACE<br />
-            Look: MOUSE
+            Look: MOUSE<br />
+            Shoot: Left Click <br />
+            Sprint: WW <br />
+            <br />
+            <span style="font-size:36px"><button id="startButton">Play!</button></span>
         </div>
 
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/three.js"></script>
     <script src="/client/script.js"></script>
-    <script type="module" src="/client/stolenExample.js"></script>
+    <script type="module" src="/client/blockball.js"></script>
 </body>
 
 </html>
