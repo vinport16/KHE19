@@ -67,7 +67,7 @@ function readMap(file_name) {
   map.forEach(function(layer, i) {
     layer.forEach(function(line, j) {
       line.forEach(function(char, k) {
-          if(map[i][j][k] == ' '){
+          if(map[i][j][k] == ' ' || map[i][j][k] == '.'){
             map[i][j][k] = 0;
           }else if(map[i][j][k] == '1'){
               map[i][j][k] = 1;
@@ -81,7 +81,6 @@ function readMap(file_name) {
       })
     })
   })
-
   return map;
 }
 

@@ -297,7 +297,9 @@ function animate() {
 var mAP = [[[]]];
 
 socket.on("map", function(map){
-    mAP = map;
+    mAP = map; 
+
+    console.dir(mAP);
 
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
@@ -335,9 +337,7 @@ socket.on("map", function(map){
                     box.position.z = j*20;
 
                     box.updateMatrix();
-                    //scene.add(box);
                     allBoxes.merge(box.geometry,box.matrix);
-                    //objects.push(box);
                 }
             });
         });
@@ -365,7 +365,6 @@ socket.on("new player", function(player){
     player.model = model;
     players[player.id] = player;
     scene.add(model);
-    //console.log("added player "+player.id);
 })
 
 socket.on("player", function(player){
@@ -406,8 +405,8 @@ socket.on("projectile", function(p){
 
 function respawn(){
     do{
-        controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
-        controls.getObject().position.z = Math.random()*mAP[0].length*20;
+        controls.getObject().position.x = Math.random()*mAP[2][2].length*20;
+        controls.getObject().position.z = Math.random()*mAP[2].length*20;
         controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +100;
     }while(!isColliding())
 }
