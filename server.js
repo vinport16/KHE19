@@ -103,11 +103,10 @@ io.on("connection", function(socket){
 
   console.log("player "+player.id+" logged in");
 
-  for(i in players){
-      players[i].socket.emit("new player", {id:player.id, position:player.position});
-      console.log("sent player",player.id,"to",players[i].id);
-  }
-
+  //for(i in players){
+  //  player.socket.emit("new player", {id:players[i].id, position:players[i].position});
+  //  console.log("sent player",players[i].id,"to",player.id);
+  //}
 
   players.push(player);
 
@@ -119,9 +118,13 @@ io.on("connection", function(socket){
     socket.emit("map",map);
     console.log("Sent Map to ",player.id);
     for(i in players){
-      player.socket.emit("new player", {id:players[i].id, position:players[i].position});
-      console.log("sent player",players[i].id,"to",player.id);
-  }
+      if(players[i].id != player.id){
+        player.socket.emit("new player", {id:players[i].id, position:players[i].position});
+        console.log("sent player",players[i].id,"to",player.id);
+        players[i].socket.emit("new player", {id:player.id, position:player.position});
+        console.log("sent player",player.id,"to",players[i].id);
+      }
+    }
   });
 
   socket.on("player position", function(position){
