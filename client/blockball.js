@@ -359,15 +359,76 @@ socket.on("new player", function(player){
 
     player.username = document.getElementById('userName').value
 
+    player.usernameLabel = makeTextSprite( player.username );
+    player.usernameLabel.position.set(player.position.x, player.position.y + 50,player.position.z);
+    scene.add( player.usernameLabel );
+
     player.model = model;
     players[player.id] = player;
     scene.add(model);
-    //console.log("added player "+player.id);
-})
+});
+
+function drawPlayer(player){
+
+}
+
+function makeTextSprite( message )
+{
+	var borderThickness = 4;		
+	var canvas = document.createElement('canvas');
+	var context = canvas.getContext('2d');
+	context.font = "Bold " + 18 + "px " + "Ariel";
+    
+	// get size data (height depends only on font size)
+	var metrics = context.measureText( message );
+	var textWidth = metrics.width;
+	
+	// background color
+	context.fillStyle   = "rgba(" + 255 + "," + 100 + ","
+								  + 100 + "," + 0.8 + ")";
+	// border color
+	context.strokeStyle = "rgba(" + 255 + "," + 0 + ","
+								  + 0 + "," + 1 + ")";
+	context.lineWidth = 4;
+	roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, 18 * 1.4 + borderThickness, 6);
+	// 1.4 is extra height factor for text below baseline: g,j,p,q.
+	
+	// text color
+	context.fillStyle = "rgba(0, 0, 0, 1.0)";
+    context.fillText( message, borderThickness, 18 + borderThickness);
+	
+	// canvas contents will be used for a texture
+	var texture = new THREE.Texture(canvas) 
+	texture.needsUpdate = true;
+	var spriteMaterial = new THREE.SpriteMaterial( 
+		{ map: texture} );
+	var sprite = new THREE.Sprite( spriteMaterial );
+	sprite.scale.set(100,50,1.0);
+	return sprite;	
+}
+
+// function for drawing rounded rectangles
+function roundRect(ctx, x, y, w, h, r) 
+{
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+    ctx.fill();
+	ctx.stroke();   
+}
 
 socket.on("setName", function(userName){
     var p = players[player.id];
     p.userName = userName;
+    //p.usernameLabel.context.fillText(userName, 4, 20);
 });
 
 socket.on("player", function(player){
@@ -375,6 +436,12 @@ socket.on("player", function(player){
     p.model.position.x = player.position.x;
     p.model.position.y = player.position.y;
     p.model.position.z = player.position.z;
+   
+    player.usernameLabel = makeTextSprite( player.username );
+
+    p.usernameLabel.position.x = player.position.x;
+    p.usernameLabel.position.y = player.position.y + 50;
+    p.usernameLabel.position.z = player.position.z;
 });
 
 socket.on("player left", function(id){

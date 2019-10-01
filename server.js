@@ -5,7 +5,7 @@ var http = require('http').createServer(app);
 var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 
-var map = readMap("maps/40x40map.txt");
+var map = readMap("maps/30x30.txt");
 http.listen(port);
 
 console.log("running on port "+port);
@@ -99,6 +99,7 @@ io.on("connection", function(socket){
   player.kills = [];
   player.deaths = [];
   player.position = {x:0,y:0,z:0};
+  player.usernameLabel;
 
   console.log("player "+player.id+" logged in");
 
@@ -127,7 +128,8 @@ io.on("connection", function(socket){
     player.position = position;
     for(i in players){
       if(players[i].id != player.id){
-        players[i].socket.emit("player", {id:player.id, position:player.position});
+          console.log("Sending position for player ", player.id, " or ", player.name)
+        players[i].socket.emit("player", {id:player.id, position:player.position, name:player.name});
       }
     }
   });
