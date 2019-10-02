@@ -361,8 +361,8 @@ socket.on("new player", function(player){
     player.userName = player.name;
 
     player.usernameLabel = makeTextSprite( player.userName );
-    player.usernameLabel.position.set(player.position.x, player.position.y + 50,player.position.z);
-    scene.add( player.usernameLabel );
+    player.usernameLabel.position.set(player.position.x, player.position.y, player.position.z);
+    //scene.add( player.usernameLabel );
 
     console.log("made player with name: ", player.userName);
 
@@ -377,7 +377,7 @@ socket.on("updateNames", function(player){
 
     removeEntity(p.usernameLabel);
     p.usernameLabel = makeTextSprite( p.userName );
-    p.usernameLabel.position.set(p.position.x, p.position.y + 50, p.position.z);
+    p.usernameLabel.position.set(p.position.x, p.position.y, p.position.z);
     scene.add( p.usernameLabel );
 });
 
@@ -418,7 +418,10 @@ function makeTextSprite( message )
 	var spriteMaterial = new THREE.SpriteMaterial( 
 		{ map: texture} );
 	var sprite = new THREE.Sprite( spriteMaterial );
-	sprite.scale.set(100,50,1.0);
+    sprite.scale.set(100,50,1.0);
+    //sprite.scale.set(50,25,1);
+    sprite.center = new THREE.Vector2(0.5,0.5);
+
 	return sprite;	
 }
 
@@ -454,7 +457,6 @@ socket.on("player", function(player){
 socket.on("player left", function(id){
     scene.remove(players[id].model);
     delete players[id];
-    //console.log("player",id,"left");
 });
 
 
