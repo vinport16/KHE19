@@ -112,6 +112,12 @@ io.on("connection", function(socket){
 
   socket.on("setName", function(userName){
     player.name = userName;
+    for(i in players){
+        if(players[i].id != player.id){
+            players[i].socket.emit("updateNames", {id:player.id, name: player.name});
+        }
+        
+    }
   });
 
   socket.on("map", function(){
@@ -119,9 +125,9 @@ io.on("connection", function(socket){
     console.log("Sent Map to ",player.id);
     for(i in players){
       if(players[i].id != player.id){
-        player.socket.emit("new player", {id:players[i].id, position:players[i].position});
+        player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name});
         console.log("sent player",players[i].id,"to",player.id);
-        players[i].socket.emit("new player", {id:player.id, position:player.position});
+        players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name});
         console.log("sent player",player.id,"to",players[i].id);
       }
     }
@@ -131,8 +137,7 @@ io.on("connection", function(socket){
     player.position = position;
     for(i in players){
       if(players[i].id != player.id){
-          console.log("Sending position for player ", player.id, " or ", player.name)
-        players[i].socket.emit("player", {id:player.id, position:player.position, name:player.name});
+        players[i].socket.emit("player", {id:player.id, position:player.position});
       }
     }
   });
@@ -214,7 +219,7 @@ function updateLeaderboard(){
     return {name:p.name,kills:p.kills,deaths:p.deaths};
   });
   board = board.sort(function(a,b){
-    return b.kills.length - a.kills.length;
+    return (b.kills.length * b.kills.length / b.deaths.length) - (a.kills.length * a.kills.length / a.deaths.length);
   });
   for(i in players){
     players[i].socket.emit("leaderboard",board);

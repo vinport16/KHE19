@@ -238,6 +238,7 @@ function animate() {
     
     if(controls.getObject().position.y <= 15) {
         velocity.y = 0;
+        controls.getObject().deaths++;
         respawn();
     }
 
@@ -357,19 +358,33 @@ socket.on("new player", function(player){
     model.position.y = player.position.y;
     model.position.z = player.position.z;
 
-    player.username = document.getElementById('userName').value
+    player.userName = player.name;
 
-    player.usernameLabel = makeTextSprite( player.username );
+    player.usernameLabel = makeTextSprite( player.userName );
     player.usernameLabel.position.set(player.position.x, player.position.y + 50,player.position.z);
     scene.add( player.usernameLabel );
+
+    console.log("made player with name: ", player.userName);
 
     player.model = model;
     players[player.id] = player;
     scene.add(model);
 });
 
-function drawPlayer(player){
+socket.on("updateNames", function(player){
+    var p = players[player.id];
+    p.userName = player.name;
 
+    removeEntity(p.usernameLabel);
+    p.usernameLabel = makeTextSprite( p.userName );
+    p.usernameLabel.position.set(p.position.x, p.position.y + 50, p.position.z);
+    scene.add( p.usernameLabel );
+});
+
+function removeEntity(object) {
+    var selectedObject = scene.getObjectByName(object.name);
+    scene.remove( selectedObject );
+    animate();
 }
 
 function makeTextSprite( message )
@@ -425,22 +440,14 @@ function roundRect(ctx, x, y, w, h, r)
 	ctx.stroke();   
 }
 
-socket.on("setName", function(userName){
-    var p = players[player.id];
-    p.userName = userName;
-    //p.usernameLabel.context.fillText(userName, 4, 20);
-});
-
 socket.on("player", function(player){
     var p = players[player.id];
     p.model.position.x = player.position.x;
     p.model.position.y = player.position.y;
     p.model.position.z = player.position.z;
    
-    player.usernameLabel = makeTextSprite( player.username );
-
     p.usernameLabel.position.x = player.position.x;
-    p.usernameLabel.position.y = player.position.y + 50;
+    p.usernameLabel.position.y = player.position.y + 5;
     p.usernameLabel.position.z = player.position.z;
 });
 
