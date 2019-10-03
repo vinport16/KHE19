@@ -100,7 +100,7 @@ io.on("connection", function(socket){
   player.deaths = [];
   player.position = {x:0,y:0,z:0};
   player.usernameLabel;
-  player.color = "white";
+  player.color = "red";
 
   console.log("player "+player.id+" logged in");
 

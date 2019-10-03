@@ -347,8 +347,7 @@ socket.on("map", function(map){
 var players = {};
 var projectiles = {};
 
-//Move this to a draw player function and call it from update player when player properties change
-socket.on("new player", function(player){
+function drawPlayer(player){
     var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
@@ -361,50 +360,38 @@ socket.on("new player", function(player){
     model.position.z = player.position.z;
 
     player.userName = player.name;
-    
 
     player.usernameLabel = makeTextSprite( player.userName );
     player.usernameLabel.position.set(player.position.x, player.position.y, player.position.z);
-    //scene.add( player.usernameLabel );
+    scene.add( player.usernameLabel );
 
-    console.log("made player with name: ", player.userName, " and color: ", player.color);
+    //console.log("made player with name: ", player.userName, " and color: ", player.color);
 
     player.model = model;
     players[player.id] = player;
     scene.add(model);
+}
+
+
+//Move this to a draw player function and call it from update player when player properties change
+socket.on("new player", function(player){
+    drawPlayer(player);
 });
 
 socket.on("updatePlayer", function(player){
     var p = players[player.id];
     p.userName = player.name;
 
-    if(p.color != player.color){
-        console.log("newColor");
-        removeEntity(p.model);
-
-        var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
-        cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
-
-        var material = new THREE.MeshLambertMaterial({ color: player.color });
-        material.color.setHSL( player.color, 0.75, Math.random() * 0.25 + 0.75 );
-
-        var model = new THREE.Mesh( cylinderGeometry, material );
-        model.position.x = player.position.x;
-        model.position.y = player.position.y;
-        model.position.z = player.position.z;
-
-        p.model = model;
-
-        scene.add(model);
+    if(p.color != player.color || p.userName != player.name){
+        removeEntity(p.model)
+        removeEntity(p.usernameLabel);
+        drawPlayer(player)
     }
 
-    //p.color = player.color;
-
-
-    removeEntity(p.usernameLabel);
-    p.usernameLabel = makeTextSprite( p.userName );
-    p.usernameLabel.position.set(p.position.x, p.position.y, p.position.z);
-    scene.add( p.usernameLabel );
+    // removeEntity(p.usernameLabel);
+    // p.usernameLabel = makeTextSprite( p.userName );
+    // p.usernameLabel.position.set(p.position.x, p.position.y, p.position.z);
+    // scene.add( p.usernameLabel );
 });
 
 function removeEntity(object) {
