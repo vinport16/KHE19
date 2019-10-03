@@ -235,10 +235,9 @@ function isColliding(){
 
 function animate() {
     requestAnimationFrame( animate );
-    
     if(controls.getObject().position.y <= 15) {
         velocity.y = 0;
-        controls.getObject().deaths++;
+        socket.emit("playerFell")
         respawn();
     }
 
@@ -483,11 +482,11 @@ socket.on("projectile", function(p){
 });
 
 function respawn(){
-    do{
+    //do{
         controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
         controls.getObject().position.z = Math.random()*mAP[0].length*20;
-        controls.getObject().position.y = Math.random()*(mAP.length-4)*20 +200;
-    }while(!isColliding())
+        controls.getObject().position.y = Math.random()*(mAP.length+5)*20 + (mAP.length-1) * 20;
+    //}while(!isColliding())
 }
 
 socket.on("hit", function(){

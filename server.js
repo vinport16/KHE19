@@ -133,6 +133,11 @@ io.on("connection", function(socket){
     }
   });
 
+  socket.on("playerFell", function(){
+      player.deaths.push([player.id]);
+      updateLeaderboard();
+  });
+
   socket.on("player position", function(position){
     player.position = position;
     for(i in players){
