@@ -100,6 +100,7 @@ io.on("connection", function(socket){
   player.deaths = [];
   player.position = {x:0,y:0,z:0};
   player.usernameLabel;
+  player.color = "white";
 
   console.log("player "+player.id+" logged in");
 
@@ -110,11 +111,14 @@ io.on("connection", function(socket){
 
   players.push(player);
 
-  socket.on("setName", function(userName){
-    player.name = userName;
+  socket.on("setUser", function(user){
+    player.name = user.name;
+    console.log("original colro: ", user.color);
+    player.color = user.color;
+    console.log("got a new color: ", player.color)
     for(i in players){
         if(players[i].id != player.id){
-            players[i].socket.emit("updateNames", {id:player.id, name: player.name});
+            players[i].socket.emit("updatePlayer", {id:player.id, name: player.name, color:player.color});
         }
         
     }
@@ -125,9 +129,9 @@ io.on("connection", function(socket){
     console.log("Sent Map to ",player.id);
     for(i in players){
       if(players[i].id != player.id){
-        player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name});
+        player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name, color: players[i].color});
         console.log("sent player",players[i].id,"to",player.id);
-        players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name});
+        players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name, color: players[i].color});
         console.log("sent player",player.id,"to",players[i].id);
       }
     }

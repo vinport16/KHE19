@@ -40,7 +40,9 @@ function init() {
     var startButton = document.getElementById('startButton');
     startButton.addEventListener( 'click', function () {
         var username = document.getElementById('userName').value;
-        socket.emit("setName", username);
+        var userColor = document.getElementById("userColor").value;
+        console.log("GOt a color: ", userColor);
+        socket.emit("setUser", {name:username, color:userColor});
         controls.lock();
     }, false );
     controls.addEventListener( 'lock', function () {
@@ -345,12 +347,13 @@ socket.on("map", function(map){
 var players = {};
 var projectiles = {};
 
+//Move this to a draw player function and call it from update player when player properties change
 socket.on("new player", function(player){
     var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
     var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
-    material.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+    material.color.setHSL( player.color, 0.75, Math.random() * 0.25 + 0.75 );
 
     var model = new THREE.Mesh( cylinderGeometry, material );
     model.position.x = player.position.x;
@@ -358,21 +361,45 @@ socket.on("new player", function(player){
     model.position.z = player.position.z;
 
     player.userName = player.name;
+    
 
     player.usernameLabel = makeTextSprite( player.userName );
     player.usernameLabel.position.set(player.position.x, player.position.y, player.position.z);
     //scene.add( player.usernameLabel );
 
-    console.log("made player with name: ", player.userName);
+    console.log("made player with name: ", player.userName, " and color: ", player.color);
 
     player.model = model;
     players[player.id] = player;
     scene.add(model);
 });
 
-socket.on("updateNames", function(player){
+socket.on("updatePlayer", function(player){
     var p = players[player.id];
     p.userName = player.name;
+
+    if(p.color != player.color){
+        console.log("newColor");
+        removeEntity(p.model);
+
+        var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
+        cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
+
+        var material = new THREE.MeshLambertMaterial({ color: player.color });
+        material.color.setHSL( player.color, 0.75, Math.random() * 0.25 + 0.75 );
+
+        var model = new THREE.Mesh( cylinderGeometry, material );
+        model.position.x = player.position.x;
+        model.position.y = player.position.y;
+        model.position.z = player.position.z;
+
+        p.model = model;
+
+        scene.add(model);
+    }
+
+    //p.color = player.color;
+
 
     removeEntity(p.usernameLabel);
     p.usernameLabel = makeTextSprite( p.userName );
