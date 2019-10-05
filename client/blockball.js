@@ -325,6 +325,10 @@ socket.on("map", function(map){
                         var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
                         dirtMaterial.color.setHSL( 0.111111, 1, Math.random() * 0.05 + 0.15 );
                         var boxMaterial = dirtMaterial;
+                    }else if(map[i][j][k] == 5){//sand
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
+                        brickMaterial.color.setHSL( 0.12, 1, Math.random() * 0.05 + 0.4 );
+                        var boxMaterial = brickMaterial;
                     }else{//sky/wall
                         var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
                         skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
@@ -351,8 +355,8 @@ function drawPlayer(player){
     var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
-    var material = new THREE.MeshLambertMaterial({ color: 0xf0ff00 });
-    material.color.setHSL( player.color, 0.75, Math.random() * 0.25 + 0.75 );
+    var material = new THREE.MeshLambertMaterial({ color: player.color });
+    //material.color.setHSL( p, 0.75, Math.random() * 0.25 + 0.75 );
 
     var model = new THREE.Mesh( cylinderGeometry, material );
     model.position.x = player.position.x;
@@ -381,12 +385,13 @@ socket.on("new player", function(player){
 socket.on("updatePlayer", function(player){
     var p = players[player.id];
     p.userName = player.name;
-
-    if(p.color != player.color || p.userName != player.name){
-        removeEntity(p.model)
+    p.color = player.color;
+    console.log("Updating color to: ", p.color);
+    //if(p.color != player.color || p.userName != player.name){
+        removeEntity(p.model);
         removeEntity(p.usernameLabel);
-        drawPlayer(player)
-    }
+        drawPlayer(p);
+    //}
 
     // removeEntity(p.usernameLabel);
     // p.usernameLabel = makeTextSprite( p.userName );

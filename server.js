@@ -8,7 +8,7 @@ var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 var map = readMap("maps/30x30.txt");
 http.listen(port);
 
-console.log("running on port "+port);
+//console.log("running on port "+port);
 
 
 app.get('/socket.io/socket.io.js', function(req, res){
@@ -102,37 +102,34 @@ io.on("connection", function(socket){
   player.usernameLabel;
   player.color = "red";
 
-  console.log("player "+player.id+" logged in");
+  //console.log("player "+player.id+" logged in");
 
   //for(i in players){
   //  player.socket.emit("new player", {id:players[i].id, position:players[i].position});
-  //  console.log("sent player",players[i].id,"to",player.id);
+  //  //console.log("sent player",players[i].id,"to",player.id);
   //}
 
   players.push(player);
 
   socket.on("setUser", function(user){
     player.name = user.name;
-    console.log("original colro: ", user.color);
     player.color = user.color;
-    console.log("got a new color: ", player.color)
     for(i in players){
         if(players[i].id != player.id){
             players[i].socket.emit("updatePlayer", {id:player.id, name: player.name, color:player.color});
         }
-        
     }
   });
 
   socket.on("map", function(){
     socket.emit("map",map);
-    console.log("Sent Map to ",player.id);
+    //console.log("Sent Map to ",player.id);
     for(i in players){
       if(players[i].id != player.id){
         player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name, color: players[i].color});
-        console.log("sent player",players[i].id,"to",player.id);
-        players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name, color: players[i].color});
-        console.log("sent player",player.id,"to",players[i].id);
+        //console.log("sent player",players[i].id,"to",player.id);
+        players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name, color: player.color});
+        //console.log("sent player",player.id,"to",players[i].id);
       }
     }
   });
@@ -160,7 +157,7 @@ io.on("connection", function(socket){
         players[i].socket.emit("player left", player.id);
       }
     }
-    console.log("player "+player.id+" left");
+    //console.log("player "+player.id+" left");
   });
 
   socket.on("launch", function(angle){
@@ -212,7 +209,7 @@ function projCollision(p,map){
     var bottom = player.y - (35/2);
     var top = player.y + (35/2);
     if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
-      console.log("PLAYER",players[i].name,"WAS HIT BY",p.owner.name);
+      //console.log("PLAYER",players[i].name,"WAS HIT BY",p.owner.name);
       players[i].deaths.push(p.owner.id);
       p.owner.kills.push(players[i].id);
       players[i].socket.emit("hit");
