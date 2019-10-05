@@ -5,7 +5,7 @@ var http = require('http').createServer(app);
 var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 
-var map = readMap("maps/30x30.txt");
+var map = readMap("maps/long.txt");
 http.listen(port);
 
 //console.log("running on port "+port);
