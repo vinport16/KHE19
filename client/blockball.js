@@ -300,49 +300,180 @@ function animate() {
 var mAP = [[[]]];
 
 socket.on("map", function(map){
-    mAP = map;
+    mAP = map; 
+
+    console.dir(mAP);
 
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
     // objects
-    var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
-    boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
-    position = boxGeometry.attributes.position;
+    var boxGeometry = new THREE.BoxGeometry( 20, 20, 20 );
+    //boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
+    //position = boxGeometry.attributes.position;
+
+    var allBoxes = new THREE.Geometry();
 
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
                 if(map[i][j][k] != 0){
+                    var boxMaterial;
                     if(map[i][j][k] == 1){ //grass
                         var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
                         grassMaterial.color.setHSL( 0.3333, 1, Math.random() * 0.1 + 0.25 );
-                        var boxMaterial = grassMaterial;
+                        boxMaterial = grassMaterial;
                     }else if(map[i][j][k] == 2){//brick
                         var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xcb4154 });
                         brickMaterial.color.setHSL( 0, 1, Math.random() * 0.1 + 0.4 );
-                        var boxMaterial = brickMaterial;
+                        boxMaterial = brickMaterial;
                     }else if(map[i][j][k] == 3){//dirt
                         var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
                         dirtMaterial.color.setHSL( 0.111111, 1, Math.random() * 0.05 + 0.15 );
-                        var boxMaterial = dirtMaterial;
+                        boxMaterial = dirtMaterial;
                     }else{//sky/wall
                         var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
                         skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
-                        var boxMaterial = skyMaterial;
+                        boxMaterial = skyMaterial;
                     }
-                    var box = new THREE.Mesh( boxGeometry, boxMaterial );
-                    box.position.x = k*20;
-                    box.position.y = i*20;
-                    box.position.z = j*20;
 
-                    scene.add(box);
-                    objects.push(box);
+                    // im sorry that this is a mess
+                    // but im not gonna do anything about it
+                    // -vincent
+
+                    var box = new THREE.BoxGeometry( 20, 20, 20 );
+                    
+                    var p = {};
+                    p.x = k*20;
+                    p.y = i*20;
+                    p.z = j*20;
+
+                    // move box
+                    box.translate(p.x,p.y,p.z);
+
+                    var sides = makeSides(map,i,j,k,p);
+                    var vbox = new THREE.Geometry();
+
+                    for(var s in sides){
+                        vbox.merge(sides[s]);
+                    }
+
+                    vbox.computeFaceNormals();
+                    vbox.computeVertexNormals();
+                    for(var s in vbox.faces){
+                        vbox.faces[s].color = boxMaterial.color;
+                        
+                    }
+                    allBoxes.merge(vbox);
+
+                    var objbox = new THREE.Mesh( box, boxMaterial );
+                    objects.push(objbox);
                 }
             });
         });
     });
-
+    let mat = new THREE.MeshLambertMaterial({ vertexColors: THREE.FaceColors });
+    var m = new THREE.Mesh(allBoxes, mat);
+    m.material.side = THREE.DoubleSide;
+    scene.add(m);
 });
+
+
+function noBlockAt(x){
+    return x == undefined || x == 0;
+}
+
+/**
+    im sorry that this function is dumb but I don't care
+    it works
+**/
+function makeSides(map,i,j,k,p){
+    let sides = [];
+    if(map[i+1] == undefined || noBlockAt(map[i+1][j][k])){
+        // +y
+        var square = new THREE.Geometry();
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y+10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y+10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z+10));
+
+        square.faces.push(new THREE.Face3(0, 1, 2));
+        square.faces.push(new THREE.Face3(0, 2, 3));
+
+        sides.push(square);
+    }
+    if(map[i-1] == undefined || noBlockAt(map[i-1][j][k])){
+        // -y
+        var square = new THREE.Geometry();
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z+10));
+
+        square.faces.push(new THREE.Face3(0, 2, 1));
+        square.faces.push(new THREE.Face3(0, 3, 2));
+
+        sides.push(square);
+    }
+    if(map[i][j+1] == undefined || noBlockAt(map[i][j+1][k])){
+        // +z
+        var square = new THREE.Geometry();
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y+10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z+10));
+
+        square.faces.push(new THREE.Face3(0, 2, 1));
+        square.faces.push(new THREE.Face3(0, 3, 2));
+
+        sides.push(square);
+    }
+    if(map[i][j-1] == undefined || noBlockAt(map[i][j-1][k])){
+        // -z
+        var square = new THREE.Geometry();
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y+10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z-10));
+
+        square.faces.push(new THREE.Face3(0, 2, 1));
+        square.faces.push(new THREE.Face3(0, 3, 2));
+
+        sides.push(square);
+    }
+    if(map[i][j][k+1] == undefined || noBlockAt(map[i][j][k+1])){
+        // +x
+        var square = new THREE.Geometry();
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y-10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x+10, p.y+10, p.z+10));
+
+        square.faces.push(new THREE.Face3(0, 2, 1));
+        square.faces.push(new THREE.Face3(0, 3, 2));
+
+        sides.push(square);
+    }
+    if(map[i][j][k-1] == undefined || noBlockAt(map[i][j][k-1])){
+        // -x
+        var square = new THREE.Geometry();
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y+10, p.z-10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y+10, p.z+10));
+        square.vertices.push(new THREE.Vector3(p.x-10, p.y-10, p.z+10));
+
+        square.faces.push(new THREE.Face3(0, 2, 1));
+        square.faces.push(new THREE.Face3(0, 3, 2));
+
+        sides.push(square);
+    }
+    return sides;
+}
 
 var players = {};
 var projectiles = {};
