@@ -87,7 +87,7 @@ function readMap(file_name) {
 var players = [];
 var nextId = 0;
 
-var pSpeed = 20;
+var pSpeed = 40;
 var pGrav = 10;
 var pLife = 800;
 
@@ -255,20 +255,23 @@ wait = 8; //in ms
 
 async function moveProjectile(p){
   var hit = false;
+  var send = true;
   while(!hit && p.count < pLife){
-    await sleep(10);
+    await sleep(5);
 
     p.velocity.y -= pGrav * wait/1000;
 
-    p.position.x += p.velocity.x * pSpeed * wait/1000;
-    p.position.y += p.velocity.y * pSpeed * wait/1000;
-    p.position.z += p.velocity.z * pSpeed * wait/1000;
-
-    announcePosition(p);
+    p.position.x += p.velocity.x * pSpeed/2 * wait/1000;
+    p.position.y += p.velocity.y * pSpeed/2 * wait/1000;
+    p.position.z += p.velocity.z * pSpeed/2 * wait/1000;
 
     if(projCollision(p,map)){
       hit = true;
+      announcePosition(p);
+    }else if(send){
+      announcePosition(p);
     }
+    send = !send;
 
     p.count++;
   }

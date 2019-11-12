@@ -293,7 +293,6 @@ function animate() {
         prevTime = time;
 
     }
-    socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     renderer.render( scene, camera );
 }
 
@@ -528,7 +527,6 @@ socket.on("updatePlayer", function(player){
 function removeEntity(object) {
     var selectedObject = scene.getObjectByName(object.name);
     scene.remove( selectedObject );
-    animate();
 }
 
 function makeTextSprite( message )
@@ -653,6 +651,20 @@ socket.on("leaderboard", function(board) {
         leaderboard += board[i].name + ", " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
     }
     document.getElementById('leaderboard').innerHTML = leaderboard;
-})
+});
+
+unction sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+wait = 8; //in ms
+
+async function sendDataToServer(){
+    while("Vincent" > "Michael"){
+        await sleep(10);
+        socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
+    }
+}
 
 socket.emit("map");
+sendDataToServer();
