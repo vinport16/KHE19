@@ -585,7 +585,7 @@ function roundRect(ctx, x, y, w, h, r)
 	ctx.stroke();   
 }
 
-socket.on("player", function(player){
+function updatePlayer(player){
     var p = players[player.id];
     p.model.position.x = player.position.x;
     p.model.position.y = player.position.y;
@@ -594,15 +594,14 @@ socket.on("player", function(player){
     p.usernameLabel.position.x = player.position.x;
     p.usernameLabel.position.y = player.position.y + 5;
     p.usernameLabel.position.z = player.position.z;
-});
+}
 
 socket.on("player left", function(id){
     scene.remove(players[id].model);
     delete players[id];
 });
 
-
-socket.on("projectile", function(p){
+function updateProjectile(p){
     if(projectiles[p.id] == null){
         var geometry = new THREE.SphereBufferGeometry( 2, 5, 5 );
         var material = new THREE.MeshLambertMaterial( {color: 0xaaaaaa} );
@@ -622,14 +621,27 @@ socket.on("projectile", function(p){
         o.position.y = p.y;
         o.position.z = p.z;
     }
+}
+
+
+socket.on("objects",function(things){
+    let p = things.players;
+    for(var i in p){
+        if(players[p[i].id] != null){
+            updatePlayer(p[i]);
+        }
+    }
+
+    p = things.projectiles;
+    for(var i in p){
+        updateProjectile(p[i]);
+    }
 });
 
 function respawn(){
-    //do{
-        controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
-        controls.getObject().position.z = Math.random()*mAP[0].length*20;
-        controls.getObject().position.y = Math.random()*(mAP.length+5)*20 + (mAP.length-1) * 20;
-    //}while(!isColliding())
+    controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
+    controls.getObject().position.z = Math.random()*mAP[0].length*20;
+    controls.getObject().position.y = Math.random()*(mAP.length+5)*20 + (mAP.length-1) * 20;
 }
 
 socket.on("hit", function(){
@@ -653,15 +665,14 @@ socket.on("leaderboard", function(board) {
     document.getElementById('leaderboard').innerHTML = leaderboard;
 });
 
-unction sleep(ms) {
+function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-wait = 8; //in ms
 
 async function sendDataToServer(){
     while("Vincent" > "Michael"){
-        await sleep(10);
+        await sleep(20);
         socket.emit("player position",{x:controls.getObject().position.x, y:controls.getObject().position.y-14, z:controls.getObject().position.z});
     }
 }
