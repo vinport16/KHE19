@@ -5,7 +5,7 @@ var http = require('http').createServer(app);
 var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 
-var map = readMap("maps/long.txt");
+var map = readMap("maps/40x40map.txt");
 http.listen(port);
 
 //console.log("running on port "+port);
@@ -84,11 +84,15 @@ function readMap(file_name) {
   return map;
 }
 
+// STEP SPEED
+wait = 20; // ms = 0.05 second = 50/sec
+
 var players = [];
 var nextId = 0;
 
-var pSpeed = 20;
-var pGrav = 10;
+var projectiles = [];
+var pSpeed = 40;
+var pGrav = 5;
 var pLife = 800;
 
 io.on("connection", function(socket){
@@ -103,11 +107,6 @@ io.on("connection", function(socket){
   player.color = "red";
 
   //console.log("player "+player.id+" logged in");
-
-  //for(i in players){
-  //  player.socket.emit("new player", {id:players[i].id, position:players[i].position});
-  //  //console.log("sent player",players[i].id,"to",player.id);
-  //}
 
   players.push(player);
 
@@ -141,11 +140,6 @@ io.on("connection", function(socket){
 
   socket.on("player position", function(position){
     player.position = position;
-    for(i in players){
-      if(players[i].id != player.id){
-        players[i].socket.emit("player", {id:player.id, position:player.position});
-      }
-    }
   });
 
   socket.on("disconnect",function(){
@@ -173,7 +167,7 @@ io.on("connection", function(socket){
 
     p.velocity = {};
     p.velocity.x = angle.dx * pSpeed;
-    p.velocity.y = angle.dy * pSpeed + 2;
+    p.velocity.y = angle.dy * pSpeed + 1;
     p.velocity.z = angle.dz * pSpeed;
 
     p.position.x += angle.dx * 10;
@@ -181,6 +175,7 @@ io.on("connection", function(socket){
     p.position.z += angle.dz * 10;
 
     if(p.position.x != NaN && p.position.y != NaN && p.position.z != NaN){
+      projectiles.push(p);
       moveProjectile(p);
     }
 
@@ -248,20 +243,17 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-wait = 8; //in ms
-
+// calculate projectile collisions with higher precision than step speed
 async function moveProjectile(p){
   var hit = false;
   while(!hit && p.count < pLife){
-    await sleep(10);
+    await sleep(wait/4);
 
     p.velocity.y -= pGrav * wait/1000;
 
-    p.position.x += p.velocity.x * pSpeed * wait/1000;
-    p.position.y += p.velocity.y * pSpeed * wait/1000;
-    p.position.z += p.velocity.z * pSpeed * wait/1000;
-
-    announcePosition(p);
+    p.position.x += p.velocity.x * pSpeed/4 * wait/1000;
+    p.position.y += p.velocity.y * pSpeed/4 * wait/1000;
+    p.position.z += p.velocity.z * pSpeed/4 * wait/1000;
 
     if(projCollision(p,map)){
       hit = true;
@@ -269,5 +261,46 @@ async function moveProjectile(p){
 
     p.count++;
   }
+
   announceBurst(p);
+
+  // remove projectile from list
+  for(var i in projectiles){
+    if(projectiles[i].id == p.id){
+      projectiles.splice(i,1);
+    }
+  }
+
 }
+
+
+async function reportEverything(){
+  while(true){
+    await sleep(wait);
+    // make structure that holds all object position data
+    let things = {};
+
+    // players have ids and positions
+    things.players = [];
+    for(var i in players){
+      let player = players[i];
+      things.players.push({id:player.id, position:player.position});
+    }
+
+    // projectiles have ids and positions
+    things.projectiles = [];
+    for(var i in projectiles){
+      let p = projectiles[i];
+      things.projectiles.push({id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});
+    }
+
+    // send every player all of the objects
+    for(var i in players){
+      player = players[i];
+      player.socket.emit("objects",things);
+    }
+
+  }
+}
+
+reportEverything();
