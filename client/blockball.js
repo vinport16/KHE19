@@ -59,6 +59,11 @@ function init() {
     controls.getObject().position.y = 120;
     controls.getObject().position.z = 200;
     scene.add( controls.getObject() );
+    var onClick = function ( event ) {
+        var vector = new THREE.Vector3( 0, 0, - 1 );
+        vector.applyQuaternion( camera.quaternion );
+        socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
+    }
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
             case 38: // up
@@ -85,6 +90,10 @@ function init() {
                 if ( canJump === true ) velocity.y += 180;
                 canJump = false;
                 break;
+            case 69: // e
+                // shoot
+                onClick(event);
+                break;
         }
     };
     var onKeyUp = function ( event ) {
@@ -109,13 +118,7 @@ function init() {
                 break;
         }
     };
-    var onClick = function ( event ) {
-        var vector = new THREE.Vector3( 0, 0, - 1 );
-        vector.applyQuaternion( camera.quaternion );
 
-        socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
-
-    }
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
     document.addEventListener( 'click', onClick, false);
