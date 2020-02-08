@@ -336,6 +336,14 @@ socket.on("map", function(map){
                         var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
                         brickMaterial.color.setHSL( 0.12, 1, Math.random() * 0.05 + 0.4 );
                         boxMaterial = brickMaterial;
+                    }else if(map[i][j][k] == 6){//Grey
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
+                        brickMaterial.color.setHSL( 0.0, 0, Math.random() * 0.05 + 0.4 );
+                        boxMaterial = brickMaterial;
+                    }else if(map[i][j][k] == 7){//pink
+                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
+                        brickMaterial.color.setHSL( 0.9, 1, Math.random() * 0.2 + 0.5 );
+                        boxMaterial = brickMaterial;
                     }else{//sky/wall
                         var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
                         skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
