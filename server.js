@@ -29,7 +29,7 @@ app.get('/three.module.js', function(req, res){
   });
 
 app.get('/pointerlock.js', function(req, res){
-    res.sendFile(__dirname + '/pointerLock.js');
+    res.sendFile(__dirname + '/pointerlock.js');
 });
 
 app.get('/client/blockball.js', function(req, res){
