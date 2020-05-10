@@ -3,6 +3,7 @@ var camera, scene, renderer, controls;
 var myMap;
 var objects = [];
 var raycaster;
+var ray0, ray1, ray2, ray3;
 var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
@@ -16,6 +17,7 @@ var vertex = new THREE.Vector3();
 var color = new THREE.Color();
 var sprint = false;
 var startTime = Date.now();
+var player_radius = 7.5;
 
 init();
 animate();
@@ -123,6 +125,10 @@ function init() {
     document.addEventListener( 'keyup', onKeyUp, false );
     document.addEventListener( 'click', onClick, false);
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+    ray0 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+    ray1 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+    ray2 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+    ray3 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 
 
 
@@ -192,26 +198,27 @@ function getFromMap(mapPos){
     return 0;
 }
 
-function isColliding(){
+function isColliding(position){
     var collidingWith = [];
     var checkspots = [];
-    var p = controls.getObject();
     var mapPos = {};
-    mapPos.x = ((p.position.x+10)/20);
-    mapPos.y = ((p.position.y-5)/20);
-    mapPos.z = ((p.position.z+10)/20);
+    mapPos.x = ((position.x+10)/20);
+    mapPos.y = ((position.y-5)/20);
+    mapPos.z = ((position.z+10)/20);
     mapPos.ox = false;
     mapPos.oz = false;
 
-    if(mapPos.x % 1 > 0.675){
+    let radius = (7.5)/20;
+
+    if(mapPos.x % 1 > 1-radius){
         mapPos.ox = mapPos.x+1;
-    }else if(mapPos.x < 0.325){
+    }else if(mapPos.x % 1 < radius){
         mapPos.ox = mapPos.x-1;
     }
 
-    if(mapPos.z % 1 > 0.675){
+    if(mapPos.z % 1 > 1-radius){
         mapPos.oz = mapPos.z+1;
-    }else if(mapPos.z < 0.325){
+    }else if(mapPos.z % 1 < radius){
         mapPos.oz = mapPos.z-1;
     }
 
@@ -230,12 +237,77 @@ function isColliding(){
     for(var i in checkspots){
         if(getFromMap(checkspots[i]) != 0){
             collision = true;
-            collidingWith.push(checkspots[i])
-            //console.log("colliding");
+            collidingWith.push(checkspots[i]);
             return true;
         }
     }
     return false;
+}
+
+function nextPosition(position, move){
+
+    if(Math.abs(move.x) + Math.abs(move.z) < 0.01){
+        return position.clone().add(move);
+    }
+
+    let slightlyHigher = position.clone();
+    slightlyHigher.y += Math.sign(move.y)/10;
+
+    if(isColliding(position) || isColliding(slightlyHigher)){
+        let next = position.clone();
+        next.y += move.y;
+        return next;
+    }
+
+    let stepsize = move.length() / (1 + Math.floor(move.length() / (20/2)));
+    stepsize = stepsize - 0.01;
+    if(stepsize < 0.01){stepsize = 0.01;}
+
+    let fauxPosition = position.clone();
+    for(let step = stepsize; step < move.length(); step += stepsize){
+        fauxPosition.add(move.clone().normalize().multiplyScalar(stepsize));
+        
+        var collision = isColliding(fauxPosition);
+        if(collision){
+            let tinystep = stepsize;
+            let direction = -1;
+            for(let i = 0; i < 7; i++){
+                tinystep = tinystep/2;
+                fauxPosition.add(move.clone().normalize().multiplyScalar(tinystep * direction));
+                if(isColliding(fauxPosition)){
+                    direction = -1;
+                }else{
+                    direction = 1;
+                }
+            }
+            if(isColliding(fauxPosition)){
+                fauxPosition.add(move.clone().normalize().multiplyScalar(tinystep * direction));
+            }
+            break;
+        }
+    }
+
+    if(collision){
+        // determine if you can go more in the x or z direction
+    
+        let xtester = fauxPosition.clone();
+        xtester.x += Math.sign(move.x)/10;
+        let ztester = fauxPosition.clone();
+        ztester.z += Math.sign(move.z)/10;
+
+        let newMove = move.clone().sub(fauxPosition.clone().sub(position));
+
+        if(!isColliding(xtester)){
+          newMove.z = 0;
+          return nextPosition(fauxPosition.clone(), newMove);
+        }else if(!isColliding(ztester)){
+          newMove.x = 0;
+          return nextPosition(fauxPosition.clone(), newMove);
+        }
+
+    }
+    return fauxPosition;
+
 }
 
 function animate() {
@@ -248,15 +320,36 @@ function animate() {
 
     if ( controls.isLocked === true ) {
 
-        var op = {};
-        op.x = controls.getObject().position.x;
-        op.y = controls.getObject().position.y;
-        op.z = controls.getObject().position.z;
+        var originalPosition = new THREE.Vector3();
+        originalPosition.x = controls.getObject().position.x;
+        originalPosition.y = controls.getObject().position.y;
+        originalPosition.z = controls.getObject().position.z;
 
         raycaster.ray.origin.copy( controls.getObject().position );
-        raycaster.ray.origin.y -= 24;
-        var intersections = raycaster.intersectObjects( objects );
-        var onObject = intersections.length > 0;
+        raycaster.ray.origin.y -= 24; // center
+
+        // make four raycasters: one at each corner of the player like :o:
+        ray0.ray.origin.copy(raycaster.ray.origin);
+        ray0.ray.origin.x += player_radius;
+        ray0.ray.origin.z += player_radius;
+
+        ray1.ray.origin.copy(raycaster.ray.origin);
+        ray1.ray.origin.x += player_radius;
+        ray1.ray.origin.z -= player_radius;
+
+        ray2.ray.origin.copy(raycaster.ray.origin);
+        ray2.ray.origin.x -= player_radius;
+        ray2.ray.origin.z += player_radius;
+
+        ray3.ray.origin.copy(raycaster.ray.origin);
+        ray3.ray.origin.x -= player_radius;
+        ray3.ray.origin.z -= player_radius;
+
+        let intersections = ray0.intersectObjects( objects ).length;
+        intersections += ray1.intersectObjects( objects ).length;
+        intersections += ray2.intersectObjects( objects ).length;
+        intersections += ray3.intersectObjects( objects ).length;
+        var onObject = intersections > 0;
 
         var time = performance.now();
         var delta = ( time - prevTime ) / 1000;
@@ -281,11 +374,19 @@ function animate() {
         controls.moveRight( - velocity.x * delta );
         controls.moveForward( - velocity.z * delta );
         controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+        
+        let newPosition = controls.getObject().position;
+        let move = newPosition.sub(originalPosition);
 
-        if(isColliding()){
-            controls.getObject().position.x = op.x;
-            //controls.getObject().position.y = op.y;
-            controls.getObject().position.z = op.z;
+        let newPos = nextPosition(originalPosition, move);
+        controls.getObject().position.x = newPos.x;
+        controls.getObject().position.y = newPos.y;
+        controls.getObject().position.z = newPos.z;
+
+        if(isColliding(originalPosition, move)){
+            controls.getObject().position.x = originalPosition.x;
+            //controls.getObject().position.y = originalPosition.y; // THIS STOPS JUMPING THROUGH CEILINGS
+            controls.getObject().position.z = originalPosition.z;
         }
 
         // if ( controls.getObject().position.y < 10 ) {
@@ -493,6 +594,7 @@ var players = {};
 var projectiles = {};
 
 function drawPlayer(player){
+
     var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
