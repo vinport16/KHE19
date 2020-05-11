@@ -608,11 +608,9 @@ function drawPlayer(player){
 
     player.userName = player.name;
 
-    player.usernameLabel = makeTextSprite( player.userName );
-    player.usernameLabel.position.set(player.position.x, player.position.y, player.position.z);
+    player.usernameLabel = makeTextSprite( player.userName);
+    player.usernameLabel.position.set(player.position.x, player.position.y + 15, player.position.z);
     scene.add( player.usernameLabel );
-
-    //console.log("made player with name: ", player.userName, " and color: ", player.color);
 
     player.model = model;
     players[player.id] = player;
@@ -649,40 +647,41 @@ function removeEntity(object) {
 
 function makeTextSprite( message )
 {
-	var borderThickness = 4;		
-	var canvas = document.createElement('canvas');
-	var context = canvas.getContext('2d');
-	context.font = "Bold " + 18 + "px " + "Ariel";
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; // width and height must be powers of 2
+    canvas.height = 256;
+    var context = canvas.getContext('2d');
+    var fontsz = 32;
+    context.font = "Bold " + fontsz + "px " + "Ariel";
     
-	// get size data (height depends only on font size)
-	var metrics = context.measureText( message );
-	var textWidth = metrics.width;
-	
-	// background color
-	context.fillStyle   = "rgba(" + 255 + "," + 100 + ","
-								  + 100 + "," + 0.8 + ")";
-	// border color
-	context.strokeStyle = "rgba(" + 255 + "," + 0 + ","
-								  + 0 + "," + 1 + ")";
-	context.lineWidth = 4;
-	roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, 18 * 1.4 + borderThickness, 6);
-	// 1.4 is extra height factor for text below baseline: g,j,p,q.
-	
-	// text color
-	context.fillStyle = "rgba(0, 0, 0, 1.0)";
-    context.fillText( message, borderThickness, 18 + borderThickness);
-	
-	// canvas contents will be used for a texture
-	var texture = new THREE.Texture(canvas) 
-	texture.needsUpdate = true;
-	var spriteMaterial = new THREE.SpriteMaterial( 
-		{ map: texture} );
-	var sprite = new THREE.Sprite( spriteMaterial );
-    sprite.scale.set(100,50,1.0);
-    //sprite.scale.set(50,25,1);
+    // get size data (height depends only on font size)
+    var metrics = context.measureText( message );
+    var textWidth = metrics.width;
+    
+    // background color
+    context.fillStyle   = "rgba(" + 255 + "," + 200 + ","
+                                  + 100 + "," + 0.4 + ")";
+    // border color
+    context.strokeStyle = "rgba(" + 0 + "," + 0 + ","
+                                  + 0 + "," + 0 + ")";
+    roundRect(context, canvas.width/2 - textWidth/2, 0, textWidth, fontsz * 1.4, 6);
+    // 1.4 is extra height factor for text below baseline: g,j,p,q.
+    
+    // text color
+    context.fillStyle = "rgba(0, 0, 0, 1.0)";
+    context.textAlign = "center";
+    context.fillText( message, canvas.width/2, fontsz);
+    
+    // canvas contents will be used for a texture
+    var texture = new THREE.Texture(canvas) 
+    texture.needsUpdate = true;
+    var spriteMaterial = new THREE.SpriteMaterial( 
+        { map: texture} );
+    var sprite = new THREE.Sprite( spriteMaterial );
+    sprite.scale.set(30,25,1.0);
     sprite.center = new THREE.Vector2(0.5,0.5);
 
-	return sprite;	
+    return sprite;  
 }
 
 // function for drawing rounded rectangles
@@ -710,7 +709,7 @@ function updatePlayer(player){
     p.model.position.z = player.position.z;
    
     p.usernameLabel.position.x = player.position.x;
-    p.usernameLabel.position.y = player.position.y + 5;
+    p.usernameLabel.position.y = player.position.y + 15;
     p.usernameLabel.position.z = player.position.z;
 }
 

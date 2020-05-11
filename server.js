@@ -4,8 +4,9 @@ var app = express();
 var http = require('http').createServer(app);
 var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
+console.log("running on port", port);
 
-var map = readMap("maps/40x40map.txt");
+var map = readMap("maps/20x20map.txt");
 //var map = csv2map("maps/50x50map.csv");
 http.listen(port);
 
@@ -72,7 +73,7 @@ function csv2map(file_name) {
       })
     })
   })
-
+  console.log("Map Loaded");
   return map;
 }
 
@@ -114,6 +115,7 @@ function readMap(file_name) {
       })
     })
   })
+  console.log("Map Loaded");
   return map;
 }
 
