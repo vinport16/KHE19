@@ -246,8 +246,10 @@ function isColliding(position){
 
 function nextPosition(position, move){
 
-    if(Math.abs(move.x) + Math.abs(move.z) < 0.01){
-        return position.clone().add(move);
+    if(Math.abs(move.x) + Math.abs(move.z) < 0.001){
+        let next = position.clone();
+        next.y += move.y;
+        return next;
     }
 
     let slightlyHigher = position.clone();
