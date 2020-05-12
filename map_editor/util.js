@@ -91,6 +91,12 @@ function rotateVector(vec, ang){
     return {x: Math.round(10000*(vec.x * cos - vec.y * sin))/10000, y: Math.round(10000*(vec.x * sin + vec.y * cos))/10000};
 }
 
+// math
+
+function clamp(num, min, max) {
+  return num <= min ? min : num >= max ? max : num;
+}
+
 // setup
 
 var canvas = document.getElementById("canvas");

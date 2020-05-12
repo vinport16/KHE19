@@ -41,6 +41,7 @@ let seven_brush = [
 ];
 
 var map = blankMap(5, 40, 40);
+var previous_map;
 
 function blankMap(zz,xx,yy){
   let map = [];
@@ -68,6 +69,28 @@ function writeTile(position, value){
     map[view_height][position.x][position.y] = value;
   }
 }
+
+function cloneMap(map){
+  let clone = [];
+  for(let z = 0; z < map.length; z++){
+    clone.push([]);
+    for(let x = 0; x < map[z].length; x++){
+      clone[z].push([]);
+      for(let y = 0; y < map[z][x].length; y++){
+        clone[z][x][y] = map[z][x][y];
+      }
+    }
+  }
+  // transfer the exists function
+  clone.exists = map.exists;
+  return clone;
+}
+
+function saveState(){
+  previous_map = cloneMap(map);
+}
+
+saveState();
 
 function drawTile(position, color){ //color should be string
   let vp = subtract(position, view_position);
@@ -166,6 +189,8 @@ canvas.addEventListener("mousedown", function(event){
   position = floor(multiply(position, 1/square_width));
   position = add(position, view_position);
 
+  saveState();
+
   startSelection = position;
 
   writeWithBrush(position, brush, block_type);
@@ -235,6 +260,26 @@ document.addEventListener("keypress", function(event){
   drawMap();
 });
 
+// UNDO
+var cmd_is_down = false;
+
+document.addEventListener("keydown", function(event){
+  if(event.metaKey){
+    cmd_is_down = true;
+  }
+  if(event.key == "z" && cmd_is_down){
+    map = previous_map;
+    clearCanvas();
+    drawMap();
+  }
+});
+
+document.addEventListener("keyup", function(event){
+  if(event.key == "Meta"){
+    cmd_is_down = false;
+  }
+});
+
 // menu input
 var current_layer = document.getElementById("current-layer");
 
@@ -263,6 +308,7 @@ updateLayer();
 
 new_map.onclick = function(){
   if(confirm("this will delete your current map")){
+    saveState();
     let e = map.exists;
     map = blankMap(5, xsize.value, ysize.value);
     map.exists = e;
@@ -307,12 +353,38 @@ export_file.onclick = function(){
 };
 
 insert_layer.onclick = function(){
+  saveState();
   map.splice(view_height+1, 0, []);
   
   for(let x = 0; x < map[view_height].length; x++){
     map[view_height+1].push([]);
     for(let y = 0; y < map[view_height][x].length; y++){
       map[view_height+1][x][y] = 0;
+    }
+  }
+
+  updateLayer();
+  drawMap();
+};
+
+delete_layer.onclick = function(){
+  saveState();
+  if(map.length > 0){
+    map.splice(view_height, 1);
+    view_height = clamp(view_height, 0, map.length-1);
+  }
+  updateLayer();
+  drawMap();
+};
+
+duplicate_layer.onclick = function(){
+  saveState();
+  map.splice(view_height+1, 0, []);
+  
+  for(let x = 0; x < map[view_height].length; x++){
+    map[view_height+1].push([]);
+    for(let y = 0; y < map[view_height][x].length; y++){
+      map[view_height+1][x][y] = map[view_height][x][y];
     }
   }
 
