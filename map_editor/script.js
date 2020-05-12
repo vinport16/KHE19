@@ -290,7 +290,9 @@ export_file.onclick = function(){
   for(let z = 0; z < map.length; z++){
     for(let x = 0; x < map[z].length; x++){
       for(let y = 0; y < map[z][x].length; y++){
-        output += map[z][x][y];
+        if(map[z][x][y] != 0){
+          output += map[z][x][y];
+        }
         if(y+1 < map[z][x].length){
           output += ",";
         }

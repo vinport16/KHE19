@@ -488,7 +488,8 @@ socket.on("map", function(map){
     });
     let mat = new THREE.MeshLambertMaterial({ vertexColors: THREE.FaceColors });
     var m = new THREE.Mesh(allBoxes, mat);
-    m.material.side = THREE.DoubleSide;
+    // only render front side of shapes
+    //m.material.side = THREE.DoubleSide; //uncomment to render both sides
     scene.add(m);
 });
 
