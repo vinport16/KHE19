@@ -2,20 +2,45 @@ var square_width = 10;
 var view_position = {x:-20, y:-2};
 var view_height = 0;
 
-var block_type = 1;
+var block_type = 0;
+var brush_type = 0;
 
 let color = [
   "white",
   "green",
   "red",
   "brown",
+  "blue",
   "yellow",
   "gray",
   "pink",
   "blue"
 ]
 
-var map = blankMap(4, 50, 50);
+let brush = [
+  "point",
+  "three",
+  "seven",
+  "rectangle"
+]
+
+let three_brush = [
+  [1,1,1],
+  [1,1,1],
+  [1,1,1]
+];
+
+let seven_brush = [
+  [0,0,1,1,1,0,0],
+  [0,1,1,1,1,1,0],
+  [1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1],
+  [0,1,1,1,1,1,0],
+  [0,0,1,1,1,0,0]
+];
+
+var map = blankMap(5, 40, 40);
 
 function blankMap(zz,xx,yy){
   let map = [];
@@ -52,8 +77,18 @@ function drawTile(position, color){ //color should be string
 function drawMap(){
   for(let i = 0; i < map[view_height].length; i++){
     for(let j = 0; j < map[view_height][i].length; j++){
-      drawTile({x:i, y:j},color[map[view_height][i][j]]);
-      
+      // show preview two levels deep
+      if(map[view_height][i][j] == 0 && view_height > 0){
+        if(map[view_height-1][i][j] == 0 && view_height > 1){
+          drawTile({x:i, y:j}, color[map[view_height-2][i][j]]);
+          drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
+        }else{
+          drawTile({x:i, y:j}, color[map[view_height-1][i][j]]);
+        }
+        drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
+      }else{
+        drawTile({x:i, y:j},color[map[view_height][i][j]]);
+      }
     }
   }
 }
@@ -90,6 +125,32 @@ function writeRange(start, end){
   }
 }
 
+function writeArray(position, array, block){
+  let startx = -Math.floor(array.length/2);
+  let starty = -Math.floor(array[0].length/2);
+
+  let endx = array.length + startx;
+  let endy = array[0].length + starty;
+
+  for(let x = startx; x < endx; x++){
+    for(let y = starty; y < endy; y++){
+      if(array[x - startx][y - starty] == 1){
+        writeTile({x:position.x + x, y:position.y + y}, block);
+      }
+    }
+  }
+}
+
+function writeWithBrush(position, brush, block_type){
+  if(brush[brush_type] == "point"){
+    writeTile(position, block_type);
+  }else if(brush[brush_type] == "three"){
+    writeArray(position, three_brush, block_type);
+  }else if(brush[brush_type] == "seven"){
+    writeArray(position, seven_brush, block_type);
+  }
+}
+
 drawMap();
 
 
@@ -107,6 +168,8 @@ canvas.addEventListener("mousedown", function(event){
 
   startSelection = position;
 
+  writeWithBrush(position, brush, block_type);
+
   clearCanvas();
   drawMap();
   //drawTile(position, "red");
@@ -119,9 +182,14 @@ canvas.addEventListener("mousemove", function(event){
   position = add(position, view_position);
 
   if(startSelection){
+    
+    writeWithBrush(position, brush, block_type)
+
     clearCanvas();
     drawMap();
-    drawRange(position, startSelection);
+    if(brush[brush_type] == "rectangle"){
+      drawRange(position, startSelection);
+    }
   }
 
 });
@@ -132,7 +200,9 @@ canvas.addEventListener("mouseup", function(event){
   position = floor(multiply(position, 1/square_width));
   position = add(position, view_position);
   
-  writeRange(position, startSelection);
+  if(brush[brush_type] == "rectangle"){
+    writeRange(position, startSelection);
+  }
 
   clearCanvas();
   drawMap();
@@ -168,6 +238,10 @@ document.addEventListener("keypress", function(event){
 // menu input
 var current_layer = document.getElementById("current-layer");
 
+var xsize = document.getElementById("xsize");
+var ysize = document.getElementById("ysize");
+var new_map = document.getElementById("new");
+
 var file = document.getElementById("file"); //TODO
 var import_file = document.getElementById("import"); //TODO
 var export_file = document.getElementById("export");
@@ -179,12 +253,24 @@ var insert_layer = document.getElementById("new-layer"); //TODO
 var delete_layer = document.getElementById("delete-layer"); //TODO
 var duplicate_layer = document.getElementById("duplicate-layer"); //TODO
 
+var brush_select = document.getElementById("brush");
 var color_select = document.getElementById("color");
 
 function updateLayer(){
   current_layer.innerHTML = "layer: "+(view_height+1)+"/"+map.length;
 }
 updateLayer();
+
+new_map.onclick = function(){
+  if(confirm("this will delete your current map")){
+    let e = map.exists;
+    map = blankMap(5, xsize.value, ysize.value);
+    map.exists = e;
+    view_height = 0;
+    updateLayer();
+    drawMap();
+  }
+};
 
 function download(filename, text) {
   var element = document.createElement('a');
@@ -263,6 +349,17 @@ color_select.addEventListener("change", function(){
   block_type = color_select.value;
 });
 
+for(var i = 0; i < brush.length; i++){
+  var opt = brush[i];
+  var el = document.createElement("option");
+  el.textContent = opt;
+  el.value = i;
+  brush_select.appendChild(el);
+}
+
+brush_select.addEventListener("change", function(){
+  brush_type = brush_select.value;
+});
 
 
 

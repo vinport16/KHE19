@@ -6,6 +6,10 @@
     <canvas id="canvas"></canvas>
     <div class="floating">
       <div class="layer" id="current-layer">layer: 0/0</div>
+      <hr>
+      <input type="number" class="size" id="xsize">by<input type="number" class="size" id="ysize"><br>
+      <button id="new">new map</button><br>
+      <hr>
       <input type="file" id="file"></input>
       <button id="import">import</button>
       <button id="export">export</button>
@@ -18,8 +22,9 @@
       <button id="delete-layer">delete current layer</button><br>
       <button id="duplicate-layer">duplicate later</button><br>
       <hr>
-      <select id="color">
-      </select>
+      Brush:<br>
+      <select id="brush"></select>
+      <select id="color"></select>
 
       <p>navigate with WASD. QE to move between layers.</p>
     </div>
