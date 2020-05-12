@@ -1,0 +1,24 @@
+body{
+  margin:0px;
+}
+canvas{
+  background-color: black;
+}
+div.floating{
+  color:red;
+
+  position: absolute;
+  left: 15px;
+  top: 15px;
+
+  border: 1px solid red;
+  padding: 5px;
+
+  width: 150px;
+  height: 500px;
+
+  overflow-x: hidden;
+}
+div.layer{
+  font-size: 26px;
+}

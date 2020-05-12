@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div class="floating">
+      <div class="layer" id="currentlayer">layer: 0</div>
+      <input type="file" id="file"></input>
+      <button id="import">import</button>
+      <button id="export">export</button>
+      <hr>
+      square size:<br>
+      <button id="size-big">bigger</button>
+      <button id="size-small">smaller</button>
+      <hr>
+      <button id="new-layer">insert layer above</button><br>
+      <button id="delete-layer">delete current layer</button><br>
+      <button id="duplicate-layer">duplicate later</button><br>
+      <hr>
+      <select id="color">
+      </select>
+
+      <p>navigate with WASD. QE to move between layers.</p>
+    </div>
+  </body>
+  <script type="text/javascript" src="util.js"></script>
+  <script type="text/javascript" src="script.js"></script>
+</html>
