@@ -15,31 +15,21 @@ let color = [
   "blue"
 ]
 
+var map = blankMap(4, 50, 50);
 
-let map = [
- [
-  [1,1,1,0,1,1],
-  [0,1,0,0,0,0],
-  [0,1,0,0,1,0],
-  [0,0,0,0,0,0],
-  [1,0,1,1,0,1],
-  [1,0,0,0,1,0]
-  ],[
-  [1,1,1,1,1,1],
-  [1,1,0,0,0,1],
-  [1,1,0,0,1,1],
-  [1,0,0,0,0,1],
-  [1,0,1,1,0,1],
-  [1,1,1,1,1,1]
-  ],[
-  [1,1,1,1,1,1],
-  [1,0,0,0,0,1],
-  [1,0,0,0,0,1],
-  [1,0,0,0,0,1],
-  [1,0,0,0,0,1],
-  [1,1,1,1,1,1]
-  ]
-];
+function blankMap(zz,xx,yy){
+  let map = [];
+  for(let z = 0; z < zz; z++){
+    map.push([]);
+    for(let x = 0; x < xx; x++){
+      map[z].push([]);
+      for(let y = 0; y < yy; y++){
+        map[z][x][y] = 0;
+      }
+    }
+  }
+  return map;
+}
 
 map.exists = function(z,x,y){
   if(map[z] && map[z][x] && typeof map[z][x][y] != "undefined"){
@@ -170,11 +160,13 @@ document.addEventListener("keypress", function(event){
       view_height += 1;
     }
   }
+  updateLayer();
   clearCanvas();
   drawMap();
 });
 
 // menu input
+var current_layer = document.getElementById("current-layer");
 
 var file = document.getElementById("file"); //TODO
 var import_file = document.getElementById("import"); //TODO
@@ -188,6 +180,11 @@ var delete_layer = document.getElementById("delete-layer"); //TODO
 var duplicate_layer = document.getElementById("duplicate-layer"); //TODO
 
 var color_select = document.getElementById("color");
+
+function updateLayer(){
+  current_layer.innerHTML = "layer: "+(view_height+1)+"/"+map.length;
+}
+updateLayer();
 
 function download(filename, text) {
   var element = document.createElement('a');
@@ -219,6 +216,20 @@ export_file.onclick = function(){
     }
   }
   download("map.csv", output);
+};
+
+insert_layer.onclick = function(){
+  map.splice(view_height+1, 0, []);
+  
+  for(let x = 0; x < map[view_height].length; x++){
+    map[view_height+1].push([]);
+    for(let y = 0; y < map[view_height][x].length; y++){
+      map[view_height+1][x][y] = 0;
+    }
+  }
+
+  updateLayer();
+  drawMap();
 };
 
 button_small.onclick = function(){
