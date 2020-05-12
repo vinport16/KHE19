@@ -331,6 +331,42 @@ function download(filename, text) {
   document.body.removeChild(element);
 }
 
+import_file.onclick = function(){
+  let reader = new FileReader();
+  reader.onload = function(event) {
+    let contents = event.target.result;
+    let e = map.exists;
+    map = [];
+    map.exists = e;
+
+    map.push([]);
+    let d2 = 0;
+    let d1 = 0;
+
+    let file = contents.split('\r');
+
+    // Iterate through lines of map file
+    file.forEach(function(line) {
+      if(line[0] == 'n') {
+        map.push([]);
+        d1++;
+      }else{
+        let line_chars = line.split(',');
+        map[d1].push(line_chars);
+      }
+    });
+    map.forEach(function(layer, i) {
+      layer.forEach(function(line, j) {
+        line.forEach(function(char, k) {
+          map[i][j][k] = map[i][j][k] == '' ? 0 : parseInt(map[i][j][k]);
+        });
+      });
+    });
+    console.log("Map Loaded");
+  };
+  reader.readAsText(file.files[0]);
+}
+
 export_file.onclick = function(){
   output = "";
   for(let z = 0; z < map.length; z++){
@@ -343,7 +379,9 @@ export_file.onclick = function(){
           output += ",";
         }
       }
-      output += '\r';
+      if(x+1 < map[z].length){
+        output += "\r";
+      }
     }
     if(z+1 < map.length){
       output += "n,"+'\r';
