@@ -6,9 +6,13 @@ var block_type = 1;
 
 let color = [
   "white",
-  "blue",
   "green",
-  "brown"
+  "red",
+  "brown",
+  "yellow",
+  "gray",
+  "pink",
+  "blue"
 ]
 
 
@@ -37,15 +41,20 @@ let map = [
   ]
 ];
 
-map.get = function(x,y){
-  if(x >= 0 && x < this.length && y >= 0 && y < this[0].length ){
-    return this[x][y];
-  }else{
-    return 0;
+map.exists = function(z,x,y){
+  if(map[z] && map[z][x] && typeof map[z][x][y] != "undefined"){
+    return true;
+  }
+  return false;
+}
+
+function writeTile(position, value){
+  if(map.exists(view_height, position.x, position.y)){
+    map[view_height][position.x][position.y] = value;
   }
 }
 
-function drawTile(position, color){
+function drawTile(position, color){ //color should be string
   let vp = subtract(position, view_position);
   drawRectangle(multiply(vp,square_width), {x:square_width, y:square_width}, color);
 }
@@ -53,11 +62,8 @@ function drawTile(position, color){
 function drawMap(){
   for(let i = 0; i < map[view_height].length; i++){
     for(let j = 0; j < map[view_height][i].length; j++){
-      if(map[view_height][i][j] == 0){
-        drawTile({x:i, y:j}, "white");
-      }else if(map[view_height][i][j] == 1){
-        drawTile({x:i, y:j}, "blue");
-      }
+      drawTile({x:i, y:j},color[map[view_height][i][j]]);
+      
     }
   }
 }
@@ -72,7 +78,24 @@ function drawRange(start, end){
 
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
-      drawTile({x:x, y:y}, color[block_type]);
+      if(map.exists(view_height, x, y)){
+        drawTile({x:x, y:y}, color[block_type]);
+      }
+    }
+  }
+}
+
+function writeRange(start, end){
+  
+  let startx = Math.min(start.x, end.x);
+  let starty = Math.min(start.y, end.y);
+  
+  let endx = Math.max(start.x, end.x);
+  let endy = Math.max(start.y, end.y);
+
+  for(let x = startx; x <= endx; x++){
+    for(let y = starty; y <= endy; y++){
+      writeTile({x:x, y:y}, block_type);
     }
   }
 }
@@ -118,10 +141,12 @@ canvas.addEventListener("mouseup", function(event){
   let position = {x:event.clientX, y:event.clientY};
   position = floor(multiply(position, 1/square_width));
   position = add(position, view_position);
+  
+  writeRange(position, startSelection);
 
   clearCanvas();
   drawMap();
-  drawRange(position, startSelection);
+
 
   startSelection = null;
 
@@ -151,18 +176,50 @@ document.addEventListener("keypress", function(event){
 
 // menu input
 
-var file = document.getElementById("file");
-var import_file = document.getElementById("import");
+var file = document.getElementById("file"); //TODO
+var import_file = document.getElementById("import"); //TODO
 var export_file = document.getElementById("export");
 
 var button_small = document.getElementById("size-small");
 var button_big = document.getElementById("size-big");
 
-var insert_layer = document.getElementById("new-layer");
-var delete_layer = document.getElementById("delete-layer");
-var duplicate_layer = document.getElementById("duplicate-layer");
+var insert_layer = document.getElementById("new-layer"); //TODO
+var delete_layer = document.getElementById("delete-layer"); //TODO
+var duplicate_layer = document.getElementById("duplicate-layer"); //TODO
 
 var color_select = document.getElementById("color");
+
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+
+export_file.onclick = function(){
+  output = "";
+  for(let z = 0; z < map.length; z++){
+    for(let x = 0; x < map[z].length; x++){
+      for(let y = 0; y < map[z][x].length; y++){
+        output += map[z][x][y];
+        if(y+1 < map[z][x].length){
+          output += ",";
+        }
+      }
+      output += '\r';
+    }
+    if(z+1 < map.length){
+      output += "n,"+'\r';
+    }
+  }
+  download("map.csv", output);
+};
 
 button_small.onclick = function(){
   if(square_width > 5){
@@ -182,6 +239,9 @@ button_big.onclick = function(){
 
 for(var i = 0; i < color.length; i++){
   var opt = color[i];
+  if(i == 0){
+    opt = "empty";
+  }
   var el = document.createElement("option");
   el.textContent = opt;
   el.value = i;
