@@ -379,7 +379,7 @@ export_file.onclick = function(){
           output += ",";
         }
       }
-      if(x+1 < map[z].length){
+      if(z+1 < map.length || x+1 < map[z].length){
         output += "\r";
       }
     }

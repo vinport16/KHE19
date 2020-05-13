@@ -1,5 +1,6 @@
 # KHE19: BlockBall
 BlockBall is a Fully 3D Browser Based Multiplayer FPS Platformer.
+This project was started at Kent Hack Enough 2019.
 
 ![Screenshot of 40 by 40 map](https://github.com/vinport16/KHE19/raw/master/images/40x40map.png "Screenshot of 40 by 40 map")
 
