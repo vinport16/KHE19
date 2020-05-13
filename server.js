@@ -7,7 +7,8 @@ var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
 //var map = readMap("maps/40x40map.txt");
-var map = csv2map("maps/test_map.csv");
+var map = csv2map("testmaps/islands_150.csv");
+//var map = csv2map("maps/50x50map.csv");
 http.listen(port);
 
 //console.log("running on port "+port);
@@ -54,7 +55,7 @@ function csv2map(file_name) {
   var d2 = 0;
   var d1 = 0;
 
-  var file = contents.split('\r\n');
+  var file = contents.split('\n');
 
   // Iterate through lines of map file
   file.forEach(function(line) {
@@ -73,7 +74,7 @@ function csv2map(file_name) {
       })
     })
   })
-  console.log("Map Loaded");
+  console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
   return map;
 }
 

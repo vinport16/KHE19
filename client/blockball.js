@@ -1,7 +1,6 @@
 import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
 var myMap;
-var objects = [];
 var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
@@ -21,12 +20,12 @@ init();
 animate();
 
 function init() {
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 150*20 );
     camera.position.y = 200;
     scene = new THREE.Scene();
     //scene.background = new THREE.Color( 0x44ff00 );
     scene.background = new THREE.MeshLambertMaterial({ color: 0x663333 });
-    scene.fog = new THREE.Fog( 0x99ff88, 0, 1000 );
+    scene.fog = new THREE.Fog( 0x99ff88, 100*20, 150*20 );
     var light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
     light.position.set( 0.5, 1, 0.75 );
     scene.add( light );
@@ -452,9 +451,6 @@ socket.on("map", function(map){
                         
                     }
                     allBoxes.merge(vbox);
-
-                    var objbox = new THREE.Mesh( box, boxMaterial );
-                    objects.push(objbox);
                 }
             });
         });
