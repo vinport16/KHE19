@@ -343,7 +343,7 @@ import_file.onclick = function(){
     let d2 = 0;
     let d1 = 0;
 
-    let file = contents.split('\r');
+    let file = contents.split('\r\n');
 
     // Iterate through lines of map file
     file.forEach(function(line) {
