@@ -98,6 +98,7 @@ function drawTile(position, color){ //color should be string
 }
 
 function drawMap(){
+  clearCanvas();
   for(let i = 0; i < map[view_height].length; i++){
     for(let j = 0; j < map[view_height][i].length; j++){
       // show preview two levels deep
@@ -195,7 +196,6 @@ canvas.addEventListener("mousedown", function(event){
 
   writeWithBrush(position, brush, block_type);
 
-  clearCanvas();
   drawMap();
   //drawTile(position, "red");
 });
@@ -210,7 +210,6 @@ canvas.addEventListener("mousemove", function(event){
     
     writeWithBrush(position, brush, block_type)
 
-    clearCanvas();
     drawMap();
     if(brush[brush_type] == "rectangle"){
       drawRange(position, startSelection);
@@ -229,7 +228,6 @@ canvas.addEventListener("mouseup", function(event){
     writeRange(position, startSelection);
   }
 
-  clearCanvas();
   drawMap();
 
 
@@ -256,7 +254,6 @@ document.addEventListener("keypress", function(event){
     }
   }
   updateLayer();
-  clearCanvas();
   drawMap();
 });
 
@@ -269,7 +266,6 @@ document.addEventListener("keydown", function(event){
   }
   if(event.key == "z" && cmd_is_down){
     map = previous_map;
-    clearCanvas();
     drawMap();
   }
 });
@@ -318,6 +314,22 @@ new_map.onclick = function(){
   }
 };
 
+function flipMap(map){ // blockball uses zyx array order, editor uses zxy
+  newMap = [];
+  for(let z = 0; z < map.length; z++){
+    newMap.push([]);
+    for(let x = 0; x < map[z].length; x++){
+      for(let y = 0; y < map[z][x].length; y++){
+        if(newMap[z][y] == undefined){
+          newMap[z].push([]);
+        }
+        newMap[z][y][x] = map[z][x][y];
+      }
+    }
+  }
+  return newMap;
+}
+
 function download(filename, text) {
   var element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -337,7 +349,6 @@ import_file.onclick = function(){
     let contents = event.target.result;
     let e = map.exists;
     map = [];
-    map.exists = e;
 
     map.push([]);
     let d2 = 0;
@@ -362,28 +373,34 @@ import_file.onclick = function(){
         });
       });
     });
-    console.log("Map Loaded");
+
+    map = flipMap(map);
+    map.exists = e;
+    
+    drawMap();
   };
   reader.readAsText(file.files[0]);
 }
 
 export_file.onclick = function(){
+  let flipped_map = flipMap(map);
+
   output = "";
-  for(let z = 0; z < map.length; z++){
-    for(let x = 0; x < map[z].length; x++){
-      for(let y = 0; y < map[z][x].length; y++){
-        if(map[z][x][y] != 0){
-          output += map[z][x][y];
+  for(let z = 0; z < flipped_map.length; z++){
+    for(let x = 0; x < flipped_map[z].length; x++){
+      for(let y = 0; y < flipped_map[z][x].length; y++){
+        if(flipped_map[z][x][y] != 0){
+          output += flipped_map[z][x][y];
         }
-        if(y+1 < map[z][x].length){
+        if(y+1 < flipped_map[z][x].length){
           output += ",";
         }
       }
-      if(z+1 < map.length || x+1 < map[z].length){
+      if(z+1 < flipped_map.length || x+1 < flipped_map[z].length){
         output += "\r";
       }
     }
-    if(z+1 < map.length){
+    if(z+1 < flipped_map.length){
       output += "n,"+'\r';
     }
   }
@@ -434,7 +451,6 @@ button_small.onclick = function(){
   if(square_width > 5){
     square_width -= 5;
   }
-  clearCanvas();
   drawMap();
 };
 
@@ -442,7 +458,6 @@ button_big.onclick = function(){
   if(square_width < 100){
     square_width += 5;
   }
-  clearCanvas();
   drawMap();
 };
 
