@@ -2,8 +2,6 @@ import { PointerLockControls } from '../pointerlock.js';
 var camera, scene, renderer, controls;
 var myMap;
 var objects = [];
-var raycaster;
-var ray0, ray1, ray2, ray3;
 var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
@@ -124,12 +122,6 @@ function init() {
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
     document.addEventListener( 'click', onClick, false);
-    raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-    ray0 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-    ray1 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-    ray2 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-    ray3 = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-
 
 
     var light = new THREE.DirectionalLight(0xffffff, 1);
@@ -327,31 +319,10 @@ function animate() {
         originalPosition.y = controls.getObject().position.y;
         originalPosition.z = controls.getObject().position.z;
 
-        raycaster.ray.origin.copy( controls.getObject().position );
-        raycaster.ray.origin.y -= 24; // center
-
-        // make four raycasters: one at each corner of the player like :o:
-        ray0.ray.origin.copy(raycaster.ray.origin);
-        ray0.ray.origin.x += player_radius;
-        ray0.ray.origin.z += player_radius;
-
-        ray1.ray.origin.copy(raycaster.ray.origin);
-        ray1.ray.origin.x += player_radius;
-        ray1.ray.origin.z -= player_radius;
-
-        ray2.ray.origin.copy(raycaster.ray.origin);
-        ray2.ray.origin.x -= player_radius;
-        ray2.ray.origin.z += player_radius;
-
-        ray3.ray.origin.copy(raycaster.ray.origin);
-        ray3.ray.origin.x -= player_radius;
-        ray3.ray.origin.z -= player_radius;
-
-        let intersections = ray0.intersectObjects( objects ).length;
-        intersections += ray1.intersectObjects( objects ).length;
-        intersections += ray2.intersectObjects( objects ).length;
-        intersections += ray3.intersectObjects( objects ).length;
-        var onObject = intersections > 0;
+        
+        let slightlyLower = controls.getObject().position.clone();
+        slightlyLower.y -= 35/2; //half height
+        var onObject = isColliding(slightlyLower);
 
         var time = performance.now();
         var delta = ( time - prevTime ) / 1000;
@@ -385,7 +356,7 @@ function animate() {
         controls.getObject().position.y = newPos.y;
         controls.getObject().position.z = newPos.z;
 
-        if(isColliding(originalPosition, move)){
+        if(isColliding(originalPosition)){
             controls.getObject().position.x = originalPosition.x;
             //controls.getObject().position.y = originalPosition.y; // THIS STOPS JUMPING THROUGH CEILINGS
             controls.getObject().position.z = originalPosition.z;
