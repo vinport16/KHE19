@@ -65,6 +65,10 @@ function init() {
     }
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
+            case 16: // shift
+                camera.fov = 10;
+                camera.updateProjectionMatrix();
+                break;
             case 38: // up
             case 87: // w
                 var elapsedTime = ((Date.now() - startTime)/ 1000).toFixed(3);
@@ -97,6 +101,9 @@ function init() {
     };
     var onKeyUp = function ( event ) {
         switch ( event.keyCode ) {
+            case 16: // shift
+                camera.fov = 75;
+                camera.updateProjectionMatrix();
             case 38: // up
             case 87: // w
                 startTime = Date.now();
