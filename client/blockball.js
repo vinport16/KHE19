@@ -61,7 +61,12 @@ function init() {
     var onClick = function ( event ) {
         var vector = new THREE.Vector3( 0, 0, - 1 );
         vector.applyQuaternion( camera.quaternion );
-        socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
+        if(camera.fov > 20){
+            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
+        }else{
+            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, speed:100});
+        }
+        
     }
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {

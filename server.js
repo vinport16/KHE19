@@ -121,7 +121,7 @@ function readMap(file_name) {
 }
 
 // STEP SPEED
-wait = 20; // ms = 0.05 second = 50/sec
+var wait = 20; // ms = 0.05 second = 50/sec
 
 var players = [];
 var nextId = 0;
@@ -202,9 +202,16 @@ io.on("connection", function(socket){
     p.position.z = player.position.z;
 
     p.velocity = {};
-    p.velocity.x = angle.dx * pSpeed;
-    p.velocity.y = angle.dy * pSpeed + 1;
-    p.velocity.z = angle.dz * pSpeed;
+    if(angle.speed != undefined){
+      p.velocity.x = angle.dx * angle.speed;
+      p.velocity.y = angle.dy * angle.speed + 1;
+      p.velocity.z = angle.dz * angle.speed;
+    }else{
+      p.velocity.x = angle.dx * pSpeed;
+      p.velocity.y = angle.dy * pSpeed + 1;
+      p.velocity.z = angle.dz * pSpeed;
+    }
+    
 
     p.position.x += angle.dx * 10;
     p.position.y += angle.dy * 10;
