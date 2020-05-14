@@ -66,7 +66,6 @@ function init() {
         }else{
             socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, speed:100});
         }
-        event.stopPropagation();
     }
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
