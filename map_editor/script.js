@@ -354,7 +354,11 @@ import_file.onclick = function(){
     let d2 = 0;
     let d1 = 0;
 
+    // NOT SURE WHICH LINE SEPARATOR IS CORRECT!!
     let file = contents.split('\r\n');
+    if(file.length == 1){
+      file = file[0].split('\r');
+    }
 
     // Iterate through lines of map file
     file.forEach(function(line) {
