@@ -7,7 +7,7 @@ var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
 //var map = readMap("maps/40x40map.txt");
-var map = csv2map("testmaps/islands_150.csv");
+var map = csv2map("maps/islands_150.csv");
 //var map = csv2map("maps/50x50map.csv");
 http.listen(port);
 
@@ -27,7 +27,7 @@ app.get('/three.js', function(req, res){
 });
 
 app.get('/three.module.js', function(req, res){
-    res.sendFile(__dirname + '/node_modules/three/three.module.js');
+    res.sendFile(__dirname + '/client/three.module.js');
   });
 
 app.get('/pointerlock.js', function(req, res){
