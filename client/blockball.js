@@ -586,11 +586,13 @@ function drawPlayer(player){
     model.position.x = player.position.x;
     model.position.y = player.position.y;
     model.position.z = player.position.z;
+    model.name = "MODEL FOR: " + player.id;
 
     player.userName = player.name;
 
     player.usernameLabel = makeTextSprite( player.userName);
     player.usernameLabel.position.set(player.position.x, player.position.y + 15, player.position.z);
+    player.usernameLabel.name = "USERNAME FOR: " + player.id;
     scene.add( player.usernameLabel );
 
     player.model = model;
@@ -601,17 +603,22 @@ function drawPlayer(player){
 
 //Move this to a draw player function and call it from update player when player properties change
 socket.on("new player", function(player){
+  console.log("new player joined");
     drawPlayer(player);
 });
 
 socket.on("updatePlayer", function(player){
+  console.log("updating player");
     var p = players[player.id];
     p.userName = player.name;
     p.color = player.color;
     console.log("Updating color to: ", p.color);
+    //p.model.color = p.color;
     //if(p.color != player.color || p.userName != player.name){
-        removeEntity(p.model);
-        removeEntity(p.usernameLabel);
+      removeEntity(p.model);
+      removeEntity(p.usernameLabel);
+        //  p.model.setValues({color: p.color});
+        //  p.usernameLabel.dispatchEvent({type: 'dispose'});
         drawPlayer(p);
     //}
 
@@ -622,6 +629,7 @@ socket.on("updatePlayer", function(player){
 });
 
 function removeEntity(object) {
+  console.log("removing entity: " + object.name);
     var selectedObject = scene.getObjectByName(object.name);
     scene.remove( selectedObject );
 }
