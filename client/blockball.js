@@ -37,6 +37,8 @@ function init() {
     var instructions = document.getElementById( 'instructions' );
     var leaderboard = document.getElementById( 'leaderboard' );
     var startButton = document.getElementById('startButton');
+    //var continueButton = document.getElementById('continueButton');
+    //continueButton.style.display = 'none';
     startButton.addEventListener( 'click', function () {
         var username = document.getElementById('userName').value;
         var userColor = document.getElementById("userColor").value;
@@ -44,6 +46,14 @@ function init() {
         socket.emit("setUser", {name:username, color:userColor});
         controls.lock();
     }, false );
+    //I was thinking maybe we could use a second button that would not update the color or username of the player
+    //so once they start the game they can't change it. 
+    // continueButton.addEventListener('click', function (){
+    //   //var username = document.getElementById('userName').value;
+    //     //var userColor = document.getElementById("userColor").value;
+    //     //socket.emit("updateUser", {name:username, color:userColor});
+    //     controls.lock();
+    // }, false);
     controls.addEventListener( 'lock', function () {
         instructions.style.display = 'none';
         leaderboard.style.display = '';
@@ -53,6 +63,8 @@ function init() {
         blocker.style.display = 'block';
         instructions.style.display = '';
         leaderboard.style.display = '';
+        // startButton.style.display = 'none';
+        // continueButton.style.display = '';
     } );
     controls.getObject().position.x = 200;
     controls.getObject().position.y = 120;
@@ -319,7 +331,7 @@ function animate() {
     if(controls.getObject().position.y <= 15) {
         velocity.y = 0;
         socket.emit("playerFell")
-        respawn();
+        socket.emit("respawn")
     }
 
     if ( controls.isLocked === true ) {
@@ -575,7 +587,6 @@ var players = {};
 var projectiles = {};
 
 function drawPlayer(player){
-
     var cylinderGeometry = new THREE.CylinderBufferGeometry( 7.5, 7.5, 35, 10);
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
@@ -603,33 +614,20 @@ function drawPlayer(player){
 
 //Move this to a draw player function and call it from update player when player properties change
 socket.on("new player", function(player){
-  console.log("new player joined");
+  //console.log("new player joined");
     drawPlayer(player);
 });
 
 socket.on("updatePlayer", function(player){
-  console.log("updating player");
     var p = players[player.id];
     p.userName = player.name;
     p.color = player.color;
-    console.log("Updating color to: ", p.color);
-    //p.model.color = p.color;
-    //if(p.color != player.color || p.userName != player.name){
-      removeEntity(p.model);
-      removeEntity(p.usernameLabel);
-        //  p.model.setValues({color: p.color});
-        //  p.usernameLabel.dispatchEvent({type: 'dispose'});
-        drawPlayer(p);
-    //}
-
-    // removeEntity(p.usernameLabel);
-    // p.usernameLabel = makeTextSprite( p.userName );
-    // p.usernameLabel.position.set(p.position.x, p.position.y, p.position.z);
-    // scene.add( p.usernameLabel );
+    removeEntity(p.model);
+    removeEntity(p.usernameLabel);
+    drawPlayer(p);
 });
 
 function removeEntity(object) {
-  console.log("removing entity: " + object.name);
     var selectedObject = scene.getObjectByName(object.name);
     scene.remove( selectedObject );
 }
@@ -704,6 +702,7 @@ function updatePlayer(player){
 
 socket.on("player left", function(id){
     scene.remove(players[id].model);
+    scene.remove(players[id].usernameLabel);
     delete players[id];
 });
 
@@ -744,14 +743,15 @@ socket.on("objects",function(things){
     }
 });
 
-function respawn(){
-    controls.getObject().position.x = Math.random()*mAP[0][0].length*20;
-    controls.getObject().position.z = Math.random()*mAP[0].length*20;
-    controls.getObject().position.y = Math.random()*(mAP.length+5)*20 + (mAP.length-1) * 20;
-}
+socket.on("updateRespawnLocation", function(position){
+  
+  controls.getObject().position.x = position.x * 20;
+  controls.getObject().position.y = (position.z +2) * 20;
+  controls.getObject().position.z = position.y * 20;
+})
 
 socket.on("hit", function(){
-    respawn();
+  socket.emit("respawn")
 });
 
 socket.on("projectile burst", function(p){
