@@ -1,3 +1,4 @@
+var fs = require('fs');
 var express = require('express');
 var sio = require('socket.io');
 var app = express();
@@ -11,8 +12,29 @@ var map = csv2map("maps/islands_150.csv");
 //var map = csv2map("maps/50x50map.csv");
 http.listen(port);
 
-//console.log("running on port "+port);
+var SERVER_NAME = 'UNSET SERVER NAME';
+var SERVER_DESCRIPTION = "NO DESCRIPTION";
 
+fs.readFile("config.txt", "utf-8", function(err, data) {
+  if (err) {
+    console.log(err);
+    console.log("!!!\nPlease Create a config.txt file with the following format:");
+    console.log("line 1: SERVER NAME");
+    console.log("line 2: SERVER DESCRIPTION");
+    console.log("--------");
+  }else{
+    content = data.split("\n");
+    SERVER_NAME = content[0];
+    SERVER_DESCRIPTION = content[1];
+  }
+});
+
+// this allows cross origin JSON requests (to get status message)
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 app.get('/socket.io/socket.io.js', function(req, res){
   res.sendFile(__dirname + '/node_modules/socket.io/socket.io.js');
@@ -44,6 +66,16 @@ app.get('/bg.jpg', function(req,res){
 
 app.get("/", function(req, res){
   res.sendFile(__dirname + '/client/index.html');
+});
+
+app.get("/status.json", function(req, res){
+  let status = {
+    name: SERVER_NAME,
+    description: SERVER_DESCRIPTION,
+    players: players.length,
+    maxPlayers: 999,
+  };
+  res.send(JSON.stringify(status));
 });
 
 function csv2map(file_name) {
