@@ -1,3 +1,4 @@
+var fs = require('fs');
 var express = require('express');
 var sio = require('socket.io');
 var app = express();
@@ -10,6 +11,23 @@ console.log("running on port", port);
 var map = csv2map("maps/islands_150.csv");
 //var map = csv2map("maps/50x50map.csv");
 http.listen(port);
+
+var SERVER_NAME = 'UNSET SERVER NAME';
+var SERVER_DESCRIPTION = "NO DESCRIPTION";
+
+fs.readFile("config.txt", "utf-8", function(err, data) {
+  if (err) {
+    console.log(err);
+    console.log("!!!\nPlease Create a config.txt file with the following format:");
+    console.log("line 1: SERVER NAME");
+    console.log("line 2: SERVER DESCRIPTION");
+    console.log("--------");
+  }else{
+    content = data.split("\n");
+    SERVER_NAME = content[0];
+    SERVER_DESCRIPTION = content[1];
+  }
+});
 
 // this allows cross origin JSON requests (to get status message)
 app.use(function(req, res, next) {
@@ -52,8 +70,8 @@ app.get("/", function(req, res){
 
 app.get("/status.json", function(req, res){
   let status = {
-    name: "SERVER NAME",
-    description: "Free For All",
+    name: SERVER_NAME,
+    description: SERVER_DESCRIPTION,
     players: players.length,
     maxPlayers: 999,
   };
