@@ -330,8 +330,8 @@ function animate() {
     requestAnimationFrame( animate );
     if(controls.getObject().position.y <= 15) {
         velocity.y = 0;
+        controls.getObject().position.y = 16;
         socket.emit("playerFell")
-        socket.emit("respawn")
     }
 
     if ( controls.isLocked === true ) {
@@ -744,15 +744,14 @@ socket.on("objects",function(things){
 });
 
 socket.on("updateRespawnLocation", function(position){
-  
   controls.getObject().position.x = position.x * 20;
   controls.getObject().position.y = (position.z +2) * 20;
   controls.getObject().position.z = position.y * 20;
 })
 
-socket.on("hit", function(){
-  socket.emit("respawn")
-});
+// socket.on("hit", function(){
+//   socket.emit("respawn")
+// });
 
 socket.on("projectile burst", function(p){
     projectiles[p.id].object.material = new THREE.MeshLambertMaterial( {color: 0xFF5511} );
