@@ -15,7 +15,11 @@ var color = new THREE.Color();
 var sprint = false;
 var startTime = Date.now();
 var player_radius = 7.5;
+<<<<<<< HEAD
 var star = create_star_sprite();
+=======
+var playerJustFell = false;
+>>>>>>> de37bdb7453fcec6e686e72ac20fa57afbbc97fd
 
 init();
 animate();
@@ -112,7 +116,9 @@ function init() {
                 break;
             case 69: // e
                 // shoot
-                onClick(event);
+                if(!playerJustFell){
+                  onClick(event);
+                }
                 break;
         }
     };
@@ -339,10 +345,13 @@ function nextPosition(position, move){
 function animate() {
     requestAnimationFrame( animate );
     if(controls.getObject().position.y <= 15) {
+      if(!playerJustFell){
+        playerJustFell = true;
         velocity.y = 0;
-        controls.getObject().position.y = 1000;
-        controls.getObject().position.z = -500;
+        // controls.getObject().position.y = 1000;
+        // controls.getObject().position.z = -500;
         socket.emit("playerFell")
+      }
     }
 
     if ( controls.isLocked === true ) {
@@ -756,6 +765,7 @@ socket.on("updateRespawnLocation", function(position){
   controls.getObject().position.x = position.x * 20;
   controls.getObject().position.y = (position.z +2) * 20;
   controls.getObject().position.z = position.y * 20;
+  playerJustFell = false;
 })
 
 // socket.on("hit", function(){
