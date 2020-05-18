@@ -15,6 +15,7 @@ var color = new THREE.Color();
 var sprint = false;
 var startTime = Date.now();
 var player_radius = 7.5;
+var star = create_star_sprite();
 
 init();
 animate();
@@ -212,6 +213,15 @@ function getFromMap(mapPos){
     return 0;
 }
 
+function create_star_sprite(){
+    let spriteMap = new THREE.TextureLoader().load( "/sprites/star.png" );
+    let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
+    let sprite = new THREE.Sprite( spriteMaterial );
+    sprite.name = "STAR";
+    sprite.scale.set(50,50,1);
+    return sprite;
+}
+
 function isColliding(position){
     var collidingWith = [];
     var checkspots = [];
@@ -400,8 +410,6 @@ var mAP = [[[]]];
 
 socket.on("map", function(map){
     mAP = map; 
-
-    console.dir(mAP);
 
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
@@ -755,11 +763,31 @@ socket.on("updateRespawnLocation", function(position){
 // });
 
 socket.on("projectile burst", function(p){
-    projectiles[p.id].object.material = new THREE.MeshLambertMaterial( {color: 0xFF5511} );
+    var o = projectiles[p.id].object;
+    o.position.x = p.x
+    o.position.y = p.y;
+    o.position.z = p.z;
+
+    o.material = new THREE.MeshLambertMaterial( {color: 0xFF5511} );
     setTimeout(function(){
         scene.remove(projectiles[p.id].object);
     }, 1500);
 
+});
+
+socket.on("star position", function(position){
+    if(!scene.getObjectByName(star.name)){
+        scene.add(star);
+        console.log("added star");
+    }
+    star.position.x = position.x;
+    star.position.y = position.y + 20;
+    star.position.z = position.z;
+    console.log(star);
+});
+socket.on("remove star", function(position){
+    scene.remove(star);
+    console.log("removed star");
 });
 
 socket.on("leaderboard", function(board) {
@@ -774,7 +802,6 @@ socket.on("leaderboard", function(board) {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 
 async function sendDataToServer(){
     while("Vincent" > "Michael"){
