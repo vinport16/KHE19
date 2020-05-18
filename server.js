@@ -7,9 +7,15 @@ var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
+//Server Specific Values: 
 //var map = readMap("maps/40x40map.txt");
 var map = csv2map("maps/islands_150.csv");
-//var map = csv2map("maps/50x50map.csv");
+//var map = json2map("maps/map2_0test.json");
+var gameType = "";
+var flags = [];
+var spawnAreas = [];
+
+
 http.listen(port);
 
 var SERVER_NAME = 'UNSET SERVER NAME';
@@ -81,6 +87,41 @@ app.get("/status.json", function(req, res){
   };
   res.send(JSON.stringify(status));
 });
+
+function json2map(file_name){
+  var fs = require('fs');
+  var contents = fs.readFileSync(file_name).toString();
+  const mapFileContents = JSON.parse(contents);
+  //console.log(mapFileContents);
+  gameType = mapFileContents.mapInfo.gameType;
+  flags = mapFileContents.specialObjects.flags;
+  spawnAreas = mapFileContents.specialObjects.spawnAreas;
+
+  var XSize = mapFileContents.mapInfo.x;
+  var YSize = mapFileContents.mapInfo.y;
+  var ZSize = mapFileContents.mapInfo.z;
+
+  var map = [];
+
+  var currentZ = 0;
+  var jsonMap = mapFileContents.map;
+  
+  for(var z in jsonMap){
+    map.push([]);
+    for(var y in jsonMap[z]){
+      for(var x in jsonMap[z][y]){
+        map[currentZ].push(jsonMap[z][y][x])
+      }
+      ;
+    }
+    currentZ++;
+  }
+
+  console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
+  
+  return map;
+
+}
 
 function csv2map(file_name) {
   var fs = require('fs');
