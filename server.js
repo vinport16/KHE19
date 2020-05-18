@@ -267,7 +267,7 @@ io.on("connection", function(socket){
 
 });
 
-function projCollision(p,map){
+function projCollisionWithMap(p, map){
   mapPos = {};
   mapPos.x = Math.floor((p.position.x+10)/20);
   mapPos.y = Math.floor((p.position.y+10)/20);
@@ -276,10 +276,19 @@ function projCollision(p,map){
   if(mapPos.x >= 0 && mapPos.y >= 0 && mapPos.z >= 0){
     if(map.length > mapPos.y && map[0].length > mapPos.z && map[0][0].length > mapPos.x){
       if(map[mapPos.y][mapPos.z][mapPos.x] != 0){
-        return 1;
+        return true;
       }
     }
   }
+
+  return false;
+}
+
+function projCollision(p,map){
+  if(projCollisionWithMap(p,map)){
+    return true;
+  }
+  
   for(i in players){
     var player = players[i].position;
     var dz = player.z - p.position.z;
@@ -293,7 +302,7 @@ function projCollision(p,map){
       p.owner.kills.push(players[i].id);
       respawn(players[i]);
       updateLeaderboard();
-      return 1;
+      return true;
     }
   }
   return false;
@@ -338,6 +347,26 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function moveProjectileToHitLocation(p){
+    // start moving the projectile backwards, out of the block
+    let direction = -1;
+    let fraction = 0.5;
+    for(let i = 0; i < 5; i++){
+
+      //move
+      p.position.x += p.velocity.x * pSpeed/4 * wait/1000 * fraction * direction;
+      p.position.y += p.velocity.y * pSpeed/4 * wait/1000 * fraction * direction;
+      p.position.z += p.velocity.z * pSpeed/4 * wait/1000 * fraction * direction;
+
+      if(projCollisionWithMap(p,map)){
+        direction = -1;
+      }else{
+        direction = 1;
+      }
+      fraction = fraction/2;
+    }
+}
+
 // calculate projectile collisions with higher precision than step speed
 async function moveProjectile(p){
   var hit = false;
@@ -352,6 +381,11 @@ async function moveProjectile(p){
 
     if(projCollision(p,map)){
       hit = true;
+      if(projCollisionWithMap(p,map)){
+        moveProjectileToHitLocation(p);
+      }else{
+        // hit was with player, do not find exact hit location
+      }
     }
 
     p.count++;
