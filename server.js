@@ -187,7 +187,7 @@ io.on("connection", function(socket){
     player.color = user.color;
     for(i in players){
         if(players[i].id != player.id){
-            players[i].socket.emit("updatePlayer", {id:player.id, name: player.name, color:player.color});
+            players[i].socket.emit("updatePlayer", {id:player.id, name: player.name, color:player.color, position: player.position});
         }
     }
   });
@@ -205,9 +205,14 @@ io.on("connection", function(socket){
     }
   });
 
+  socket.on("respawn", function() {
+    respawn(player);
+  })
+
   socket.on("playerFell", function(){
       player.deaths.push([player.id]);
       updateLeaderboard();
+      respawn(player);
   });
 
   socket.on("player position", function(position){
@@ -286,12 +291,23 @@ function projCollision(p,map){
       //console.log("PLAYER",players[i].name,"WAS HIT BY",p.owner.name);
       players[i].deaths.push(p.owner.id);
       p.owner.kills.push(players[i].id);
-      players[i].socket.emit("hit");
+      respawn(players[i]);
       updateLeaderboard();
       return 1;
     }
   }
   return false;
+}
+
+function respawn(p){
+  var x, y , z = 0;
+  do {
+    x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
+    y = parseInt(Math.random()*(map[0].length - 4) + 2,10);
+    z = parseInt(Math.random()*(map.length - 3),10);
+  }
+  while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
+  p.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
 }
 
 function updateLeaderboard(){
