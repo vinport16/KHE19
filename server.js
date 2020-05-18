@@ -36,6 +36,10 @@ app.use(function(req, res, next) {
   next();
 });
 
+// serve files from sprites and map editor directories
+app.use('/sprites', express.static('sprites'));
+app.use('/map_editor', express.static('map_editor'));
+
 app.get('/socket.io/socket.io.js', function(req, res){
   res.sendFile(__dirname + '/node_modules/socket.io/socket.io.js');
 });
