@@ -330,7 +330,8 @@ function animate() {
     requestAnimationFrame( animate );
     if(controls.getObject().position.y <= 15) {
         velocity.y = 0;
-        controls.getObject().position.y = 16;
+        controls.getObject().position.y = 1000;
+        controls.getObject().position.z = -500;
         socket.emit("playerFell")
     }
 

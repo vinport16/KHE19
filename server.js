@@ -201,17 +201,6 @@ io.on("connection", function(socket){
     }
   });
 
-  function respawn(player){
-    var x, y , z = 0;
-    do {
-      x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
-      y = parseInt(Math.random()*(map[0].length - 4) + 2,10);
-      z = parseInt(Math.random()*(map.length - 3),10);
-    }
-    while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
-    player.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
-  }
-
   socket.on("respawn", function() {
     respawn(player);
   })
@@ -304,6 +293,17 @@ function projCollision(p,map){
     }
   }
   return false;
+}
+
+function respawn(p){
+  var x, y , z = 0;
+  do {
+    x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
+    y = parseInt(Math.random()*(map[0].length - 4) + 2,10);
+    z = parseInt(Math.random()*(map.length - 3),10);
+  }
+  while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
+  p.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
 }
 
 function updateLeaderboard(){
