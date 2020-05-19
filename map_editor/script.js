@@ -19,6 +19,9 @@ var selectedColor = "white";
 //   "blue"
 // ]
 
+let spawnAreas = [];
+let flags = []; //TODO
+
 let colors = [
   ["white", 0.0]
 ]
@@ -296,16 +299,16 @@ var xsize = document.getElementById("xsize");
 var ysize = document.getElementById("ysize");
 var new_map = document.getElementById("new");
 
-var file = document.getElementById("file"); //TODO
-var import_file = document.getElementById("import"); //TODO
+var file = document.getElementById("file"); 
+var import_file = document.getElementById("import"); 
 var export_file = document.getElementById("export");
 
 var button_small = document.getElementById("size-small");
 var button_big = document.getElementById("size-big");
 
-var insert_layer = document.getElementById("new-layer"); //TODO
-var delete_layer = document.getElementById("delete-layer"); //TODO
-var duplicate_layer = document.getElementById("duplicate-layer"); //TODO
+var insert_layer = document.getElementById("new-layer"); 
+var delete_layer = document.getElementById("delete-layer"); 
+var duplicate_layer = document.getElementById("duplicate-layer"); 
 
 var brush_select = document.getElementById("brush");
 //var color_select = document.getElementById("color");
@@ -417,7 +420,7 @@ jsonExport.onclick = function(){
     }
   }
   
-  var json = {"mapInfo": {}, "specialObjects":{}, "colors": {colors}, "map":{flipped_map}};
+  var json = {"mapInfo": {}, "specialObjects":{flags, spawnAreas}, "colors": {colors}, "map":{flipped_map}};
   json.mapInfo.name = document.getElementById("mapName").value;
   json.mapInfo.creator = document.getElementById("creatorName").value;
   json.mapInfo.dateMade = new Date().toISOString();
@@ -429,6 +432,7 @@ jsonExport.onclick = function(){
 
   download("map.json", jsonString);
 }
+
 export_file.onclick = function(){
   let flipped_map = flipMap(map);  
 
@@ -515,15 +519,30 @@ addColor.onclick = function(){
   if(isNaN(range)){
     range = 0.05;
   }
+  colors.push([color, range]);
+
   
   //Add color square to the html page
   var newColorDiv = document.createElement("div");
   newColorDiv.setAttribute("style", "height: 29px; width: 29px; display: inline-block; background-color:" + color);
   newColorDiv.setAttribute("id", color);
+  if(document.getElementById("team1spawn").checked){
+    newColorDiv.innerHTML = "T1"
+    spawnAreas.push({"team": "team1", "value": findColorValue(color)});
+  }else if(document.getElementById("team2spawn").checked){
+    newColorDiv.innerHTML = "T2"
+    spawnAreas.push({"team": "team2", "value": findColorValue(color)});
+  }
+
+
   document.getElementById("colorSelect").appendChild(newColorDiv);
 
+  //Reset the checkboxes: 
+  document.getElementById("team1spawn").checked = false;
+  document.getElementById("team2spawn").checked = false;
+
+
   //Add new color to the colors array
-  colors.push([color, range]);
 }
 
 colorSelect.addEventListener("click", function(){
@@ -582,13 +601,3 @@ function findColorValue(color){
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
