@@ -35,11 +35,17 @@
       <hr>
       Brush:<br>
       <select id="brush"></select>
-      <select id="color"></select>
+      <!-- <select id="color"></select> -->
+      <br>
+      <div id="colorSelect">
+        <div id="white" style="height: 29px; width: 29px; display: inline-block; background-color: white"></div>
+      </div>
       <br>
       Add a new color: <br>
       <input id="newColor" type="color"/>
+      <br> Range:
       <input id="newColorRange" type = "text"/>
+      The range is how textured a surface will be. Enter a value between 0.01 and 0.5. Smaller values will result in a more uniform surface color. 
       <button id="addNewColor">Add Color</button>
 
       <p>navigate with WASD. QE to move between layers. CMD-Z to undo.</p>

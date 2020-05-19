@@ -20,7 +20,7 @@ var colors = [];
 // var gameType = "";
 // var flags = [];
 // var spawnAreas = [];
- //var colors = json2colors(MAPFILE);
+// var colors = json2colors(MAPFILE);
 
 
 http.listen(port);

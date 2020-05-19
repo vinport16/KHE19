@@ -2,20 +2,25 @@ var square_width = 10;
 var view_position = {x:-20, y:-2};
 var view_height = 0;
 
-var block_type = 0;
+//var block_type = 0;
 var brush_type = 0;
 var gameType_type = 0;
+var selectedColor = "white";
 
-let color = [
-  "white",
-  "green",
-  "red",
-  "brown",
-  "blue",
-  "yellow",
-  "gray",
-  "pink",
-  "blue"
+// let color = [
+//   "white",
+//   "green",
+//   "red",
+//   "brown",
+//   "blue",
+//   "yellow",
+//   "gray",
+//   "pink",
+//   "blue"
+// ]
+
+let colors = [
+  ["white", 0.0]
 ]
 
 let brush = [
@@ -112,14 +117,14 @@ function drawMap(){
       // show preview two levels deep
       if(map[view_height][i][j] == 0 && view_height > 0){
         if(map[view_height-1][i][j] == 0 && view_height > 1){
-          drawTile({x:i, y:j}, color[map[view_height-2][i][j]]);
+          drawTile({x:i, y:j}, colors[map[view_height-2][i][j]][0]);
           drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
         }else{
-          drawTile({x:i, y:j}, color[map[view_height-1][i][j]]);
+          drawTile({x:i, y:j}, colors[map[view_height-1][i][j]][0]);
         }
         drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
       }else{
-        drawTile({x:i, y:j},color[map[view_height][i][j]]);
+        drawTile({x:i, y:j},colors[map[view_height][i][j]][0]);
       }
     }
   }
@@ -136,7 +141,7 @@ function drawRange(start, end){
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
       if(map.exists(view_height, x, y)){
-        drawTile({x:x, y:y}, color[block_type]);
+        drawTile({x:x, y:y}, selectedColor);
       }
     }
   }
@@ -152,7 +157,7 @@ function writeRange(start, end){
 
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
-      writeTile({x:x, y:y}, block_type);
+      writeTile({x:x, y:y}, findColorValue(selectedColor));
     }
   }
 }
@@ -173,13 +178,13 @@ function writeArray(position, array, block){
   }
 }
 
-function writeWithBrush(position, brush, block_type){
+function writeWithBrush(position, brush, colorIndex){
   if(brush[brush_type] == "point"){
-    writeTile(position, block_type);
+    writeTile(position, colorIndex);
   }else if(brush[brush_type] == "three"){
-    writeArray(position, three_brush, block_type);
+    writeArray(position, three_brush, colorIndex);
   }else if(brush[brush_type] == "seven"){
-    writeArray(position, seven_brush, block_type);
+    writeArray(position, seven_brush, colorIndex);
   }
 }
 
@@ -202,7 +207,7 @@ canvas.addEventListener("mousedown", function(event){
 
   startSelection = position;
 
-  writeWithBrush(position, brush, block_type);
+  writeWithBrush(position, brush, findColorValue(selectedColor));
 
   drawMap();
   //drawTile(position, "red");
@@ -216,7 +221,7 @@ canvas.addEventListener("mousemove", function(event){
 
   if(startSelection){
     
-    writeWithBrush(position, brush, block_type)
+    writeWithBrush(position, brush, findColorValue(selectedColor))
 
     drawMap();
     if(brush[brush_type] == "rectangle"){
@@ -303,11 +308,13 @@ var delete_layer = document.getElementById("delete-layer"); //TODO
 var duplicate_layer = document.getElementById("duplicate-layer"); //TODO
 
 var brush_select = document.getElementById("brush");
-var color_select = document.getElementById("color");
+//var color_select = document.getElementById("color");
 
 
 var jsonExport = document.getElementById("jsonExport");
 var gameType_select = document.getElementById("gameType");
+var addColor = document.getElementById("addNewColor");
+var colorSelect = document.getElementById("colorSelect");
 
 function updateLayer(){
   current_layer.innerHTML = "layer: "+(view_height+1)+"/"+map.length;
@@ -501,20 +508,48 @@ button_big.onclick = function(){
   drawMap();
 };
 
-for(var i = 0; i < color.length; i++){
-  var opt = color[i];
-  if(i == 0){
-    opt = "empty";
+
+addColor.onclick = function(){
+  var color = document.getElementById("newColor").value;
+  var range = Number(document.getElementById("newColorRange").value);
+  if(isNaN(range)){
+    range = 0.05;
   }
-  var el = document.createElement("option");
-  el.textContent = opt;
-  el.value = i;
-  color_select.appendChild(el);
+  
+  //Add color square to the html page
+  var newColorDiv = document.createElement("div");
+  newColorDiv.setAttribute("style", "height: 29px; width: 29px; display: inline-block; background-color:" + color);
+  newColorDiv.setAttribute("id", color);
+  document.getElementById("colorSelect").appendChild(newColorDiv);
+
+  //Add new color to the colors array
+  colors.push([color, range]);
 }
 
-color_select.addEventListener("change", function(){
-  block_type = color_select.value;
+colorSelect.addEventListener("click", function(){
+  if(event.target.id != "colorSelect"){
+    var previousColor = selectedColor;
+    selectedColor = event.target.id;
+    document.getElementById(previousColor).style.border = "";
+    document.getElementById(selectedColor).style.border = "1px solid white";
+  }
 });
+
+
+// for(var i = 0; i < color.length; i++){
+//   var opt = color[i];
+//   if(i == 0){
+//     opt = "empty";
+//   }
+//   var el = document.createElement("option");
+//   el.textContent = opt;
+//   el.value = i;
+//   color_select.appendChild(el);
+// }
+
+// color_select.addEventListener("change", function(){
+//   block_type = color_select.value;
+// });
 
 for(var i = 0; i < brush.length; i++){
   var opt = brush[i];
@@ -540,6 +575,13 @@ gameType_select.addEventListener("change", function(){
   gameType_type = gameType_select.value;
 })
 
+function findColorValue(color){
+  for(var i = 0; i < colors.length; i++){
+    if(colors[i][0] == color){
+      return i;
+    }
+  }
+}
 
 
 
