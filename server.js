@@ -14,12 +14,13 @@ var map = csv2map("maps/islands_150.csv");
 var colors = [];
 
 /***Map 2.0 Files:***/ 
-// var MAPFILE = "maps/map2_0test.json";
-// var map = json2map(MAPFILE);
+//map2_0test.json doesn't work right now. I changed the map format to just use nested arrays. 
+//var MAPFILE = "maps/temp.json";
+//var map = json2map(MAPFILE);
 // var gameType = "";
 // var flags = [];
 // var spawnAreas = [];
-// var colors = json2colors(MAPFILE);
+ //var colors = json2colors(MAPFILE);
 
 
 http.listen(port);
@@ -125,17 +126,25 @@ function json2map(file_name){
 
   var currentZ = 0;
   var jsonMap = mapFileContents.map;
+
+  console.log("json map: ")
+  console.log(jsonMap);
   
-  for(var z in jsonMap){
-    map.push([]);
-    for(var y in jsonMap[z]){
-      for(var x in jsonMap[z][y]){
-        map[currentZ].push(jsonMap[z][y][x])
-      }
-      ;
-    }
-    currentZ++;
+  for(var flippedMap in jsonMap){
+    //map.push(jsonMap[z]);
+     for(var z in jsonMap[flippedMap]){
+      map.push(jsonMap[flippedMap][z]);
+     }
+    //   for(var x in jsonMap[z][y]){
+    //     map[currentZ].push(jsonMap[z][y][x])
+    //   }
+    //   ;
+    // }
+    // currentZ++;
   }
+
+  console.log("*****************");
+  console.log(map);
 
   console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
 

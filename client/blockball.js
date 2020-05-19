@@ -44,7 +44,6 @@ function init() {
     startButton.addEventListener( 'click', function () {
         var username = document.getElementById('userName').value;
         var userColor = document.getElementById("userColor").value;
-        console.log("GOt a color: ", userColor);
         socket.emit("setUser", {name:username, color:userColor});
         controls.lock();
     }, false );
@@ -469,7 +468,7 @@ socket.on("map", function(map, colors){
                     var material = new THREE.MeshLambertMaterial({color: colorInfo.hex});
                     //Get mix up the given color by adding a random number to the lightness. 
                     //The random number is within previousLightness +- range. 
-                    material.color.offsetHSL(0,0, Math.random() * colorInfo.lightnessRange * 2 - colorInfo.lightnessRange *2 )
+                    material.color.offsetHSL(0,0, Math.random() * colorInfo.lightnessRange * 2 - colorInfo.lightnessRange * 2 )
                     boxMaterial = material;
                   }
 

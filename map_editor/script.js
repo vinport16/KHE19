@@ -4,6 +4,7 @@ var view_height = 0;
 
 var block_type = 0;
 var brush_type = 0;
+var gameType_type = 0;
 
 let color = [
   "white",
@@ -39,6 +40,13 @@ let seven_brush = [
   [0,1,1,1,1,1,0],
   [0,0,1,1,1,0,0]
 ];
+
+let gameType = [
+  "Free For All",
+  "Capture The Flag",
+  "Teams",
+  "King of the Hill"
+]
 
 var map = blankMap(5, 40, 40);
 var previous_map;
@@ -297,6 +305,10 @@ var duplicate_layer = document.getElementById("duplicate-layer"); //TODO
 var brush_select = document.getElementById("brush");
 var color_select = document.getElementById("color");
 
+
+var jsonExport = document.getElementById("jsonExport");
+var gameType_select = document.getElementById("gameType");
+
 function updateLayer(){
   current_layer.innerHTML = "layer: "+(view_height+1)+"/"+map.length;
 }
@@ -327,6 +339,7 @@ function flipMap(map){ // blockball uses zyx array order, editor uses zxy
       }
     }
   }
+
   return newMap;
 }
 
@@ -386,8 +399,31 @@ import_file.onclick = function(){
   reader.readAsText(file.files[0]);
 }
 
+jsonExport.onclick = function(){
+  let flipped_map = flipMap(map);  
+  //convert all string values to int values
+  for(let z = 0; z < flipped_map.length; z++){
+    for(let x = 0; x < flipped_map[z].length; x++){
+      for(let y = 0; y < flipped_map[z][x].length; y++){
+        flipped_map[z][x][y] = Number(flipped_map[z][x][y]);
+      }
+    }
+  }
+  
+  var json = {"mapInfo": {}, "specialObjects":{}, "colors": {}, "map":{flipped_map}};
+  json.mapInfo.name = document.getElementById("mapName").value;
+  json.mapInfo.creator = document.getElementById("creatorName").value;
+  json.mapInfo.dateMade = new Date().toISOString();
+  json.mapInfo.gameType = gameType[gameType_type];
+
+  var jsonString = JSON.stringify(json);
+  console.log(json);
+  console.log(jsonString);
+
+  //download("map.json", jsonString);
+}
 export_file.onclick = function(){
-  let flipped_map = flipMap(map);
+  let flipped_map = flipMap(map);  
 
   output = "";
   for(let z = 0; z < flipped_map.length; z++){
@@ -492,6 +528,17 @@ brush_select.addEventListener("change", function(){
   brush_type = brush_select.value;
 });
 
+for(var i = 0; i < gameType.length; i++){
+  var opt = gameType[i];
+  var el = document.createElement("option");
+  el.textContent = opt;
+  el.value = i;
+  gameType_select.appendChild(el);
+}
+
+gameType_select.addEventListener("change", function(){
+  gameType_type = gameType_select.value;
+})
 
 
 
