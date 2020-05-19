@@ -326,7 +326,12 @@ io.on("connection", function(socket){
       p.velocity.y = angle.dy * pSpeed + 1;
       p.velocity.z = angle.dz * pSpeed;
     }
-    
+
+    if(parseInt(angle.fracture)){
+      p.fracture = parseInt(angle.fracture);
+    }else{
+      p.fracture = 0;
+    }
 
     p.position.x += angle.dx * 10;
     p.position.y += angle.dy * 10;
@@ -421,6 +426,44 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function normalize(v){
+  let magnitude = Math.sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
+  return {x: v.x/magnitude, y: v.y/magnitude, z: v.z/magnitude};
+}
+
+function randomAngle(){
+  let v = {};
+  v.x = Math.random() - 0.5;
+  v.y = Math.random() - 0.5;
+  v.z = Math.random() - 0.5;
+  return normalize(v);
+}
+
+function fracture(p){
+  let num_fractures = 4;
+  let fracture_speed = 10;
+  for(let i = 0; i < num_fractures; i++){
+    let newp = {};
+    newp.id = nextId++;
+    newp.owner = p.owner;
+    newp.count = 0;
+
+    newp.position = {};
+    newp.position.x = p.position.x;
+    newp.position.y = p.position.y;
+    newp.position.z = p.position.z;
+
+    newp.velocity = randomAngle();
+    newp.velocity.x *= fracture_speed;
+    newp.velocity.y *= fracture_speed;
+    newp.velocity.z *= fracture_speed;
+
+    newp.fracture = p.fracture - 1;
+    projectiles.push(newp);
+    moveProjectile(newp);
+  }
+}
+
 function moveProjectileToHitLocation(p){
     // start moving the projectile backwards, out of the block
     let direction = -1;
@@ -459,6 +502,9 @@ async function moveProjectile(p){
         moveProjectileToHitLocation(p);
       }else{
         // hit was with player, do not find exact hit location
+      }
+      if(p.fracture > 0){
+        fracture(p);
       }
     }
 

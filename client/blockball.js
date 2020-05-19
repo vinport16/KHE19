@@ -75,7 +75,7 @@ function init() {
         var vector = new THREE.Vector3( 0, 0, - 1 );
         vector.applyQuaternion( camera.quaternion );
         if(camera.fov > 20){
-            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
+            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, fracture:3});
         }else{
             socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, speed:100});
         }
@@ -800,16 +800,13 @@ socket.on("projectile burst", function(p){
 socket.on("star position", function(position){
     if(!scene.getObjectByName(star.name)){
         scene.add(star);
-        console.log("added star");
     }
     star.position.x = position.x;
     star.position.y = position.y + 20;
     star.position.z = position.z;
-    console.log(star);
 });
 socket.on("remove star", function(position){
     scene.remove(star);
-    console.log("removed star");
 });
 
 socket.on("leaderboard", function(board) {
