@@ -417,7 +417,7 @@ jsonExport.onclick = function(){
     }
   }
   
-  var json = {"mapInfo": {}, "specialObjects":{}, "colors": {}, "map":{flipped_map}};
+  var json = {"mapInfo": {}, "specialObjects":{}, "colors": {colors}, "map":{flipped_map}};
   json.mapInfo.name = document.getElementById("mapName").value;
   json.mapInfo.creator = document.getElementById("creatorName").value;
   json.mapInfo.dateMade = new Date().toISOString();
@@ -427,7 +427,7 @@ jsonExport.onclick = function(){
   console.log(json);
   console.log(jsonString);
 
-  //download("map.json", jsonString);
+  download("map.json", jsonString);
 }
 export_file.onclick = function(){
   let flipped_map = flipMap(map);  

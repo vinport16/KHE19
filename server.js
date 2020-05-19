@@ -10,17 +10,17 @@ console.log("running on port", port);
 //Server Specific Values: 
 /***Map 1.0 Files:***/
 //var map = readMap("maps/40x40map.txt");
-var map = csv2map("maps/islands_150.csv");
-var colors = [];
+//var map = csv2map("maps/islands_150.csv");
+//var colors = [];
 
 /***Map 2.0 Files:***/ 
 //map2_0test.json doesn't work right now. I changed the map format to just use nested arrays. 
-//var MAPFILE = "maps/temp.json";
-//var map = json2map(MAPFILE);
-// var gameType = "";
-// var flags = [];
-// var spawnAreas = [];
-// var colors = json2colors(MAPFILE);
+var MAPFILE = "maps/map2_0test.json";
+var map = json2map(MAPFILE);
+ var gameType = "";
+ var flags = [];
+ var spawnAreas = [];
+ var colors = json2colors(MAPFILE);
 
 
 http.listen(port);
@@ -102,12 +102,11 @@ function json2colors(file_name){
 
   var jsonColors = mapFileContents.colors;
   var colorValues = [];
-
-  //Push nothing for air (0)
-  colorValues.push([]);
-
+  
+  
   for(var c in jsonColors){
-    colorValues.push(jsonColors[c]);
+    for(var c1 in jsonColors[c])
+    colorValues.push(jsonColors[c][c1]);
   }
   
   return colorValues;
@@ -121,30 +120,17 @@ function json2map(file_name){
   flags = mapFileContents.specialObjects.flags;
   spawnAreas = mapFileContents.specialObjects.spawnAreas;
 
-  
   var map = [];
 
   var currentZ = 0;
   var jsonMap = mapFileContents.map;
-
-  console.log("json map: ")
-  console.log(jsonMap);
   
   for(var flippedMap in jsonMap){
-    //map.push(jsonMap[z]);
      for(var z in jsonMap[flippedMap]){
       map.push(jsonMap[flippedMap][z]);
      }
-    //   for(var x in jsonMap[z][y]){
-    //     map[currentZ].push(jsonMap[z][y][x])
-    //   }
-    //   ;
-    // }
-    // currentZ++;
   }
 
-  console.log("*****************");
-  console.log(map);
 
   console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
 

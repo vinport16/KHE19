@@ -465,10 +465,11 @@ socket.on("map", function(map, colors){
                     }
                   }else{//new map file used. 
                     var colorInfo = colors[map[i][j][k]];
-                    var material = new THREE.MeshLambertMaterial({color: colorInfo.hex});
-                    //Get mix up the given color by adding a random number to the lightness. 
+                    //colorInfo in the format: ["#FFFFFF", 0.2]
+                    var material = new THREE.MeshLambertMaterial({color: colorInfo[0]});
+                    //Mix up the given color by adding a random number to the lightness. 
                     //The random number is within previousLightness +- range. 
-                    material.color.offsetHSL(0,0, Math.random() * colorInfo.lightnessRange * 2 - colorInfo.lightnessRange * 2 )
+                    material.color.offsetHSL(0,0, Math.random() * colorInfo[1] * 2 - colorInfo[1] )
                     boxMaterial = material;
                   }
 
