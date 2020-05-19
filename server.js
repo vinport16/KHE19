@@ -14,6 +14,7 @@ var map = csv2map("maps/islands_150.csv");
 var gameType = "";
 var flags = [];
 var spawnAreas = [];
+var colors = [];
 
 
 http.listen(port);
@@ -97,9 +98,16 @@ function json2map(file_name){
   flags = mapFileContents.specialObjects.flags;
   spawnAreas = mapFileContents.specialObjects.spawnAreas;
 
-  var XSize = mapFileContents.mapInfo.x;
-  var YSize = mapFileContents.mapInfo.y;
-  var ZSize = mapFileContents.mapInfo.z;
+  var jsonColors = mapFileContents.colors;
+  var colorValues = [];
+
+  //Push nothing for air (0)
+  colorValues.push([]);
+
+  for(var c in jsonColors){
+    colorValues.push(jsonColors[c]);
+  }
+  colors = colorValues;
 
   var map = [];
 
@@ -118,6 +126,10 @@ function json2map(file_name){
   }
 
   console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
+
+  if(map.length < 3){
+    console.err("The map is too short to spawn the player. Please add a map with at least 3 levels.");
+  }
   
   return map;
 

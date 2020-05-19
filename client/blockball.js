@@ -465,6 +465,10 @@ socket.on("map", function(map){
                     // but im not gonna do anything about it
                     // -vincent
 
+                    // I think its time we do something about it.
+                    // Lets use map2.0 to let users use any color then want.
+                    // -michael
+
                     var box = new THREE.BoxGeometry( 20, 20, 20 );
                     
                     var p = {};
