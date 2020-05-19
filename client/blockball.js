@@ -414,8 +414,11 @@ function animate() {
 
 var mAP = [[[]]];
 
-socket.on("map", function(map){
+socket.on("map", function(map, colors){
     mAP = map; 
+
+    console.log("COLORS: ");
+    console.log(colors);
 
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
@@ -430,7 +433,8 @@ socket.on("map", function(map){
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
                 if(map[i][j][k] != 0){
-                    var boxMaterial;
+                  var boxMaterial;
+                  if(colors.length == 0){//old map file used. 
                     if(map[i][j][k] == 1){ //grass
                         var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
                         grassMaterial.color.setHSL( 0.3333, 1, Math.random() * 0.1 + 0.25 );
@@ -460,6 +464,14 @@ socket.on("map", function(map){
                         skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
                         boxMaterial = skyMaterial;
                     }
+                  }else{//new map file used. 
+                    var colorInfo = colors[map[i][j][k]];
+                    var material = new THREE.MeshLambertMaterial({color: colorInfo.hex});
+                    //Get mix up the given color by adding a random number to the lightness. 
+                    //The random number is within previousLightness +- range. 
+                    material.color.offsetHSL(0,0, Math.random() * colorInfo.lightnessRange * 2 - colorInfo.lightnessRange *2 )
+                    boxMaterial = material;
+                  }
 
                     // im sorry that this is a mess
                     // but im not gonna do anything about it

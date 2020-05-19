@@ -8,13 +8,18 @@ var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
 //Server Specific Values: 
+/***Map 1.0 Files:***/
 //var map = readMap("maps/40x40map.txt");
 var map = csv2map("maps/islands_150.csv");
-//var map = json2map("maps/map2_0test.json");
-var gameType = "";
-var flags = [];
-var spawnAreas = [];
 var colors = [];
+
+/***Map 2.0 Files:***/ 
+// var MAPFILE = "maps/map2_0test.json";
+// var map = json2map(MAPFILE);
+// var gameType = "";
+// var flags = [];
+// var spawnAreas = [];
+// var colors = json2colors(MAPFILE);
 
 
 http.listen(port);
@@ -89,14 +94,10 @@ app.get("/status.json", function(req, res){
   res.send(JSON.stringify(status));
 });
 
-function json2map(file_name){
+function json2colors(file_name){
   var fs = require('fs');
   var contents = fs.readFileSync(file_name).toString();
   const mapFileContents = JSON.parse(contents);
-  //console.log(mapFileContents);
-  gameType = mapFileContents.mapInfo.gameType;
-  flags = mapFileContents.specialObjects.flags;
-  spawnAreas = mapFileContents.specialObjects.spawnAreas;
 
   var jsonColors = mapFileContents.colors;
   var colorValues = [];
@@ -107,8 +108,19 @@ function json2map(file_name){
   for(var c in jsonColors){
     colorValues.push(jsonColors[c]);
   }
-  colors = colorValues;
+  
+  return colorValues;
+}
+function json2map(file_name){
+  var fs = require('fs');
+  var contents = fs.readFileSync(file_name).toString();
+  const mapFileContents = JSON.parse(contents);
+  //console.log(mapFileContents);
+  gameType = mapFileContents.mapInfo.gameType;
+  flags = mapFileContents.specialObjects.flags;
+  spawnAreas = mapFileContents.specialObjects.spawnAreas;
 
+  
   var map = [];
 
   var currentZ = 0;
@@ -246,7 +258,7 @@ io.on("connection", function(socket){
   });
 
   socket.on("map", function(){
-    socket.emit("map",map);
+    socket.emit("map",map, colors);
     //console.log("Sent Map to ",player.id);
     for(i in players){
       if(players[i].id != player.id){

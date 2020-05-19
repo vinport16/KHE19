@@ -33,7 +33,7 @@
   "colors": {
     "1":{
       "name": "green grass",
-      "hex": "0x00FF00",
+      "hex": "#00c503",
       "hue": 0.3333,
       "saturation": 1,
       "lightnessMin": 0.25,
@@ -41,7 +41,7 @@
     },
     "2":{
       "name": "red",
-      "hex": "0xcb4154",
+      "hex": "#e10600",
       "hue": 0,
       "saturation": 1,
       "lightnessMin": 0.4,
@@ -49,55 +49,55 @@
     },
     "3": {
       "name": "brown",
-      "hex": "0x663333",
+      "hex": "#663333",
       "hue": 0.11111,
       "saturation": 1,
       "lightnessMin": 0.15,
-      "lightnessRange": 0.05
+      "lightnessRange": 0.1
     },
     "4": {
       "name": "does not exist yet",
-      "hex": "0x00F0FF",
+      "hex": "#00F0FF",
       "hue": 0.6,
       "saturation": 0.75,
       "lightnessMin": 0.3,
-      "lightnessRange": 0.25
+      "lightnessRange": 0.1
     },
     "5": {
       "name": "yellow",
       "value": 5,
-      "hex": "0xc2b280",
+      "hex": "#edef36",
       "hue": 0.12,
       "saturation": 0.12,
       "lightnessMin": 0.4,
-      "lightnessRange": 0.05
+      "lightnessRange": 0.1
     },
     "6": {
       "name": "grey",
       "value": 6,
-      "hex": "0xc2b280",
+      "hex": "#969a99",
       "hue": 0.0,
       "saturation": 0,
       "lightnessMin": 0.4,
-      "lightnessRange": 0.05
+      "lightnessRange": 0.1
     },
     "7": {
       "name": "pink",
       "value": 7,
-      "hex": "0xc2b280",
+      "hex": "#ef73e4",
       "hue": 0.8,
       "saturation": 1,
       "lightnessMin": 0.5,
-      "lightnessRange": 0.2
+      "lightnessRange": 0.1
     },
     "8": {
       "name": "wall blue",
       "value": 8,
-      "hex": "0x0000FF",
+      "hex": "#176fdf",
       "hue": 0.6,
       "saturation": 0.75,
       "lightnessMin": 0.3,
-      "lightnessRange": 0.25
+      "lightnessRange": 0.1
     }
   },
   "map": 
