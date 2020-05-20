@@ -421,16 +421,23 @@ jsonExport.onclick = function(){
   }
   
   var json = {"mapInfo": {}, "specialObjects":{flags, spawnAreas}, "colors": {colors}, "map":{flipped_map}};
-  json.mapInfo.name = document.getElementById("mapName").value;
-  json.mapInfo.creator = document.getElementById("creatorName").value;
-  json.mapInfo.dateMade = new Date().toISOString();
-  json.mapInfo.gameType = gameType[gameType_type];
+  var mapName = document.getElementById("mapName").value;
+  //TODO: Clean map name input and creater name input.
+  if(mapName == ""){
+    alert("Please enter a map name");
+  }else{
+    json.mapInfo.name = mapName;
+    json.mapInfo.creator = document.getElementById("creatorName").value;
+    json.mapInfo.dateMade = new Date().toISOString();
+    json.mapInfo.gameType = gameType[gameType_type];
 
-  var jsonString = JSON.stringify(json);
-  console.log(json);
-  console.log(jsonString);
+    var jsonString = JSON.stringify(json);
+    console.log(json);
+    console.log(jsonString);
 
-  download("map.json", jsonString);
+    download(mapName + ".json", jsonString);
+  }
+  
 }
 
 export_file.onclick = function(){
