@@ -8,7 +8,7 @@ var moveRight = false;
 var canJump = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
-var terminalVelocityY = -200;
+var terminalVelocityY = -500;
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
@@ -84,6 +84,7 @@ function init() {
         switch ( event.keyCode ) {
             case 16: // shift
                 camera.fov = 10;
+                controls.speedFactor = 0.0004;
                 camera.updateProjectionMatrix();
                 break;
             case 38: // up
@@ -122,6 +123,7 @@ function init() {
         switch ( event.keyCode ) {
             case 16: // shift
                 camera.fov = 75;
+                controls.speedFactor = 0.002;
                 camera.updateProjectionMatrix();
             case 38: // up
             case 87: // w
