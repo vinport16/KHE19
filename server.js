@@ -15,7 +15,7 @@ console.log("running on port", port);
 
 /***Map 2.0 Files:***/ 
 //map2_0test.json doesn't work right now. I changed the map format to just use nested arrays. 
-var MAPFILE = "maps/map2_0test.json";
+var MAPFILE = "maps/treeHouse.json";
 var map = json2map(MAPFILE);
  var gameType = "";
  var flags = [];
