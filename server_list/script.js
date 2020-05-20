@@ -25,6 +25,8 @@ for(let idx = 0; idx < servers.length; idx++){
       if (this.readyState == 4 && this.status == 200) {
           let status = JSON.parse(this.responseText);
           update(server, servers[idx], status);
+      }else if(this.readyState == 4 && this.status == 0){
+          offline(server, servers[idx]);
       }
   };
   xmlhttp.open("GET", url, true);
@@ -47,6 +49,16 @@ function update(server, address, status){
   addText(info, status.description);
   info.appendChild(document.createElement("br"));
   addText(info, status.players + "/" + status.maxPlayers + " players");
+  server.appendChild(info);
+}
+
+function offline(server, address, status){
+
+  removePendingElement(server);
+
+  let info = document.createElement("div");
+  info.classList.add("info");
+  addText(info, "Server Offline");
   server.appendChild(info);
 }
 
