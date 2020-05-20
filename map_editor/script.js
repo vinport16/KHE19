@@ -415,7 +415,12 @@ jsonImport.onclick = function(){
 
     document.getElementById("mapName").value = jsonContents.mapInfo.name;
     document.getElementById("creatorName").value = jsonContents.mapInfo.creator;
-    document.getElementById("gameType").value = jsonContents.mapInfo.gameType;
+    for(var i = 0; i < gameType.length; i++){
+      if(jsonContents.mapInfo.gameType == gameType[i]){
+        document.getElementById("gameType").selectedIndex = i;
+      }
+    }
+    
 
     map = flipMap(map);
     map.exists = e;
@@ -631,6 +636,8 @@ function addColorDiv(colorInfo, spawnTeamText){
   if(spawnTeamText != ""){
     newColorDiv.innerHTML = spawnTeamText;
   }
+
+  newColorDiv.setAttribute("class", "colorBox");
 
   document.getElementById("colorSelect").appendChild(newColorDiv);
 
