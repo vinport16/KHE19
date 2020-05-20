@@ -13,6 +13,7 @@ var PointerLockControls = function ( camera, domElement ) {
 
 	this.domElement = domElement || document.body;
 	this.isLocked = false;
+	this.speedFactor = 0.002;
 
 	//
 	// internals
@@ -39,8 +40,8 @@ var PointerLockControls = function ( camera, domElement ) {
 
 		euler.setFromQuaternion( camera.quaternion );
 
-    euler.y -= movementX * 0.002;
-		euler.x -= movementY * 0.002;
+    euler.y -= movementX * scope.speedFactor;
+		euler.x -= movementY * scope.speedFactor;
 
 		euler.x = Math.max( - PI_2, Math.min( PI_2, euler.x ) );
 

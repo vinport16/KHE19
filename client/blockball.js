@@ -8,7 +8,7 @@ var moveRight = false;
 var canJump = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
-var terminalVelocityY = -200;
+var terminalVelocityY = -500;
 var direction = new THREE.Vector3();
 var vertex = new THREE.Vector3();
 var color = new THREE.Color();
@@ -17,6 +17,8 @@ var startTime = Date.now();
 var player_radius = 7.5;
 var star = create_star_sprite();
 var playerJustFell = false;
+var reloadTime = 500;
+var loadStatus = 1;
 
 init();
 animate();
@@ -38,9 +40,9 @@ function init() {
     var blocker = document.getElementById( 'blocker' );
     var instructions = document.getElementById( 'instructions' );
     var leaderboard = document.getElementById( 'leaderboard' );
-    var startButton = document.getElementById('startButton');
-    //var continueButton = document.getElementById('continueButton');
-    //continueButton.style.display = 'none';
+    var startButton = document.getElementById('startButton' );
+    
+
     startButton.addEventListener( 'click', function () {
         var username = document.getElementById('userName').value;
         var userColor = document.getElementById("userColor").value;
@@ -72,18 +74,22 @@ function init() {
     controls.getObject().position.z = 200;
     scene.add( controls.getObject() );
     var onClick = function ( event ) {
-        var vector = new THREE.Vector3( 0, 0, - 1 );
-        vector.applyQuaternion( camera.quaternion );
-        if(camera.fov > 20){
-            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, fracture:3});
-        }else{
-            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, speed:100});
+        if(loadStatus > 0.999){
+            var vector = new THREE.Vector3( 0, 0, - 1 );
+            vector.applyQuaternion( camera.quaternion );
+            if(camera.fov > 20){
+                socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, fracture:3});
+            }else{
+                socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, speed:100});
+            }
+            loadStatus = 0;
         }
     }
     var onKeyDown = function ( event ) {
         switch ( event.keyCode ) {
             case 16: // shift
                 camera.fov = 10;
+                controls.speedFactor = 0.0004;
                 camera.updateProjectionMatrix();
                 break;
             case 38: // up
@@ -122,6 +128,7 @@ function init() {
         switch ( event.keyCode ) {
             case 16: // shift
                 camera.fov = 75;
+                controls.speedFactor = 0.002;
                 camera.updateProjectionMatrix();
             case 38: // up
             case 87: // w
@@ -399,6 +406,11 @@ function animate() {
             //controls.getObject().position.y = originalPosition.y; // THIS STOPS JUMPING THROUGH CEILINGS
             controls.getObject().position.z = originalPosition.z;
         }
+
+        // update reload status and bar
+        loadStatus += (time-prevTime)/reloadTime;
+        loadStatus = Math.min(loadStatus, 1);
+        document.getElementById( 'status-bar' ).style.width = (loadStatus * 100) + "%";
 
         // if ( controls.getObject().position.y < 10 ) {
         //     velocity.y = 0;
