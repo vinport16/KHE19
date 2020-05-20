@@ -15,7 +15,7 @@ console.log("running on port", port);
 
 /***Map 2.0 Files:***/ 
 //map2_0test.json doesn't work right now. I changed the map format to just use nested arrays. 
-var MAPFILE = "maps/temp/treeHouse.json";
+var MAPFILE = "maps/treeHouse.json";
 var map = json2map(MAPFILE);
  var gameType = "";
  var flags = [];
@@ -230,21 +230,27 @@ var pLife = 800;
 io.on("connection", function(socket){
   var player = {};
   player.id = nextId++;
-  player.name = player.id;
+  player.name = "player " + player.id;
   player.socket = socket;
   player.kills = [];
   player.deaths = [];
-  player.position = {x:0,y:0,z:0};
-  player.usernameLabel;
-  player.color = "red";
+  player.position = {x:0,y:0,z:1000};
+  player.respawning = false;
+  player.color = randomPlayerColor();
 
-  //console.log("player "+player.id+" logged in");
+  respawn(player);
+
+  console.log("player "+player.id+" logged in");
 
   players.push(player);
 
   socket.on("setUser", function(user){
-    player.name = user.name;
-    player.color = user.color;
+    if(player.name != user.name){
+        console.log(player.name + " changed their name to " + user.name);
+        player.name = user.name;
+        updateLeaderboard();
+    }
+    //player.color = user.color; //no longer allow player to set their own color
     for(i in players){
         if(players[i].id != player.id){
             players[i].socket.emit("updatePlayer", {id:player.id, name: player.name, color:player.color, position: player.position});
@@ -254,13 +260,10 @@ io.on("connection", function(socket){
 
   socket.on("map", function(){
     socket.emit("map",map, colors);
-    //console.log("Sent Map to ",player.id);
     for(i in players){
       if(players[i].id != player.id){
         player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name, color: players[i].color});
-        //console.log("sent player",players[i].id,"to",player.id);
         players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name, color: player.color});
-        //console.log("sent player",player.id,"to",players[i].id);
       }
     }
   });
@@ -275,8 +278,14 @@ io.on("connection", function(socket){
       respawn(player);
   });
 
+  socket.on("respawned", function(){
+      player.respawning = false;
+  });
+
   socket.on("player position", function(position){
-    player.position = position;
+      if(!player.respawning){
+          player.position = position;
+      }
   });
 
   socket.on("disconnect",function(){
@@ -288,7 +297,8 @@ io.on("connection", function(socket){
         players[i].socket.emit("player left", player.id);
       }
     }
-    //console.log("player "+player.id+" left");
+    console.log(player.name + " left");
+    updateLeaderboard();
   });
 
   socket.on("launch", function(angle){
@@ -332,6 +342,10 @@ io.on("connection", function(socket){
 
 });
 
+function randomPlayerColor(){
+  return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
+}
+
 function projCollisionWithMap(p, map){
   mapPos = {};
   mapPos.x = Math.floor((p.position.x+10)/20);
@@ -362,7 +376,7 @@ function projCollision(p,map){
     var bottom = player.y - (35/2);
     var top = player.y + (35/2);
     if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
-      //console.log("PLAYER",players[i].name,"WAS HIT BY",p.owner.name);
+      console.log(players[i].name + " was hit by " + p.owner.name);
       players[i].deaths.push(p.owner.id);
       p.owner.kills.push(players[i].id);
       respawn(players[i]);
@@ -374,6 +388,7 @@ function projCollision(p,map){
 }
 
 function respawn(p){
+  p.respawning = true;
   var x, y , z = 0;
   do {
     x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
@@ -382,6 +397,7 @@ function respawn(p){
   }
   while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
   p.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
+  p.position = {x:1000, y:1000, z:1000};
 }
 
 function updateLeaderboard(){

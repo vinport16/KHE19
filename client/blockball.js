@@ -41,7 +41,6 @@ function init() {
     var instructions = document.getElementById( 'instructions' );
     var leaderboard = document.getElementById( 'leaderboard' );
     var startButton = document.getElementById('startButton' );
-    
 
     startButton.addEventListener( 'click', function () {
         var username = document.getElementById('userName').value;
@@ -72,9 +71,10 @@ function init() {
     controls.getObject().position.x = 200;
     controls.getObject().position.y = 120;
     controls.getObject().position.z = 200;
+    socket.emit("respawn");
     scene.add( controls.getObject() );
     var onClick = function ( event ) {
-        if(loadStatus > 0.999){
+        if(loadStatus > 0.999 && controls.isLocked){
             var vector = new THREE.Vector3( 0, 0, - 1 );
             vector.applyQuaternion( camera.quaternion );
             if(camera.fov > 20){
@@ -428,9 +428,6 @@ var mAP = [[[]]];
 socket.on("map", function(map, colors){
     mAP = map; 
 
-    console.log("COLORS: ");
-    console.log(colors);
-
     var floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
     var position = floorGeometry.attributes.position;
     // objects
@@ -657,12 +654,12 @@ function drawPlayer(player){
 
 //Move this to a draw player function and call it from update player when player properties change
 socket.on("new player", function(player){
-  //console.log("new player joined");
     drawPlayer(player);
 });
 
 socket.on("updatePlayer", function(player){
     var p = players[player.id];
+    p.name = player.name;
     p.userName = player.name;
     p.color = player.color;
     removeEntity(p.model);
@@ -749,20 +746,23 @@ socket.on("player left", function(id){
     delete players[id];
 });
 
+function createProjectile(p){
+    var geometry = new THREE.SphereBufferGeometry( 2, 5, 5 );
+    var material = new THREE.MeshLambertMaterial( {color: 0xaaaaaa} );
+    var sphere = new THREE.Mesh( geometry, material );
+
+    sphere.position.x = p.x;
+    sphere.position.y = p.y;
+    sphere.position.z = p.z;
+
+    p.object = sphere;
+    scene.add( sphere );
+    projectiles[p.id] = p;
+}
+
 function updateProjectile(p){
     if(projectiles[p.id] == null){
-        var geometry = new THREE.SphereBufferGeometry( 2, 5, 5 );
-        var material = new THREE.MeshLambertMaterial( {color: 0xaaaaaa} );
-        var sphere = new THREE.Mesh( geometry, material );
-
-        sphere.position.x = p.x;
-        sphere.position.y = p.y;
-        sphere.position.z = p.z;
-
-        p.object = sphere;
-        scene.add( sphere );
-        projectiles[p.id] = p;
-
+        createProjectile(p);
     }else{
         var o = projectiles[p.id].object;
         o.position.x = p.x
@@ -791,13 +791,13 @@ socket.on("updateRespawnLocation", function(position){
   controls.getObject().position.y = (position.z +2) * 20;
   controls.getObject().position.z = position.y * 20;
   playerJustFell = false;
+  socket.emit("respawned", {});
 })
 
-// socket.on("hit", function(){
-//   socket.emit("respawn")
-// });
-
 socket.on("projectile burst", function(p){
+    if(!projectiles[p.id]){
+        createProjectile(p);
+    }
     var o = projectiles[p.id].object;
     o.position.x = p.x
     o.position.y = p.y;
