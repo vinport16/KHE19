@@ -22,8 +22,10 @@ var selectedColor = "white";
 let spawnAreas = [];
 let flags = []; //TODO
 
+let emptyColor = ["white", 0.0]
+
 let colors = [
-  ["white", 0.0]
+  emptyColor
 ]
 
 let brush = [
@@ -313,7 +315,7 @@ var duplicate_layer = document.getElementById("duplicate-layer");
 var brush_select = document.getElementById("brush");
 //var color_select = document.getElementById("color");
 
-
+var jsonImport = document.getElementById("jsonImport");
 var jsonExport = document.getElementById("jsonExport");
 var gameType_select = document.getElementById("gameType");
 var addColor = document.getElementById("addNewColor");
@@ -364,6 +366,64 @@ function download(filename, text) {
   element.click();
 
   document.body.removeChild(element);
+}
+
+jsonImport.onclick = function(){
+  let reader = new FileReader();
+  reader.onload = function(event){
+    let contents = event.target.result;
+    let e = map.exists;
+
+    //console.log(contents);
+    var jsonContents = JSON.parse(contents);
+
+    //console.log(jsonContents);
+
+    flags = jsonContents.specialObjects.flags;
+    spawnAreas = jsonContents.specialObjects.spawnAreas;
+
+    map = [];
+    for(var flippedMap in jsonContents.map){
+      for(var z in jsonContents.map[flippedMap]){
+        map.push(jsonContents.map[flippedMap][z]);
+      }
+    }
+
+    //remove all current colors on the page
+    colors = [];
+    var colorParent = document.getElementById("colorSelect");
+    while (colorParent.firstChild){
+      colorParent.removeChild(colorParent.firstChild);
+    }
+
+    for(var c in jsonContents.colors){
+      for(var c1 in jsonContents.colors[c]){
+        var alreadyAdded = false;
+        colors.push(jsonContents.colors[c][c1]);
+        for(var i = 0; i < spawnAreas.length; i++){
+          if(spawnAreas[i].value == jsonContents.colors[c][c1][0]){
+            addColorDiv(jsonContents.colors[c][c1], spawnAreas[i].team);
+            alreadyAdded = true;
+          }
+        }
+        if(!alreadyAdded){
+          addColorDiv(jsonContents.colors[c][c1], "");
+        }
+        
+      }
+    }
+
+    document.getElementById("mapName").value = jsonContents.mapInfo.name;
+    document.getElementById("creatorName").value = jsonContents.mapInfo.creator;
+    document.getElementById("gameType").value = jsonContents.mapInfo.gameType;
+
+    map = flipMap(map);
+    map.exists = e;
+    
+    drawMap();
+
+  }
+  reader.readAsText(file.files[0]);
 }
 
 import_file.onclick = function(){
@@ -526,40 +586,56 @@ addColor.onclick = function(){
   if(isNaN(range)){
     range = 0.05;
   }
+  //Add new color to the colors array
   colors.push([color, range]);
 
-  
-  //Add color square to the html page
-  var newColorDiv = document.createElement("div");
-  newColorDiv.setAttribute("style", "height: 29px; width: 29px; display: inline-block; background-color:" + color);
-  newColorDiv.setAttribute("id", color);
   if(document.getElementById("team1spawn").checked){
-    newColorDiv.innerHTML = "T1"
-    spawnAreas.push({"team": "team1", "value": findColorValue(color)});
+    addColorDiv([color, range], "T1");
+    spawnAreas.push({"team": "T1", "value": color});
   }else if(document.getElementById("team2spawn").checked){
-    newColorDiv.innerHTML = "T2"
-    spawnAreas.push({"team": "team2", "value": findColorValue(color)});
+    addColorDiv([color, range], "T2");
+    spawnAreas.push({"team": "T2", "value": color});
+  }else{
+    addColorDiv([color, range], "");
   }
 
+  
 
-  document.getElementById("colorSelect").appendChild(newColorDiv);
+  // //Add color to page // Move above to if statement ^^
+  // addColorDiv([color, range]);
 
   //Reset the checkboxes: 
   document.getElementById("team1spawn").checked = false;
   document.getElementById("team2spawn").checked = false;
-
-
-  //Add new color to the colors array
 }
 
 colorSelect.addEventListener("click", function(){
   if(event.target.id != "colorSelect"){
     var previousColor = selectedColor;
     selectedColor = event.target.id;
-    document.getElementById(previousColor).style.border = "";
+    if(previousColor != null){
+      document.getElementById(previousColor).style.border = "";
+    }
     document.getElementById(selectedColor).style.border = "1px solid white";
   }
 });
+
+function addColorDiv(colorInfo, spawnTeamText){
+  var color = colorInfo[0];
+  var range = colorInfo[1];
+
+  //Add color square to the html page
+  var newColorDiv = document.createElement("div");
+  newColorDiv.setAttribute("style", "height: 29px; width: 29px; display: inline-block; background-color:" + color);
+  newColorDiv.setAttribute("id", color);
+  if(spawnTeamText != ""){
+    newColorDiv.innerHTML = spawnTeamText;
+  }
+
+  document.getElementById("colorSelect").appendChild(newColorDiv);
+
+  
+}
 
 
 // for(var i = 0; i < color.length; i++){
