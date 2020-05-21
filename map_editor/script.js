@@ -129,7 +129,7 @@ function drawMap(){
         }
         drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
       }else{
-        drawTile({x:i, y:j},colors[map[view_height][i][j]][0]);
+          drawTile({x:i, y:j},colors[map[view_height][i][j]][0]);
       }
     }
   }

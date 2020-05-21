@@ -7,20 +7,17 @@ var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
-//Server Specific Values: 
-/***Map 1.0 Files:***/
-//var map = readMap("maps/40x40map.txt");
-//var map = csv2map("maps/islands_150.csv");
-//var colors = [];
 
+//Server Specific Values: 
 /***Map 2.0 Files:***/ 
-//map2_0test.json doesn't work right now. I changed the map format to just use nested arrays. 
 var MAPFILE = "maps/islands.json";
 var map = json2map(MAPFILE);
+var colors = json2colors(MAPFILE);
+//I don't think these are set right now. 
  var gameType = "";
  var flags = [];
  var spawnAreas = [];
- var colors = json2colors(MAPFILE);
+ 
 
 
 http.listen(port);
@@ -75,10 +72,6 @@ app.get('/pointerlock.js', function(req, res){
 
 app.get('/client/blockball.js', function(req, res){
     res.sendFile(__dirname + '/client/blockball.js');
-});
-
-app.get('/bg.jpg', function(req,res){
-    res.sendFile(__dirname + '/client/hdri.jpg');
 });
 
 app.get("/", function(req, res){
