@@ -20,6 +20,13 @@ var playerJustFell = false;
 var reloadTime = 500;
 var loadStatus = 1;
 
+var currentShotTypeIndex = 0;
+var shotTypes = [
+  {name: "regular", reloadTime: 400},
+  {name: "scope", reloadTime: 600},
+  {name: "fracture", reloadTime: 1000},
+]
+
 init();
 animate();
 
@@ -48,14 +55,6 @@ function init() {
         socket.emit("setUser", {name:username, color:userColor});
         controls.lock();
     }, false );
-    //I was thinking maybe we could use a second button that would not update the color or username of the player
-    //so once they start the game they can't change it. 
-    // continueButton.addEventListener('click', function (){
-    //   //var username = document.getElementById('userName').value;
-    //     //var userColor = document.getElementById("userColor").value;
-    //     //socket.emit("updateUser", {name:username, color:userColor});
-    //     controls.lock();
-    // }, false);
     controls.addEventListener( 'lock', function () {
         instructions.style.display = 'none';
         leaderboard.style.display = '';
@@ -65,8 +64,6 @@ function init() {
         blocker.style.display = 'block';
         instructions.style.display = '';
         leaderboard.style.display = '';
-        // startButton.style.display = 'none';
-        // continueButton.style.display = '';
     } );
     controls.getObject().position.x = 200;
     controls.getObject().position.y = 120;
@@ -77,11 +74,11 @@ function init() {
         if(loadStatus > 0.999 && controls.isLocked){
             var vector = new THREE.Vector3( 0, 0, - 1 );
             vector.applyQuaternion( camera.quaternion );
-            if(camera.fov > 20){
-                socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, fracture:3});
-            }else{
-                socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, speed:100});
-            }
+            //if(camera.fov > 20){
+                socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, type:shotTypes[currentShotTypeIndex].name});
+            //}else{
+               // socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, type: "scope"});
+            //}
             loadStatus = 0;
         }
     }
@@ -121,6 +118,14 @@ function init() {
                 if(!playerJustFell){
                   onClick(event);
                 }
+                break;
+            case 88: //x, exchange shot type
+                if(currentShotTypeIndex == shotTypes.length-1){
+                  currentShotTypeIndex = 0;
+                }else{
+                  currentShotTypeIndex++;
+                }
+                reloadTime = shotTypes[currentShotTypeIndex].reloadTime;
                 break;
         }
     };

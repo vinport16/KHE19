@@ -175,6 +175,8 @@ io.on("connection", function(socket){
         player.name = user.name;
         updateLeaderboard();
     }
+    console.log("player color: " + player.color);
+
     //player.color = user.color; //no longer allow player to set their own color
     for(i in players){
         if(players[i].id != player.id){
@@ -227,7 +229,7 @@ io.on("connection", function(socket){
   });
 
   socket.on("launch", function(angle){
-    var p = {};
+    var p = getNewProjectile(angle.type);
     p.id = nextId++;
     p.owner = player;
     p.count = 0;
@@ -238,21 +240,9 @@ io.on("connection", function(socket){
     p.position.z = player.position.z;
 
     p.velocity = {};
-    if(angle.speed != undefined){
-      p.velocity.x = angle.dx * angle.speed;
-      p.velocity.y = angle.dy * angle.speed + 1;
-      p.velocity.z = angle.dz * angle.speed;
-    }else{
-      p.velocity.x = angle.dx * pSpeed;
-      p.velocity.y = angle.dy * pSpeed + 1;
-      p.velocity.z = angle.dz * pSpeed;
-    }
-
-    if(parseInt(angle.fracture)){
-      p.fracture = parseInt(angle.fracture);
-    }else{
-      p.fracture = 0;
-    }
+    p.velocity.x = angle.dx * p.speed;
+    p.velocity.y = angle.dy * p.speed + 1;
+    p.velocity.z = angle.dz * p.speed;
 
     p.position.x += angle.dx * 10;
     p.position.y += angle.dy * 10;
@@ -411,6 +401,39 @@ function moveProjectileToHitLocation(p){
     }
 }
 
+function getNewProjectile(type){
+  if(type == "regular"){
+    return new regularProjectile();
+  }else if(type == "scope"){
+    return new scopeProjectile();
+  }else if(type == "fracture"){
+    return new fractureProjectile();
+  }
+}
+
+function regularProjectile(){
+  this.fracture = 0;
+  this.speed = 40;
+  this.grav = 5;
+  this.lifeSpan = 800;
+}
+
+function scopeProjectile(){
+  this.fracture = 0;
+  this.speed = 100;
+  this.grav = 5;
+  this.lifeSpan = 800;
+}
+
+function fractureProjectile(){
+  this.fracture = 3;
+  this.speed = 30;
+  this.grav = 6;
+  this.lifeSpan = 800;
+}
+
+
+
 // calculate projectile collisions with higher precision than step speed
 async function moveProjectile(p){
   var hit = false;
@@ -480,3 +503,6 @@ async function reportEverything(){
 }
 
 reportEverything();
+
+
+
