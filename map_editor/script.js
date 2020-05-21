@@ -7,22 +7,22 @@ var brush_type = 0;
 var gameType_type = 0;
 var selectedColor = "white";
 
-// let color = [
-//   "white",
-//   "green",
-//   "red",
-//   "brown",
-//   "blue",
-//   "yellow",
-//   "gray",
-//   "pink",
-//   "blue"
-// ]
-
 let spawnAreas = [];
 let flags = []; //TODO
 
 let emptyColor = ["white", 0.0]
+
+let oldColors = [
+  emptyColor,
+  ["#059900", 0.1],//green
+  ["#e60000", 0.1],//red
+  ["#573a00", 0.05],//brown
+  ["#1957b3", 0.25],//blue
+  ["#d69d00", 0.05],//yellow
+  ["#6b6b6b", 0.05],//grey
+  ["#ff33ad", 0.2],//pink
+  ["#1957b3", 0.25]//blue
+]
 
 let colors = [
   emptyColor
@@ -303,7 +303,7 @@ var new_map = document.getElementById("new");
 
 var file = document.getElementById("file"); 
 var import_file = document.getElementById("import"); 
-var export_file = document.getElementById("export");
+// var export_file = document.getElementById("export");
 
 var button_small = document.getElementById("size-small");
 var button_big = document.getElementById("size-big");
@@ -438,7 +438,7 @@ import_file.onclick = function(){
     let d1 = 0;
 
     // NOT SURE WHICH LINE SEPARATOR IS CORRECT!!
-    let file = contents.split('\r\n');
+    let file = contents.split('\n');
     if(file.length == 1){
       file = file[0].split('\r');
     }
@@ -463,6 +463,10 @@ import_file.onclick = function(){
 
     map = flipMap(map);
     map.exists = e;
+
+    console.log(map);
+
+    colors = oldColors;
     
     drawMap();
   };
@@ -506,30 +510,30 @@ jsonExport.onclick = function(){
   
 }
 
-export_file.onclick = function(){
-  let flipped_map = flipMap(map);  
+// export_file.onclick = function(){
+//   let flipped_map = flipMap(map);  
 
-  output = "";
-  for(let z = 0; z < flipped_map.length; z++){
-    for(let x = 0; x < flipped_map[z].length; x++){
-      for(let y = 0; y < flipped_map[z][x].length; y++){
-        if(flipped_map[z][x][y] != 0){
-          output += flipped_map[z][x][y];
-        }
-        if(y+1 < flipped_map[z][x].length){
-          output += ",";
-        }
-      }
-      if(z+1 < flipped_map.length || x+1 < flipped_map[z].length){
-        output += "\r";
-      }
-    }
-    if(z+1 < flipped_map.length){
-      output += "n,"+'\r';
-    }
-  }
-  download("map.csv", output);
-};
+//   output = "";
+//   for(let z = 0; z < flipped_map.length; z++){
+//     for(let x = 0; x < flipped_map[z].length; x++){
+//       for(let y = 0; y < flipped_map[z][x].length; y++){
+//         if(flipped_map[z][x][y] != 0){
+//           output += flipped_map[z][x][y];
+//         }
+//         if(y+1 < flipped_map[z][x].length){
+//           output += ",";
+//         }
+//       }
+//       if(z+1 < flipped_map.length || x+1 < flipped_map[z].length){
+//         output += "\r";
+//       }
+//     }
+//     if(z+1 < flipped_map.length){
+//       output += "n,"+'\r';
+//     }
+//   }
+//   download("map.csv", output);
+// };
 
 insert_layer.onclick = function(){
   saveState();
