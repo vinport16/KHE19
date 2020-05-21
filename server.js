@@ -15,7 +15,7 @@ console.log("running on port", port);
 
 /***Map 2.0 Files:***/ 
 //map2_0test.json doesn't work right now. I changed the map format to just use nested arrays. 
-var MAPFILE = "maps/treeHouse.json";
+var MAPFILE = "maps/treeHouse2.json";
 var map = json2map(MAPFILE);
  var gameType = "";
  var flags = [];
@@ -103,34 +103,26 @@ function json2colors(file_name){
   var jsonColors = mapFileContents.colors;
   var colorValues = [];
   
-  
-  for(var c in jsonColors){
-    for(var c1 in jsonColors[c])
-    colorValues.push(jsonColors[c][c1]);
-  }
+  colorValues = mapFileContents.colors;
   
   return colorValues;
 }
+
 function json2map(file_name){
   var fs = require('fs');
   var contents = fs.readFileSync(file_name).toString();
   const mapFileContents = JSON.parse(contents);
   //console.log(mapFileContents);
+
+  //These probably don't work, but we don't use them right now anyway. 
   gameType = mapFileContents.mapInfo.gameType;
   flags = mapFileContents.specialObjects.flags;
   spawnAreas = mapFileContents.specialObjects.spawnAreas;
 
   var map = [];
-
-  var currentZ = 0;
-  var jsonMap = mapFileContents.map;
+  map = mapFileContents.map;
   
-  for(var flippedMap in jsonMap){
-     for(var z in jsonMap[flippedMap]){
-      map.push(jsonMap[flippedMap][z]);
-     }
-  }
-
+  //console.log(map);
 
   console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
 

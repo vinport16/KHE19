@@ -383,11 +383,8 @@ jsonImport.onclick = function(){
     spawnAreas = jsonContents.specialObjects.spawnAreas;
 
     map = [];
-    for(var flippedMap in jsonContents.map){
-      for(var z in jsonContents.map[flippedMap]){
-        map.push(jsonContents.map[flippedMap][z]);
-      }
-    }
+    map = jsonContents.map;
+   
 
     //remove all current colors on the page
     colors = [];
@@ -396,20 +393,18 @@ jsonImport.onclick = function(){
       colorParent.removeChild(colorParent.firstChild);
     }
 
-    for(var c in jsonContents.colors){
-      for(var c1 in jsonContents.colors[c]){
-        var alreadyAdded = false;
-        colors.push(jsonContents.colors[c][c1]);
-        for(var i = 0; i < spawnAreas.length; i++){
-          if(spawnAreas[i].value == jsonContents.colors[c][c1][0]){
-            addColorDiv(jsonContents.colors[c][c1], spawnAreas[i].team);
-            alreadyAdded = true;
-          }
+    //Add the new colors to the html page with the spawn colors labels
+    colors = jsonContents.colors;
+    for(var c in colors){
+      var alreadyAdded = false;
+      for(var i = 0; i < spawnAreas.length; i++){
+        if(spawnAreas[i].value == colors[c][0]){
+          addColorDiv(colors[c], spawnAreas[i].team);
+          alreadyAdded = true;
         }
-        if(!alreadyAdded){
-          addColorDiv(jsonContents.colors[c][c1], "");
-        }
-        
+      }
+      if(!alreadyAdded){
+        addColorDiv(colors[c], "");
       }
     }
 
@@ -485,7 +480,13 @@ jsonExport.onclick = function(){
     }
   }
   
-  var json = {"mapInfo": {}, "specialObjects":{flags, spawnAreas}, "colors": {colors}, "map":{flipped_map}};
+  var tempMap = map;
+  map = flipped_map;
+
+  var json = {"mapInfo": {}, "specialObjects":{flags, spawnAreas}, colors, map};
+  
+  map = tempMap;
+
   var mapName = document.getElementById("mapName").value;
   //TODO: Clean map name input and creater name input.
   if(mapName == ""){
