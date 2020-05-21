@@ -442,53 +442,13 @@ socket.on("map", function(map, colors){
             line.forEach(function(char, k) {
                 if(map[i][j][k] != 0){
                   var boxMaterial;
-                  if(colors.length == 0){//old map file used. 
-                    if(map[i][j][k] == 1){ //grass
-                        var grassMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
-                        grassMaterial.color.setHSL( 0.3333, 1, Math.random() * 0.1 + 0.25 );
-                        boxMaterial = grassMaterial;
-                    }else if(map[i][j][k] == 2){//brick
-                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xcb4154 });
-                        brickMaterial.color.setHSL( 0, 1, Math.random() * 0.1 + 0.4 );
-                        boxMaterial = brickMaterial;
-                    }else if(map[i][j][k] == 3){//dirt
-                        var dirtMaterial = new THREE.MeshLambertMaterial({ color: 0x663333 });
-                        dirtMaterial.color.setHSL( 0.111111, 1, Math.random() * 0.05 + 0.15 );
-                        boxMaterial = dirtMaterial;
-                    }else if(map[i][j][k] == 5){//sand
-                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
-                        brickMaterial.color.setHSL( 0.12, 1, Math.random() * 0.05 + 0.4 );
-                        boxMaterial = brickMaterial;
-                    }else if(map[i][j][k] == 6){//Grey
-                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
-                        brickMaterial.color.setHSL( 0.0, 0, Math.random() * 0.05 + 0.4 );
-                        boxMaterial = brickMaterial;
-                    }else if(map[i][j][k] == 7){//pink
-                        var brickMaterial = new THREE.MeshLambertMaterial({ color: 0xc2b280 });
-                        brickMaterial.color.setHSL( 0.9, 1, Math.random() * 0.2 + 0.5 );
-                        boxMaterial = brickMaterial;
-                    }else{//sky/wall
-                        var skyMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF });
-                        skyMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.3 ); // looks nice
-                        boxMaterial = skyMaterial;
-                    }
-                  }else{//new map file used. 
                     var colorInfo = colors[map[i][j][k]];
                     //colorInfo in the format: ["#FFFFFF", 0.2]
                     var material = new THREE.MeshLambertMaterial({color: colorInfo[0]});
                     //Mix up the given color by adding a random number to the lightness. 
-                    //The random number is within previousLightness +- range. 
+                    //The random number is within the givene color lightness +- range. 
                     material.color.offsetHSL(0,0, Math.random() * colorInfo[1] * 2 - colorInfo[1] )
                     boxMaterial = material;
-                  }
-
-                    // im sorry that this is a mess
-                    // but im not gonna do anything about it
-                    // -vincent
-
-                    // I think its time we do something about it.
-                    // Lets use map2.0 to let users use any color then want.
-                    // -michael
 
                     var box = new THREE.BoxGeometry( 20, 20, 20 );
                     

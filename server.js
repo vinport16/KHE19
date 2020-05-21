@@ -7,6 +7,20 @@ var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
+//Pick a map at random when the server is loaded: 
+// //get possible maps
+// var files = fs.readdirSync('maps/');
+// for(var i = 0; i < files.length; i++){
+//   if(!files[i].includes(".json")){
+//     files.splice(i,1);
+//     i++;
+//   }
+// }
+
+// //pick a random map
+// var mapIndex = Math.floor(Math.random() * files.length);
+// var MAPFILE = "maps/" + files[mapIndex];
+
 
 //Server Specific Values: 
 /***Map 2.0 Files:***/ 
@@ -125,80 +139,6 @@ function json2map(file_name){
   
   return map;
 
-}
-
-function csv2map(file_name) {
-  var fs = require('fs');
-  var contents = fs.readFileSync(file_name).toString();
-
-  var map = [];
-  map.push([]);
-  var d2 = 0;
-  var d1 = 0;
-
-  var file = contents.split('\n');
-
-  // Iterate through lines of map file
-  file.forEach(function(line) {
-    if(line[0] == 'n') {
-      map.push([]);
-      d1++;
-    }else{
-      var line_chars = line.split(',');
-      map[d1].push(line_chars);
-    }
-  });
-  map.forEach(function(layer, i) {
-    layer.forEach(function(line, j) {
-      line.forEach(function(char, k) {
-        map[i][j][k] = map[i][j][k] == '' ? 0 : parseInt(map[i][j][k]);
-      })
-    })
-  })
-  console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
-  return map;
-}
-
-function readMap(file_name) {
-  var fs = require('fs');
-  var contents = fs.readFileSync(file_name).toString();
-
-  var map = [];
-  map.push([]);
-  var d2 = 0;
-  var d1 = 0;
-
-  var file = contents.split('\n');
-
-  // Iterate through lines of map file
-  file.forEach(function(line) {
-    if(line == '') {
-      map.push([]);
-      d1++;
-    }
-    var line_chars = line.split('');
-    map[d1].push(line_chars);
-
-  });
-  map.forEach(function(layer, i) {
-    layer.forEach(function(line, j) {
-      line.forEach(function(char, k) {
-          if(map[i][j][k] == ' ' || map[i][j][k] == '.'){
-            map[i][j][k] = 0;
-          }else if(map[i][j][k] == '1'){
-              map[i][j][k] = 1;
-          }else if(map[i][j][k] == '2'){
-            map[i][j][k] = 2;
-        }else if(map[i][j][k] == '3'){
-            map[i][j][k] = 3;
-        }else if(map[i][j][k] == '4'){
-            map[i][j][k] = 4;
-        }
-      })
-    })
-  })
-  console.log("Map Loaded");
-  return map;
 }
 
 // STEP SPEED
