@@ -123,7 +123,6 @@ function json2map(file_name){
   var fs = require('fs');
   var contents = fs.readFileSync(file_name).toString();
   const mapFileContents = JSON.parse(contents);
-  //console.log(mapFileContents);
 
   //These probably don't work, but we don't use them right now anyway. 
   gameType = mapFileContents.mapInfo.gameType;
@@ -133,8 +132,6 @@ function json2map(file_name){
   var map = [];
   map = mapFileContents.map;
   
-  //console.log(map);
-
   console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
 
   if(map.length < 3){
@@ -179,7 +176,6 @@ io.on("connection", function(socket){
         player.name = user.name;
         updateLeaderboard();
     }
-    console.log("player color: " + player.color);
 
     //player.color = user.color; //no longer allow player to set their own color
     for(i in players){
@@ -229,6 +225,7 @@ io.on("connection", function(socket){
       }
     }
     console.log(player.name + " left");
+    tellEveryone(player.name + " left");
     updateLeaderboard();
   });
 
@@ -259,10 +256,27 @@ io.on("connection", function(socket){
 
   });
 
+  socket.on("message", function(message){
+    for(i in players){
+      players[i].socket.emit("message", {from:player.name, text:message});
+    }
+  });
+
 });
 
 function randomPlayerColor(){
   return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
+}
+
+function tellEveryone(messageText){
+  for(i in players){
+    players[i].socket.emit("message", {from:"server", text:messageText});
+  }
+}
+
+function announceHit(hitPlayer, oPlayer){
+  hitPlayer.socket.emit("message", {from: "server", text: oPlayer.name + " hit you!"});
+  oPlayer.socket.emit("message", {from: "server", text: "you hit " + hitPlayer.name + "!"});
 }
 
 function projCollisionWithMap(p, map){
@@ -295,7 +309,7 @@ function projCollision(p,map){
     var bottom = player.y - (35/2);
     var top = player.y + (35/2);
     if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
-      console.log(players[i].name + " was hit by " + p.owner.name);
+      announceHit(players[i], p.owner);
       players[i].deaths.push(p.owner.id);
       p.owner.kills.push(players[i].id);
       respawn(players[i]);

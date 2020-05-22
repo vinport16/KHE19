@@ -28,7 +28,7 @@ function pushMessage(message){
   let newMessage = createMessageElement(message);
   chat.children[0].appendChild(newMessage);
   newMessage.style.visibility = "visible";
-  setTimeout(function(){newMessage.style.visibility = "inherit";}, 2000);
+  setTimeout(function(){newMessage.style.visibility = "inherit";}, 5000);
   chat.children[0].appendChild(m_input);
 }
 
@@ -45,19 +45,27 @@ function messageOnT(event){
     showMessageLog();
     input.focus();
   }
-  setTimeout(function(){input.value = ''}, 1);
+  setTimeout(function(){input.value = ''}, 5);
 }
 
 function sendOnEnter(event){
+  console.log(event.key);
   if(event.key == 'Enter'){
-    pushMessage({from:"me", text:input.value});
+    socket.emit("message",input.value);
     input.value = '';
+    hideMessageLog();
+    document.children[0].focus();
+  }else if(event.key == "Escape"){
+    // this doesn't work well...
     hideMessageLog();
     document.children[0].focus();
   }
   event.stopPropagation();
 }
 
+socket.on("message", function(message){
+  pushMessage(message);
+});
+
 document.addEventListener('keydown', messageOnT, false);
 input.addEventListener('keydown', sendOnEnter, false);
-updateMessageLog();
