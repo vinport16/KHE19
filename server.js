@@ -88,6 +88,10 @@ app.get('/client/blockball.js', function(req, res){
     res.sendFile(__dirname + '/client/blockball.js');
 });
 
+app.get('/client/messaging.js', function(req, res){
+    res.sendFile(__dirname + '/client/messaging.js');
+});
+
 app.get("/", function(req, res){
   res.sendFile(__dirname + '/client/index.html');
 });
