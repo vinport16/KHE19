@@ -17,15 +17,9 @@ var startTime = Date.now();
 var player_radius = 7.5;
 var star = create_star_sprite();
 var playerJustFell = false;
-var reloadTime = 500;
 var loadStatus = 1;
-
-var currentShotTypeIndex = 0;
-var shotTypes = [
-  {name: "regular", reloadTime: 400},
-  {name: "scope", reloadTime: 600},
-  {name: "fracture", reloadTime: 1000},
-]
+var playerClass = "scout";
+var reloadTime = 400;
 
 init();
 animate();
@@ -74,11 +68,7 @@ function init() {
         if(loadStatus > 0.999 && controls.isLocked){
             var vector = new THREE.Vector3( 0, 0, - 1 );
             vector.applyQuaternion( camera.quaternion );
-            //if(camera.fov > 20){
-                socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, type:shotTypes[currentShotTypeIndex].name});
-            //}else{
-               // socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z, type: "scope"});
-            //}
+            socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
             loadStatus = 0;
         }
     }
@@ -119,13 +109,14 @@ function init() {
                   onClick(event);
                 }
                 break;
-            case 88: //x, exchange shot type
-                if(currentShotTypeIndex == shotTypes.length-1){
-                  currentShotTypeIndex = 0;
-                }else{
-                  currentShotTypeIndex++;
+            case 88: //x, change class
+                if(playerClass == "scout"){
+                  socket.emit("change class", "sniper");
+                }else if(playerClass == "sniper"){
+                  socket.emit("change class", "heavy");
+                }else if(playerClass == "heavy"){
+                  socket.emit("change class", "scout");
                 }
-                reloadTime = shotTypes[currentShotTypeIndex].reloadTime;
                 break;
         }
     };
@@ -630,6 +621,11 @@ socket.on("updatePlayer", function(player){
     removeEntity(p.model);
     removeEntity(p.usernameLabel);
     drawPlayer(p);
+});
+
+socket.on("set class", function(newClass){
+    playerClass = newClass.name;
+    reloadTime = newClass.reloadTime;
 });
 
 function removeEntity(object) {

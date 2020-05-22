@@ -154,6 +154,19 @@ var pSpeed = 40;
 var pGrav = 5;
 var pLife = 800;
 
+var classes = [
+  "scout",
+  "sniper",
+  "heavy"
+];
+
+var reloadTime = {
+  scout: 100,
+  sniper: 1000,
+  heavy: 900
+};;
+
+
 io.on("connection", function(socket){
   var player = {};
   player.id = nextId++;
@@ -162,13 +175,13 @@ io.on("connection", function(socket){
   player.kills = [];
   player.deaths = [];
   player.position = {x:0,y:0,z:1000};
+  player.class = "scout";
   player.respawning = false;
   player.color = randomPlayerColor();
 
   respawn(player);
-
   console.log("player "+player.id+" logged in");
-
+  setClass(player, player.class);
   players.push(player);
 
   socket.on("setUser", function(user){
@@ -216,6 +229,12 @@ io.on("connection", function(socket){
       }
   });
 
+  socket.on("change class", function(newClass){
+    if(classes.includes(newClass)){
+      setClass(player, newClass);
+    }
+  });
+
   socket.on("disconnect",function(){
     for(i in players){
       if(players[i].id == player.id){
@@ -231,7 +250,7 @@ io.on("connection", function(socket){
   });
 
   socket.on("launch", function(angle){
-    var p = getNewProjectile(angle.type);
+    var p = getNewProjectile(player.class);
     p.id = nextId++;
     p.owner = player;
     p.count = 0;
@@ -267,6 +286,12 @@ io.on("connection", function(socket){
 
 function randomPlayerColor(){
   return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
+}
+
+function setClass(player, newClass){
+  player.class = newClass;
+  player.socket.emit("set class", {name:player.class, reloadTime:reloadTime[player.class]});
+  player.socket.emit("message", {from:"server", text:"Your class is now "+newClass});
 }
 
 function tellEveryone(messageText){
@@ -421,30 +446,30 @@ function moveProjectileToHitLocation(p){
 }
 
 function getNewProjectile(type){
-  if(type == "regular"){
-    return new regularProjectile();
-  }else if(type == "scope"){
-    return new scopeProjectile();
-  }else if(type == "fracture"){
-    return new fractureProjectile();
+  if(type == "scout"){
+    return new scoutProjectile();
+  }else if(type == "sniper"){
+    return new sniperProjectile();
+  }else if(type == "heavy"){
+    return new heavyProjectile();
   }
 }
 
-function regularProjectile(){
+function scoutProjectile(){
   this.fracture = 0;
   this.speed = 40;
   this.grav = 5;
   this.lifeSpan = 800;
 }
 
-function scopeProjectile(){
+function sniperProjectile(){
   this.fracture = 0;
   this.speed = 100;
   this.grav = 5;
   this.lifeSpan = 800;
 }
 
-function fractureProjectile(){
+function heavyProjectile(){
   this.fracture = 3;
   this.speed = 30;
   this.grav = 6;
