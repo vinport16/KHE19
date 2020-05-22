@@ -1,6 +1,7 @@
 let chat = document.getElementById("chat");
 let slots = chat.children[0].children;
 let input = document.getElementById("chat-input");
+let usernameInput = document.getElementById('userName');
 
 messages = [
   {from:"server", text:"HELLO! hi!"},
@@ -66,6 +67,8 @@ function sendOnEnter(event){
 socket.on("message", function(message){
   pushMessage(message);
 });
+
+usernameInput.addEventListener('keydown', function(event){event.stopPropagation();}, false);
 
 document.addEventListener('keydown', messageOnT, false);
 input.addEventListener('keydown', sendOnEnter, false);

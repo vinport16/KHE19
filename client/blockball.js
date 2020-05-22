@@ -19,7 +19,7 @@ var star = create_star_sprite();
 var playerJustFell = false;
 var loadStatus = 1;
 var playerClass = "scout";
-var reloadTime = 400;
+var reloadTime = 100;
 
 init();
 animate();
