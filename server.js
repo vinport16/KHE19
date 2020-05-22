@@ -23,8 +23,26 @@ console.log("running on port", port);
 
 
 //Server Specific Values: 
-/***Map 2.0 Files:***/ 
 var MAPFILE = "maps/islands.json";
+var SERVER_NAME = 'UNSET SERVER NAME';
+var SERVER_DESCRIPTION = "NO DESCRIPTION";
+
+fs.readFile("config.txt", "utf-8", function(err, data) {
+  if (err) {
+    console.log(err);
+    console.log("!!!\nPlease Create a config.txt file with the following format:");
+    console.log("line 1: SERVER NAME");
+    console.log("line 2: SERVER DESCRIPTION");
+    console.log("line 3: MAP FILE");
+    console.log("--------");
+  }else{
+    content = data.split("\n");
+    SERVER_NAME = content[0];
+    SERVER_DESCRIPTION = content[1];
+    MAPFILE = content[2];
+  }
+});
+
 var map = json2map(MAPFILE);
 var colors = json2colors(MAPFILE);
 //I don't think these are set right now. 
@@ -35,23 +53,6 @@ var colors = json2colors(MAPFILE);
 
 
 http.listen(port);
-
-var SERVER_NAME = 'UNSET SERVER NAME';
-var SERVER_DESCRIPTION = "NO DESCRIPTION";
-
-fs.readFile("config.txt", "utf-8", function(err, data) {
-  if (err) {
-    console.log(err);
-    console.log("!!!\nPlease Create a config.txt file with the following format:");
-    console.log("line 1: SERVER NAME");
-    console.log("line 2: SERVER DESCRIPTION");
-    console.log("--------");
-  }else{
-    content = data.split("\n");
-    SERVER_NAME = content[0];
-    SERVER_DESCRIPTION = content[1];
-  }
-});
 
 // this allows cross origin JSON requests (to get status message)
 app.use(function(req, res, next) {
