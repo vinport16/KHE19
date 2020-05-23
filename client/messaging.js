@@ -22,8 +22,13 @@ function createMessageElement(message){
 }
 
 function pushMessage(message){
+  let return_focus = false;
   messages.push(message);
   let m_input = slots[slots.length-1];
+  if(document.activeElement == input){
+    return_focus = true;
+  }
+  let currentValue = input.value;
   m_input.remove();
   slots[0].remove();
   let newMessage = createMessageElement(message);
@@ -31,6 +36,10 @@ function pushMessage(message){
   newMessage.style.visibility = "visible";
   setTimeout(function(){newMessage.style.visibility = "inherit";}, 5000);
   chat.children[0].appendChild(m_input);
+  input.value = currentValue;
+  if(return_focus){
+    input.focus();
+  }
 }
 
 function showMessageLog(){
@@ -45,8 +54,8 @@ function messageOnT(event){
   if(event.key == 't'){
     showMessageLog();
     input.focus();
+    setTimeout(function(){input.value = ''}, 5);
   }
-  setTimeout(function(){input.value = ''}, 5);
 }
 
 function sendOnEnter(event){
