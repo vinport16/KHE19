@@ -609,11 +609,6 @@ addColor.onclick = function(){
     addColorDiv([color, range], "");
   }
 
-  
-
-  // //Add color to page // Move above to if statement ^^
-  // addColorDiv([color, range]);
-
   //Reset the checkboxes: 
   document.getElementById("team1spawn").checked = false;
   document.getElementById("team2spawn").checked = false;
@@ -642,10 +637,24 @@ function addColorDiv(colorInfo, spawnTeamText){
     newColorDiv.innerHTML = spawnTeamText;
   }
 
-  newColorDiv.setAttribute("class", "colorBox");
+  newColorDiv.setAttribute("class", "colorBox tooltip");
 
   document.getElementById("colorSelect").appendChild(newColorDiv);
 
+
+  var newColorTooltip = document.createElement("span");
+  
+  newColorTooltip.innerHTML = color + ", " + range;
+  if(colors.length % 5 == 1){
+    newColorTooltip.setAttribute("class", "tooltipText tooltipRight");
+  }else if(colors.length % 5 == 0){
+    newColorTooltip.setAttribute("class", "tooltipText tooltipLeft");
+  }else{
+    newColorTooltip.setAttribute("class", "tooltipText tooltipCenter");
+  }
+  
+
+  document.getElementById(color).appendChild(newColorTooltip);
   
 }
 
