@@ -50,7 +50,6 @@ function messageOnT(event){
 }
 
 function sendOnEnter(event){
-  console.log(event.key);
   if(event.key == 'Enter'){
     socket.emit("message",input.value);
     input.value = '';

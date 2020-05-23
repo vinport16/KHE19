@@ -597,10 +597,7 @@ function drawPlayer(player){
 
     player.userName = player.name;
 
-    player.usernameLabel = makeTextSprite( player.userName);
-    player.usernameLabel.position.set(player.position.x, player.position.y + 15, player.position.z);
-    player.usernameLabel.name = "USERNAME FOR: " + player.id;
-    scene.add( player.usernameLabel );
+    updatePlayerNameTag(player);
 
     player.model = model;
     players[player.id] = player;
@@ -613,14 +610,52 @@ socket.on("new player", function(player){
     drawPlayer(player);
 });
 
+function updatePlayerColor(player){
+    player.model.material.color.set(player.color);
+}
+
+function updatePlayerNameTag(player){
+    if(player.usernameLabel){
+        removeEntity(player.usernameLabel);
+    }
+    player.usernameLabel = makeTextSprite(player.userName);
+    player.usernameLabel.position.set(player.position.x, player.position.y + 15, player.position.z);
+    player.usernameLabel.name = "USERNAME FOR: " + player.id;
+    scene.add( player.usernameLabel );
+}
+
 socket.on("updatePlayer", function(player){
     var p = players[player.id];
     p.name = player.name;
     p.userName = player.name;
     p.color = player.color;
-    removeEntity(p.model);
-    removeEntity(p.usernameLabel);
-    drawPlayer(p);
+    updatePlayerColor(p);
+    updatePlayerNameTag(p);
+});
+
+function flash(player, color){
+    player.flash = true;
+    let flash = function(){
+        if(player.flash){
+            let original_color = player.color;
+            player.color = color;
+            updatePlayerColor(player);
+            setTimeout(function(){
+                player.color = original_color;
+                updatePlayerColor(player);
+                setTimeout(flash, 100);
+            }, 100);
+        }
+    }
+    flash();
+}
+
+socket.on("flash player", function(player_id, color){
+    flash(players[player_id], color);
+});
+
+socket.on("stop flash", function(player_id){
+    players[player_id].flash = false;
 });
 
 socket.on("set class", function(newClass){
