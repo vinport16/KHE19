@@ -593,6 +593,7 @@ function refreshPageForTeamNum(){
   for(var i = 0; i < numberOfTeams; i++){
     var newSpawnCheckbox = document.createElement("input");
     newSpawnCheckbox.setAttribute("type", "checkbox");
+    newSpawnCheckbox.setAttribute("value", i);
     var newId = "team"+i+"spawn";
     newSpawnCheckbox.setAttribute("id", newId);
 
@@ -624,20 +625,22 @@ addColor.onclick = function(){
   }
   //Add new color to the colors array
   colors.push([color, range]);
-
-  if(document.getElementById("team1spawn").checked){
-    addColorDiv([color, range], "T1");
-    spawnAreas.push({"team": "T1", "value": color});
-  }else if(document.getElementById("team2spawn").checked){
-    addColorDiv([color, range], "T2");
-    spawnAreas.push({"team": "T2", "value": color});
-  }else{
-    addColorDiv([color, range], "");
+  
+  var colorAdded = false;
+  var checkboxes = document.getElementById("teamSpawnSelect").getElementsByTagName("input");
+  for(var i = 0; i < checkboxes.length; i++){
+    if(checkboxes[i].checked && !checkboxes[i].disabled && !colorAdded){
+      var iPlusOne = i + 1;
+      addColorDiv([color, range], "T" + iPlusOne);
+      spawnAreas.push({"team": i, "value": color});
+      checkboxes[i].checked = false;
+      colorAdded = true;
+    }
   }
 
-  //Reset the checkboxes: 
-  document.getElementById("team1spawn").checked = false;
-  document.getElementById("team2spawn").checked = false;
+  if(!colorAdded){
+    addColorDiv([color, range], "");
+  }
 }
 
 colorSelect.addEventListener("click", function(){
