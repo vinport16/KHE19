@@ -23,7 +23,7 @@ console.log("running on port", port);
 
 
 //Server Specific Values: 
-var MAPFILE = "maps/islands.json";
+var MAPFILE = "maps/testSpawn.json";
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
 
@@ -49,10 +49,9 @@ const map = json2map(mapFileContents.map);
 var colors = mapFileContents.colors;
 var gameType = mapFileContents.mapInfo.gameType;
 var flags = mapFileContents.specialObjects.flags;
-var allSpawnAreas = mapFileContents.specialObjects.spawnAreas;
-
-var validSpawnAreas = map;
-
+var numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
+var spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
+var validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
 http.listen(port);
 
 // this allows cross origin JSON requests (to get status message)
@@ -116,6 +115,49 @@ function json2contents(file_name){
   return mapFileContents;
 }
 
+function json2spawn(inputSpawn, numberOfTeams){
+  var spawnAreas = [];
+  for(var i = 0; i < numberOfTeams; i++){
+    spawnAreas.push(new Array());
+  }
+  console.log(spawnAreas);
+  inputSpawn.forEach(area => {
+    spawnAreas[area.team].push(area.value);
+  });
+
+  //console.log(spawnAreas);
+  return spawnAreas;
+}
+
+function cloneArray(inputArr){
+  return JSON.parse(JSON.stringify(inputArr));
+}
+
+//Each team starts off as the whole map as valid. 
+function setUpValidSpawnLocations(teamNum){
+  var spawnLoc = [];
+  var mapCoordinates = [];
+  for(var z = 1; z < map.length - 2; z++){
+    for(var y = 1; y < map[0].length - 1; y++){
+      for(var x = 1; x < map[0][0].length - 1; x++){
+        mapCoordinates.push([z, y, x]);
+      }
+    }
+  }
+
+  for(var i = 0; i < teamNum; i++){
+    // var newMap = [];
+    // for(var j = 0; j < map.length; j++){
+    //   newMap[j] = map[i].slice();
+    // }
+    // console.log(newMap);
+    //spawnLoc[i] = cloneArray(map);
+    spawnLoc[i] = cloneArray(mapCoordinates);
+  }
+
+  return spawnLoc;
+}
+
 function json2map(inputMap){
   var map = [];
   map = inputMap;
@@ -165,7 +207,8 @@ io.on("connection", function(socket){
   player.class = "scout";
   player.respawning = false;
   player.color = randomPlayerColor();
-  player.team = "T1";
+  //player.team = randomTeam();
+  player.team = 0;
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -276,6 +319,12 @@ function randomPlayerColor(){
   return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
 }
 
+function randomTeam(){
+  var team = Math.floor(Math.random() * numberOfTeams);
+  console.log(team);
+  return team;
+}
+
 function setClass(player, newClass){
   player.class = newClass;
   player.socket.emit("set class", {name:player.class, reloadTime:reloadTime[player.class]});
@@ -336,16 +385,51 @@ function projCollision(p,map){
 
 function respawn(p){
   p.respawning = true;
-  //TODO: Determine valid respawn colors
-
-
+  //validSpawnLocations is an array with one index for each team. 
+  //The teams start off with the whole map as valid.
+  //As this method finds and checks random spots, invalid spots are removed. 
+  //Eventually only valid spots remain for each team. 
+  //A spot is valid if it has two empty blocks above it and the colors matches one of p's team's spawn color. 
   var x, y , z = 0;
-  do {
-    x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
-    y = parseInt(Math.random()*(map[0].length - 4) + 2,10);
-    z = parseInt(Math.random()*(map.length - 3),10);
+  var validLocation = false;
+  while(!validLocation){
+    var teamSpawnMap = validSpawnLocations[p.team];
+    
+    //Maybe change this to use an array of coordinates and it removes the coordinates as they are invalid. 
+    //eg: [[0,0,0], [0,0,1], ... , [5,10,10]]
+    //pick one index in the array at random then remove values that are bad. 
+    //yes, lets do this. 
+    //x = parseInt(Math.random()*(teamSpawnMap[0][0].length - 4) + 2,10);
+    //y = parseInt(Math.random()*(teamSpawnMap[0].length - 4) + 2,10);
+    //z = parseInt(Math.random()*(teamSpawnMap.length - 3),10);
+
+    var randomLocation = Math.floor(Math.random()*teamSpawnMap.length)
+    x = teamSpawnMap[randomLocation][2];
+    y = teamSpawnMap[randomLocation][1];
+    z = teamSpawnMap[randomLocation][0];
+
+    
+    if(map[z][y][x] != null){
+      if(map[z][y][x] != 0 && map[z+1][y][x] == 0 && map[z+2][y][x] == 0){
+        if(spawnAreas[p.team].includes(colors[map[z][y][x]][0])){
+          validLocation = true;
+          console.log("valid length:");
+          console.log(teamSpawnMap.length);
+        }
+      }
+    }
+    if(!validLocation){
+      teamSpawnMap.splice(randomLocation, 1);
+    }
   }
-  while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
+  console.log("found new point");
+
+  // do {
+  //   x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
+  //   y = parseInt(Math.random()*(map[0].length - 4) + 2,10);
+  //   z = parseInt(Math.random()*(map.length - 3),10);
+  // }
+  // while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
   p.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
   p.position = {x:1000, y:1000, z:1000};
 }
