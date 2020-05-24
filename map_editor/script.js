@@ -398,6 +398,8 @@ jsonImport.onclick = function(){
 
     flags = jsonContents.specialObjects.flags;
     spawnAreas = jsonContents.specialObjects.spawnAreas;
+    numberOfTeams = jsonContents.mapInfo.numberOfTeams;
+    refreshPageForTeamNum();
 
     map = [];
     map = jsonContents.map;
@@ -416,7 +418,8 @@ jsonImport.onclick = function(){
       var alreadyAdded = false;
       for(var i = 0; i < spawnAreas.length; i++){
         if(spawnAreas[i].value == colors[c][0]){
-          addColorDiv(colors[c], spawnAreas[i].team);
+          var teamPlusOne = spawnAreas[i].team+1
+          addColorDiv(colors[c], "T"+teamPlusOne);
           alreadyAdded = true;
         }
       }
