@@ -5,6 +5,8 @@ var view_height = 0;
 //var block_type = 0;
 var brush_type = 0;
 var gameType_type = 0;
+var selectedGameType = "";
+var numberOfTeams = 0;
 var selectedColor = "white";
 
 let spawnAreas = [];
@@ -299,6 +301,7 @@ var current_layer = document.getElementById("current-layer");
 
 var xsize = document.getElementById("xsize");
 var ysize = document.getElementById("ysize");
+var gameType_select = document.getElementById("gameType");
 var new_map = document.getElementById("new");
 
 var file = document.getElementById("file"); 
@@ -317,7 +320,6 @@ var brush_select = document.getElementById("brush");
 
 var jsonImport = document.getElementById("jsonImport");
 var jsonExport = document.getElementById("jsonExport");
-var gameType_select = document.getElementById("gameType");
 var addColor = document.getElementById("addNewColor");
 var colorSelect = document.getElementById("colorSelect");
 
@@ -327,13 +329,28 @@ function updateLayer(){
 updateLayer();
 
 new_map.onclick = function(){
-  if(confirm("this will delete your current map")){
+  if(confirm("This will delete your current map")){
     saveState();
     let e = map.exists;
     map = blankMap(5, xsize.value, ysize.value);
     map.exists = e;
     view_height = 0;
     updateLayer();
+
+    //Set the number of teams for this map
+    selectedGameType = gameType[gameType_type];
+    if(selectedGameType == "Capture The Flag" || selectedGameType == "Teams"){
+      var teamNum = parseInt(prompt("The game type you selected involves teams. How many teams can play on this map?", "2"), 10);
+      if(teamNum != null && !isNaN(teamNum)){
+        numberOfTeams = teamNum;
+      }else{
+        numberOfTeams = 2;
+      }
+    }else{
+      numberOfTeams = 1;
+    }
+    //Update the html to match the number of teams for this map.
+    refreshPageForTeamNum();
     drawMap();
   }
 };
@@ -499,7 +516,8 @@ jsonExport.onclick = function(){
     json.mapInfo.name = mapName;
     json.mapInfo.creator = document.getElementById("creatorName").value;
     json.mapInfo.dateMade = new Date().toISOString();
-    json.mapInfo.gameType = gameType[gameType_type];
+    json.mapInfo.gameType = selectedGameType;
+    json.mapInfo.numberOfTeams = numberOfTeams;
 
     var jsonString = JSON.stringify(json);
     console.log(json);
@@ -509,31 +527,6 @@ jsonExport.onclick = function(){
   }
   
 }
-
-// export_file.onclick = function(){
-//   let flipped_map = flipMap(map);  
-
-//   output = "";
-//   for(let z = 0; z < flipped_map.length; z++){
-//     for(let x = 0; x < flipped_map[z].length; x++){
-//       for(let y = 0; y < flipped_map[z][x].length; y++){
-//         if(flipped_map[z][x][y] != 0){
-//           output += flipped_map[z][x][y];
-//         }
-//         if(y+1 < flipped_map[z][x].length){
-//           output += ",";
-//         }
-//       }
-//       if(z+1 < flipped_map.length || x+1 < flipped_map[z].length){
-//         output += "\r";
-//       }
-//     }
-//     if(z+1 < flipped_map.length){
-//       output += "n,"+'\r';
-//     }
-//   }
-//   download("map.csv", output);
-// };
 
 insert_layer.onclick = function(){
   saveState();
@@ -588,6 +581,39 @@ button_big.onclick = function(){
   }
   drawMap();
 };
+
+function refreshPageForTeamNum(){
+  //Remove old checkboxes
+  var spawnSelectParent = document.getElementById("teamSpawnSelect");
+  while (spawnSelectParent.firstChild){
+    spawnSelectParent.removeChild(spawnSelectParent.firstChild);
+  }
+
+  //Add new checkboxes for each team: 
+  for(var i = 0; i < numberOfTeams; i++){
+    var newSpawnCheckbox = document.createElement("input");
+    newSpawnCheckbox.setAttribute("type", "checkbox");
+    var newId = "team"+i+"spawn";
+    newSpawnCheckbox.setAttribute("id", newId);
+
+    document.getElementById("teamSpawnSelect").appendChild(newSpawnCheckbox);
+
+    //Add the label
+    var newSpawnCheckboxLabel = document.createElement("label");
+    newSpawnCheckboxLabel.setAttribute("for", newId);
+    var idPlusOne = i + 1;
+    if(numberOfTeams == 1){
+      newSpawnCheckboxLabel.innerHTML = "Spawn Area";
+    }else{
+      newSpawnCheckboxLabel.innerHTML = "Team " + idPlusOne + " Spawn";
+    }
+
+    document.getElementById("teamSpawnSelect").appendChild(newSpawnCheckboxLabel);
+
+    var newBreak = document.createElement("br");
+    document.getElementById("teamSpawnSelect").appendChild(newBreak);
+  }
+}
 
 
 addColor.onclick = function(){

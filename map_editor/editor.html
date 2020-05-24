@@ -9,6 +9,7 @@
       <div class="layer" id="current-layer">layer: 0/0</div>
       <hr>
       <input type="number" class="size" id="xsize">by<input type="number" class="size" id="ysize"><br>
+      <select id="gameType"></select>
       <button id="new">new map</button><br>
       <hr>
       <input type="file" id="file"></input>
@@ -23,7 +24,6 @@
       </br>
       Your Name:
       <input type="text" id="creatorName"></input>
-      <select id="gameType"></select>
       <button id="jsonExport">jsonExport</button>
       <hr>
       square size:<br>
@@ -48,11 +48,14 @@
       <input id="newColorRange" type = "text"/>
       The range is how textured a surface will be. Enter a value between 0.01 and 0.5. Smaller values will result in a more uniform surface color. 
       <br>
-      <input type="checkbox" id="team1spawn" value="t1Spawn"> 
+      <div id="teamSpawnSelect">
+
+      </div>
+      <!-- <input type="checkbox" id="team1spawn" > 
       <label for="team1spawn"> Team 1 Spawn </label>
       <br>
-      <input type="checkbox" id="team2spawn" value="t2Spawn"> 
-      <label for="team2spawn"> Team 2 Spawn </label>
+      <input type="checkbox" id="team2spawn" > 
+      <label for="team2spawn"> Team 2 Spawn </label> -->
       <br>For FFA, just use team 1 for spawning areas.
       <button id="addNewColor">Add Color</button>
 

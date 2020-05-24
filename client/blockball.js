@@ -164,7 +164,6 @@ function init() {
 
         light.position.set(-60, 200, 100); // CHANGED
         scene.add(light);
-        scene.add(new THREE.DirectionalLightHelper(light, 0.2));
     //
     renderer = new THREE.WebGLRenderer( { antialias: true } );
     renderer.setPixelRatio( window.devicePixelRatio );

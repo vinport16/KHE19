@@ -43,14 +43,15 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
   }
 });
 
-var map = json2map(MAPFILE);
-var colors = json2colors(MAPFILE);
-//I don't think these are set right now. 
- var gameType = "";
- var flags = [];
- var spawnAreas = [];
- 
+var mapFileContents = json2contents(MAPFILE);
 
+const map = json2map(mapFileContents.map);
+var colors = mapFileContents.colors;
+var gameType = mapFileContents.mapInfo.gameType;
+var flags = mapFileContents.specialObjects.flags;
+var allSpawnAreas = mapFileContents.specialObjects.spawnAreas;
+
+var validSpawnAreas = map;
 
 http.listen(port);
 
@@ -108,40 +109,25 @@ app.get("/status.json", function(req, res){
   res.send(JSON.stringify(status));
 });
 
-function json2colors(file_name){
+function json2contents(file_name){
   var fs = require('fs');
   var contents = fs.readFileSync(file_name).toString();
   const mapFileContents = JSON.parse(contents);
-
-  var jsonColors = mapFileContents.colors;
-  var colorValues = [];
-  
-  colorValues = mapFileContents.colors;
-  
-  return colorValues;
+  return mapFileContents;
 }
 
-function json2map(file_name){
-  var fs = require('fs');
-  var contents = fs.readFileSync(file_name).toString();
-  const mapFileContents = JSON.parse(contents);
-
-  //These probably don't work, but we don't use them right now anyway. 
-  gameType = mapFileContents.mapInfo.gameType;
-  flags = mapFileContents.specialObjects.flags;
-  spawnAreas = mapFileContents.specialObjects.spawnAreas;
-
+function json2map(inputMap){
   var map = [];
-  map = mapFileContents.map;
+  map = inputMap;
   
   console.log("Map Loaded:",map[0][0].length, "by", map[0].length, "by", map.length);
 
+  //check to make sure its a valid map
   if(map.length < 3){
     console.err("The map is too short to spawn the player. Please add a map with at least 3 levels.");
   }
   
   return map;
-
 }
 
 // STEP SPEED
@@ -179,6 +165,7 @@ io.on("connection", function(socket){
   player.class = "scout";
   player.respawning = false;
   player.color = randomPlayerColor();
+  player.team = "T1";
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -349,6 +336,9 @@ function projCollision(p,map){
 
 function respawn(p){
   p.respawning = true;
+  //TODO: Determine valid respawn colors
+
+
   var x, y , z = 0;
   do {
     x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
