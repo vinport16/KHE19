@@ -8,9 +8,18 @@ var gameType_type = 0;
 var selectedGameType = "";
 var numberOfTeams = 0;
 var selectedColor = "white";
+var selectednonBlockObject = "F";
+var inColorMode = true;
+
+var previousSelected;
 
 let spawnAreas = [];
-let flags = []; //TODO
+let flags = [];
+
+
+let nonBlockObjectTypes = [
+  "F"
+]
 
 let emptyColor = ["white", 0.0]
 
@@ -117,21 +126,55 @@ function drawTile(position, color){ //color should be string
   drawRectangle(multiply(vp,square_width), {x:square_width, y:square_width}, color);
 }
 
+function drawEmptySpace(position){
+  let vp = subtract(position, view_position);
+  var topLeft = multiply(vp, square_width);
+  var bottomRight = {x: topLeft.x + square_width, y: topLeft.y + square_width};
+  drawLine(topLeft, bottomRight, "red");
+}
+
+function drawNonBlockObject(position, text){
+  let vp = subtract(position, view_position);
+  var topLeft = multiply(vp, square_width);
+  var textPos = {x: topLeft.x, y: topLeft.y + square_width};
+  drawText(textPos, square_width, text);
+}
+
 function drawMap(){
   clearCanvas();
   for(let i = 0; i < map[view_height].length; i++){
     for(let j = 0; j < map[view_height][i].length; j++){
       // show preview two levels deep
       if(map[view_height][i][j] == 0 && view_height > 0){
-        if(map[view_height-1][i][j] == 0 && view_height > 1){
-          drawTile({x:i, y:j}, colors[map[view_height-2][i][j]][0]);
-          drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
+        if(view_height > 2 && map[view_height-1][i][j] <= 0 && map[view_height-2][i][j] <= 0){
+          drawEmptySpace({x: i, y: j});
+        }else if(map[view_height-1][i][j] <= 0 && view_height > 1){
+          if(map[view_height-2][i][j] > 0){
+            drawTile({x:i, y:j}, colors[map[view_height-2][i][j]][0]);
+            drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
+          }
+          if(view_height == 2 && map[view_height-2][i][j] <= 0){
+            drawEmptySpace({x: i, y: j});
+          }
         }else{
-          drawTile({x:i, y:j}, colors[map[view_height-1][i][j]][0]);
+          if(map[view_height - 1][i][j] > 0){
+            drawTile({x:i, y:j}, colors[map[view_height-1][i][j]][0]);
+          }
+          if(view_height == 1 && map[view_height-1][i][j] <= 0){
+            drawEmptySpace({x: i, y: j});
+          }
         }
         drawTile({x:i, y:j}, "rgba(255,255,255,0.5)");
       }else{
-          drawTile({x:i, y:j},colors[map[view_height][i][j]][0]);
+          if(map[view_height][i][j] > 0){
+            drawTile({x:i, y:j},colors[map[view_height][i][j]][0]);
+          }else if(map[view_height][i][j] < 0){
+            var correctIndex = (map[view_height][i][j] * (-1)) - 1;
+            drawNonBlockObject({x:i, y:j}, nonBlockObjectTypes[correctIndex]);
+          }
+          if(view_height == 0 && map[view_height][i][j] == 0){
+            drawEmptySpace({x: i, y: j});
+          }
       }
     }
   }
@@ -148,7 +191,12 @@ function drawRange(start, end){
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
       if(map.exists(view_height, x, y)){
-        drawTile({x:x, y:y}, selectedColor);
+        if(inColorMode){
+          drawTile({x:x, y:y}, selectedColor);
+        }else{
+          drawNonBlockObject({x:x, y:y}, selectednonBlockObject);
+        }
+        
       }
     }
   }
@@ -164,7 +212,11 @@ function writeRange(start, end){
 
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
-      writeTile({x:x, y:y}, findColorValue(selectedColor));
+      if(inColorMode){
+        writeTile({x:x, y:y}, findColorValue(selectedColor));
+      }else{
+        writeTile({x:x, y:y}, findNonBlockValue(selectednonBlockObject));
+      }
     }
   }
 }
@@ -214,7 +266,12 @@ canvas.addEventListener("mousedown", function(event){
 
   startSelection = position;
 
-  writeWithBrush(position, brush, findColorValue(selectedColor));
+  if(inColorMode){
+    writeWithBrush(position, brush, findColorValue(selectedColor));
+  }else{
+    writeWithBrush(position, brush, findNonBlockValue(selectednonBlockObject));
+  }
+  
 
   drawMap();
   //drawTile(position, "red");
@@ -228,7 +285,12 @@ canvas.addEventListener("mousemove", function(event){
 
   if(startSelection){
     
-    writeWithBrush(position, brush, findColorValue(selectedColor))
+    if(inColorMode){
+      writeWithBrush(position, brush, findColorValue(selectedColor))
+    }else{
+      writeWithBrush(position, brush, findNonBlockValue(selectednonBlockObject));
+    }
+    
 
     drawMap();
     if(brush[brush_type] == "rectangle"){
@@ -306,7 +368,6 @@ var new_map = document.getElementById("new");
 
 var file = document.getElementById("file"); 
 var import_file = document.getElementById("import"); 
-// var export_file = document.getElementById("export");
 
 var button_small = document.getElementById("size-small");
 var button_big = document.getElementById("size-big");
@@ -315,8 +376,10 @@ var insert_layer = document.getElementById("new-layer");
 var delete_layer = document.getElementById("delete-layer"); 
 var duplicate_layer = document.getElementById("duplicate-layer"); 
 
+var nonBlockObjectSelect = document.getElementById("nonBlockObjectSelect");
+
+
 var brush_select = document.getElementById("brush");
-//var color_select = document.getElementById("color");
 
 var jsonImport = document.getElementById("jsonImport");
 var jsonExport = document.getElementById("jsonExport");
@@ -620,6 +683,18 @@ function refreshPageForTeamNum(){
   }
 }
 
+nonBlockObjectSelect.addEventListener("click", function(){
+  if(event.target.id != "nonBlockObjectSelect"){
+    inColorMode = false;
+    selectednonBlockObject = event.target.id;
+    
+    if(previousSelected != null){
+      document.getElementById(previousSelected).style.border = "";
+    }
+    document.getElementById(selectednonBlockObject).style.border = "1px solid red";
+    previousSelected = selectednonBlockObject;
+  }
+});
 
 addColor.onclick = function(){
   var color = document.getElementById("newColor").value;
@@ -662,12 +737,13 @@ addColor.onclick = function(){
 
 colorSelect.addEventListener("click", function(){
   if(event.target.id != "colorSelect"){
-    var previousColor = selectedColor;
+    inColorMode = true;
     selectedColor = event.target.id;
-    if(previousColor != null){
-      document.getElementById(previousColor).style.border = "";
+    if(previousSelected != null){
+      document.getElementById(previousSelected).style.border = "";
     }
     document.getElementById(selectedColor).style.border = "1px solid white";
+    previousSelected = selectedColor;
   }
 });
 
@@ -748,6 +824,15 @@ function findColorValue(color){
   for(var i = 0; i < colors.length; i++){
     if(colors[i][0] == color){
       return i;
+    }
+  }
+}
+
+function findNonBlockValue(type){
+  for(var i = 0; i < nonBlockObjectTypes.length; i++){
+    if(nonBlockObjectTypes[i] == type){
+      var value = i * (-1) - 1
+      return value;
     }
   }
 }

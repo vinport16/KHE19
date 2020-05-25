@@ -36,6 +36,11 @@ function drawLine(v1, v2, stroke){
   ctx.stroke();
 }
 
+function drawText(tl, size, text){
+  ctx.font = size + "px Arial";
+  ctx.fillText(text, tl.x, tl.y);
+}
+
 // Vectors
 
 var zeroVector = {x:0,y:0};

@@ -435,7 +435,7 @@ socket.on("map", function(map, colors){
     map.forEach(function(layer, i) {
         layer.forEach(function(line, j) {
             line.forEach(function(char, k) {
-                if(map[i][j][k] != 0){
+                if(map[i][j][k] > 0){
                   var boxMaterial;
                     var colorInfo = colors[map[i][j][k]];
                     //colorInfo in the format: ["#FFFFFF", 0.2]

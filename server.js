@@ -412,7 +412,7 @@ function respawn(p){
 
     
     if(map[z][y][x] != null){
-      if(map[z][y][x] != 0 && map[z+1][y][x] == 0 && map[z+2][y][x] == 0){
+      if(map[z][y][x] > 0 && map[z+1][y][x] == 0 && map[z+2][y][x] == 0){
         if(spawnAreas[p.team].includes(colors[map[z][y][x]][0]) || spawnAreas[0] == ["All Locations Valid"]){
           validLocation = true;
           // console.log("valid length:");

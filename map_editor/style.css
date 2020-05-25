@@ -6,7 +6,7 @@ canvas{
 }
 div.floating{
   color:red;
-
+  background-color: #000;
   position: absolute;
   left: 15px;
   top: 15px;
@@ -75,6 +75,14 @@ input.size{
 /* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltipText {
   visibility: visible;
+}
+
+.nonBlockObject{
+  height: 29px; 
+  width: 29px; 
+  display: inline-block; 
+  background-color: white;
+  text-align: center;
 }
 
 
