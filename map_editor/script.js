@@ -430,6 +430,7 @@ jsonImport.onclick = function(){
 
     document.getElementById("mapName").value = jsonContents.mapInfo.name;
     document.getElementById("creatorName").value = jsonContents.mapInfo.creator;
+    selectedGameType = jsonContents.mapInfo.gameType;
     for(var i = 0; i < gameType.length; i++){
       if(jsonContents.mapInfo.gameType == gameType[i]){
         document.getElementById("gameType").selectedIndex = i;
@@ -626,24 +627,37 @@ addColor.onclick = function(){
   if(isNaN(range)){
     range = 0.05;
   }
-  //Add new color to the colors array
-  colors.push([color, range]);
-  
-  var colorAdded = false;
-  var checkboxes = document.getElementById("teamSpawnSelect").getElementsByTagName("input");
-  for(var i = 0; i < checkboxes.length; i++){
-    if(checkboxes[i].checked && !checkboxes[i].disabled && !colorAdded){
-      var iPlusOne = i + 1;
-      addColorDiv([color, range], "T" + iPlusOne);
-      spawnAreas.push({"team": i, "value": color});
-      checkboxes[i].checked = false;
-      colorAdded = true;
+
+  var isDuplicateColor = false;
+  for(var i = 0; i < colors.length; i++){
+    if(colors[i][0] == color){
+      isDuplicateColor = true;
     }
   }
 
-  if(!colorAdded){
-    addColorDiv([color, range], "");
+  if(!isDuplicateColor){
+    //Add new color to the colors array
+    colors.push([color, range]);
+    
+    var colorAdded = false;
+    var checkboxes = document.getElementById("teamSpawnSelect").getElementsByTagName("input");
+    for(var i = 0; i < checkboxes.length; i++){
+      if(checkboxes[i].checked && !checkboxes[i].disabled && !colorAdded){
+        var iPlusOne = i + 1;
+        addColorDiv([color, range], "T" + iPlusOne);
+        spawnAreas.push({"team": i, "value": color});
+        checkboxes[i].checked = false;
+        colorAdded = true;
+      }
+    }
+
+    if(!colorAdded){
+      addColorDiv([color, range], "");
+    }
+  }else{
+    alert("Color already added.");
   }
+  
 }
 
 colorSelect.addEventListener("click", function(){
