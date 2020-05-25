@@ -214,8 +214,7 @@ io.on("connection", function(socket){
   player.class = "scout";
   player.respawning = false;
   player.color = randomPlayerColor();
-  //player.team = randomTeam();
-  player.team = 0;
+  player.team = randomTeam();
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -401,14 +400,10 @@ function respawn(p){
   var validLocation = false;
   while(!validLocation){
     var teamSpawnMap = validSpawnLocations[p.team];
-    
-    //Maybe change this to use an array of coordinates and it removes the coordinates as they are invalid. 
-    //eg: [[0,0,0], [0,0,1], ... , [5,10,10]]
-    //pick one index in the array at random then remove values that are bad. 
-    //yes, lets do this. 
-    //x = parseInt(Math.random()*(teamSpawnMap[0][0].length - 4) + 2,10);
-    //y = parseInt(Math.random()*(teamSpawnMap[0].length - 4) + 2,10);
-    //z = parseInt(Math.random()*(teamSpawnMap.length - 3),10);
+
+    if(teamSpawnMap.length == 0){
+      console.err("No valid spawn areas for team: " + p.team);
+    }
 
     var randomLocation = Math.floor(Math.random()*teamSpawnMap.length)
     x = teamSpawnMap[randomLocation][2];
@@ -420,8 +415,8 @@ function respawn(p){
       if(map[z][y][x] != 0 && map[z+1][y][x] == 0 && map[z+2][y][x] == 0){
         if(spawnAreas[p.team].includes(colors[map[z][y][x]][0]) || spawnAreas[0] == ["All Locations Valid"]){
           validLocation = true;
-          console.log("valid length:");
-          console.log(teamSpawnMap.length);
+          // console.log("valid length:");
+          // console.log(teamSpawnMap.length);
         }
       }
     }
@@ -429,14 +424,8 @@ function respawn(p){
       teamSpawnMap.splice(randomLocation, 1);
     }
   }
-  console.log("found new point");
+  //console.log("found new point");
 
-  // do {
-  //   x = parseInt(Math.random()*(map[0][0].length - 4) + 2,10);
-  //   y = parseInt(Math.random()*(map[0].length - 4) + 2,10);
-  //   z = parseInt(Math.random()*(map.length - 3),10);
-  // }
-  // while(map[z][y][x] == 0 || map[z+1][y][x] != 0 || map[z+2][y][x] != 0);
   p.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
   p.position = {x:1000, y:1000, z:1000};
 }
