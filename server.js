@@ -23,7 +23,7 @@ console.log("running on port", port);
 
 
 //Server Specific Values: 
-var MAPFILE = "maps/testSpawn.json";
+var MAPFILE = "maps/islands.json";
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
 
@@ -52,6 +52,8 @@ var flags = mapFileContents.specialObjects.flags;
 var numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
 var spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
 var validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
+
+console.log(spawnAreas);
 http.listen(port);
 
 // this allows cross origin JSON requests (to get status message)
@@ -116,17 +118,22 @@ function json2contents(file_name){
 }
 
 function json2spawn(inputSpawn, numberOfTeams){
-  var spawnAreas = [];
-  for(var i = 0; i < numberOfTeams; i++){
-    spawnAreas.push(new Array());
-  }
-  console.log(spawnAreas);
-  inputSpawn.forEach(area => {
-    spawnAreas[area.team].push(area.value);
-  });
+  if(inputSpawn.length == 0){
+    return ["All Locations Valid"];
+  }else{
+    var spawnAreas = [];
+    for(var i = 0; i < numberOfTeams; i++){
+      spawnAreas.push(new Array());
+    }
+    console.log(spawnAreas);
+    inputSpawn.forEach(area => {
+      spawnAreas[area.team].push(area.value);
+    });
 
-  //console.log(spawnAreas);
-  return spawnAreas;
+    //console.log(spawnAreas);
+    return spawnAreas;
+  }
+  
 }
 
 function cloneArray(inputArr){
@@ -411,7 +418,7 @@ function respawn(p){
     
     if(map[z][y][x] != null){
       if(map[z][y][x] != 0 && map[z+1][y][x] == 0 && map[z+2][y][x] == 0){
-        if(spawnAreas[p.team].includes(colors[map[z][y][x]][0])){
+        if(spawnAreas[p.team].includes(colors[map[z][y][x]][0]) || spawnAreas[0] == ["All Locations Valid"]){
           validLocation = true;
           console.log("valid length:");
           console.log(teamSpawnMap.length);
