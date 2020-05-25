@@ -14,7 +14,10 @@ var inColorMode = true;
 var previousSelected;
 
 let spawnAreas = [];
+
+//TODO: When a flag is added, add it's id and position to this array! 
 let flags = [];
+var currentFlagTeam = 1;
 
 
 let nonBlockObjectTypes = [
@@ -97,6 +100,9 @@ function writeTile(position, value){
   if(map.exists(view_height, position.x, position.y)){
     map[view_height][position.x][position.y] = value;
   }
+  if(value < 0){
+    storeObjectPosition(position, value);
+  }
 }
 
 function cloneMap(map){
@@ -136,7 +142,7 @@ function drawEmptySpace(position){
 function drawNonBlockObject(position, text){
   let vp = subtract(position, view_position);
   var topLeft = multiply(vp, square_width);
-  var textPos = {x: topLeft.x, y: topLeft.y + square_width};
+  var textPos = {x: topLeft.x, y: topLeft.y + square_width - (square_width/10)};
   drawText(textPos, square_width, text);
 }
 
@@ -188,14 +194,21 @@ function drawRange(start, end){
   let endx = Math.max(start.x, end.x);
   let endy = Math.max(start.y, end.y);
 
+  if(map.exists(view_height, startx, starty)){
+    if(!inColorMode){
+      drawNonBlockObject({x:startx, y:starty}, selectednonBlockObject);
+    }
+  }
+
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
       if(map.exists(view_height, x, y)){
         if(inColorMode){
           drawTile({x:x, y:y}, selectedColor);
-        }else{
-          drawNonBlockObject({x:x, y:y}, selectednonBlockObject);
         }
+        // }else{
+        //   drawNonBlockObject({x:x, y:y}, selectednonBlockObject);
+        // }
         
       }
     }
@@ -210,12 +223,14 @@ function writeRange(start, end){
   let endx = Math.max(start.x, end.x);
   let endy = Math.max(start.y, end.y);
 
+  if(!inColorMode){
+    writeTile({x:startx, y:starty}, findNonBlockValue(selectednonBlockObject));
+  }
+
   for(let x = startx; x <= endx; x++){
     for(let y = starty; y <= endy; y++){
       if(inColorMode){
         writeTile({x:x, y:y}, findColorValue(selectedColor));
-      }else{
-        writeTile({x:x, y:y}, findNonBlockValue(selectednonBlockObject));
       }
     }
   }
@@ -238,13 +253,18 @@ function writeArray(position, array, block){
 }
 
 function writeWithBrush(position, brush, colorIndex){
-  if(brush[brush_type] == "point"){
-    writeTile(position, colorIndex);
-  }else if(brush[brush_type] == "three"){
-    writeArray(position, three_brush, colorIndex);
-  }else if(brush[brush_type] == "seven"){
-    writeArray(position, seven_brush, colorIndex);
+  if(inColorMode){
+    if(brush[brush_type] == "point"){
+      writeTile(position, colorIndex);
+    }else if(brush[brush_type] == "three"){
+      writeArray(position, three_brush, colorIndex);
+    }else if(brush[brush_type] == "seven"){
+      writeArray(position, seven_brush, colorIndex);
+    }
+  }else{
+      writeTile(position, colorIndex);
   }
+  
 }
 
 drawMap();
@@ -287,8 +307,6 @@ canvas.addEventListener("mousemove", function(event){
     
     if(inColorMode){
       writeWithBrush(position, brush, findColorValue(selectedColor))
-    }else{
-      writeWithBrush(position, brush, findNonBlockValue(selectednonBlockObject));
     }
     
 
@@ -558,15 +576,30 @@ import_file.onclick = function(){
 }
 
 jsonExport.onclick = function(){
+  var tempFlags = [];
+
   let flipped_map = flipMap(map);  
   //convert all string values to int values
   for(let z = 0; z < flipped_map.length; z++){
     for(let x = 0; x < flipped_map[z].length; x++){
       for(let y = 0; y < flipped_map[z][x].length; y++){
         flipped_map[z][x][y] = Number(flipped_map[z][x][y]);
+        //Only add flags that are still in the map to the exported array. 
+        //If a flag is replaced with a block, we don't want to save that flag
+        if(flipped_map[z][x][y] < 0){
+          if(flipped_map[z][x][y] == -1){
+            for(var i = 0; i < flags.length; i++){
+              if(x == flags[i].position.y && y == flags[i].position.x && z == flags[i].position.z){
+                tempFlags.push(flags[i]);
+              }
+            }
+          }
+        }
       }
     }
   }
+
+  flags = tempFlags;
   
   var tempMap = map;
   map = flipped_map;
@@ -683,6 +716,24 @@ function refreshPageForTeamNum(){
   }
 }
 
+
+function storeObjectPosition(position, value){
+  if(value == -1){
+    //console.log("Adding new flag");
+    var flagObj = {};
+    flagObj.team = currentFlagTeam - 1;
+    flagObj.position = {x: position.x, y: position.y, z: view_height};
+    //Check for flags in the same spot and replace them
+    for(var i = 0; i < flags.length; i++){
+      if(flagObj.position.x == flags[i].position.x && flagObj.position.y == flags[i].position.y && flagObj.position.z == flags[i].position.z){
+        flags.splice(i,1);
+      }
+    }
+    flags.push(flagObj);
+  }
+  //add other types here. 
+}
+
 nonBlockObjectSelect.addEventListener("click", function(){
   if(event.target.id != "nonBlockObjectSelect"){
     inColorMode = false;
@@ -693,6 +744,8 @@ nonBlockObjectSelect.addEventListener("click", function(){
     }
     document.getElementById(selectednonBlockObject).style.border = "1px solid red";
     previousSelected = selectednonBlockObject;
+
+    currentFlagTeam = parseInt(prompt("What team is gaurding this flag?", currentFlagTeam+""));
   }
 });
 
@@ -779,22 +832,6 @@ function addColorDiv(colorInfo, spawnTeamText){
   document.getElementById(color).appendChild(newColorTooltip);
   
 }
-
-
-// for(var i = 0; i < color.length; i++){
-//   var opt = color[i];
-//   if(i == 0){
-//     opt = "empty";
-//   }
-//   var el = document.createElement("option");
-//   el.textContent = opt;
-//   el.value = i;
-//   color_select.appendChild(el);
-// }
-
-// color_select.addEventListener("change", function(){
-//   block_type = color_select.value;
-// });
 
 for(var i = 0; i < brush.length; i++){
   var opt = brush[i];

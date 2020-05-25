@@ -15,7 +15,7 @@ var color = new THREE.Color();
 var sprint = false;
 var startTime = Date.now();
 var player_radius = 7.5;
-var star = create_star_sprite();
+var flags = [];
 var playerJustFell = false;
 var loadStatus = 1;
 var playerClass = "scout";
@@ -217,15 +217,6 @@ function getFromMap(mapPos){
     return 0;
 }
 
-function create_star_sprite(){
-    let spriteMap = new THREE.TextureLoader().load( "/sprites/star.png" );
-    let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
-    let sprite = new THREE.Sprite( spriteMaterial );
-    sprite.name = "STAR";
-    sprite.scale.set(50,50,1);
-    return sprite;
-}
-
 function isColliding(position){
     var collidingWith = [];
     var checkspots = [];
@@ -263,7 +254,7 @@ function isColliding(position){
     var collision = false;
 
     for(var i in checkspots){
-        if(getFromMap(checkspots[i]) != 0){
+        if(getFromMap(checkspots[i]) > 0){
             collision = true;
             collidingWith.push(checkspots[i]);
             return true;
@@ -482,7 +473,7 @@ socket.on("map", function(map, colors){
 
 
 function noBlockAt(x){
-    return x == undefined || x == 0;
+    return x == undefined || x == 0 || x < 0;
 }
 
 /**
@@ -805,6 +796,25 @@ socket.on("projectile burst", function(p){
 
 });
 
+socket.on("create flag", function(f){
+  if(!scene.getObjectByName(f.name)){
+    let spriteMap = new THREE.TextureLoader().load( "/sprites/star.png" );
+    let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
+    let sprite = new THREE.Sprite( spriteMaterial );
+
+    sprite.position.x = f.position.x * 20;
+    sprite.position.y = f.position.z * 20;
+    sprite.position.z = f.position.y * 20;
+
+    console.log(sprite.position);
+
+    sprite.name = f.name;
+    //sprite.id = f.id;
+    sprite.scale.set(20,20,1);
+    scene.add(sprite);
+  }
+});
+
 socket.on("star position", function(position){
     if(!scene.getObjectByName(star.name)){
         scene.add(star);
@@ -813,8 +823,9 @@ socket.on("star position", function(position){
     star.position.y = position.y + 20;
     star.position.z = position.z;
 });
-socket.on("remove star", function(position){
-    scene.remove(star);
+
+socket.on("remove flag", function(f){
+    scene.remove(f.name);
 });
 
 socket.on("leaderboard", function(board) {

@@ -7,23 +7,8 @@ var io = sio(http);
 var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
-//Pick a map at random when the server is loaded: 
-// //get possible maps
-// var files = fs.readdirSync('maps/');
-// for(var i = 0; i < files.length; i++){
-//   if(!files[i].includes(".json")){
-//     files.splice(i,1);
-//     i++;
-//   }
-// }
-
-// //pick a random map
-// var mapIndex = Math.floor(Math.random() * files.length);
-// var MAPFILE = "maps/" + files[mapIndex];
-
-
 //Server Specific Values: 
-var MAPFILE = "maps/islands.json";
+var MAPFILE = "maps/flagTest.json";
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
 
@@ -48,12 +33,12 @@ var mapFileContents = json2contents(MAPFILE);
 const map = json2map(mapFileContents.map);
 var colors = mapFileContents.colors;
 var gameType = mapFileContents.mapInfo.gameType;
-var flags = mapFileContents.specialObjects.flags;
+var flags = json2Flags(mapFileContents.specialObjects.flags);
 var numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
 var spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
 var validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
 
-console.log(spawnAreas);
+console.log(flags);
 http.listen(port);
 
 // this allows cross origin JSON requests (to get status message)
@@ -117,6 +102,15 @@ function json2contents(file_name){
   return mapFileContents;
 }
 
+function json2Flags(flags){
+  for(var i = 0; i < flags.length; i++){
+    flags[i].id = i;
+    flags[i].name = "FLAG" + flags[i].id;
+  }
+
+  return flags;
+}
+
 function json2spawn(inputSpawn, numberOfTeams){
   if(inputSpawn.length == 0){
     return ["All Locations Valid"];
@@ -153,12 +147,6 @@ function setUpValidSpawnLocations(teamNum){
   }
 
   for(var i = 0; i < teamNum; i++){
-    // var newMap = [];
-    // for(var j = 0; j < map.length; j++){
-    //   newMap[j] = map[i].slice();
-    // }
-    // console.log(newMap);
-    //spawnLoc[i] = cloneArray(map);
     spawnLoc[i] = cloneArray(mapCoordinates);
   }
 
@@ -238,6 +226,10 @@ io.on("connection", function(socket){
 
   socket.on("map", function(){
     socket.emit("map",map, colors);
+    for(var flag in flags){
+      socket.emit("create flag", flags[flag]);
+    }
+    socket.emit("c")
     for(i in players){
       if(players[i].id != player.id){
         player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name, color: players[i].color});
@@ -356,7 +348,7 @@ function projCollisionWithMap(p, map){
 
   if(mapPos.x >= 0 && mapPos.y >= 0 && mapPos.z >= 0){
     if(map.length > mapPos.y && map[0].length > mapPos.z && map[0][0].length > mapPos.x){
-      if(map[mapPos.y][mapPos.z][mapPos.x] != 0){
+      if(map[mapPos.y][mapPos.z][mapPos.x] > 0){
         return true;
       }
     }
