@@ -798,7 +798,7 @@ socket.on("projectile burst", function(p){
 
 socket.on("create flag", function(f){
   if(!scene.getObjectByName(f.name)){
-    let spriteMap = new THREE.TextureLoader().load( "/sprites/star.png" );
+    let spriteMap = new THREE.TextureLoader().load( "/sprites/Star.png" );
     let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
     let sprite = new THREE.Sprite( spriteMaterial );
 
