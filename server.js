@@ -113,6 +113,11 @@ function json2Flags(flags){
     flags[i].position.y = tempFlagZ;
     flags[i].position.z = tempFlagY;
 
+    flags[i].originalPosition = {};
+    flags[i].originalPosition.x = flags[i].position.x;
+    flags[i].originalPosition.y = flags[i].position.y;
+    flags[i].originalPosition.z = flags[i].position.z;
+
     flags[i].show = true;
 
   }
@@ -197,7 +202,7 @@ var reloadTime = {
   scout: 100,
   sniper: 1000,
   heavy: 900
-};;
+};
 
 
 io.on("connection", function(socket){
@@ -212,7 +217,7 @@ io.on("connection", function(socket){
   player.respawning = false;
   player.color = randomPlayerColor();
   player.team = randomTeam();
-  player.hasFlag = -1;
+  player.hasFlag = false;
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -235,16 +240,19 @@ io.on("connection", function(socket){
   });
 
   socket.on("map", function(){
-    socket.emit("map",map, colors);
-    for(var flag in flags){
-      if(flags[flag].show = true){
-        socket.emit("create flag", flags[flag]);
+    socket.emit("map", map, colors);
+    for(var f in flags){
+      if(flags[f].show){
+        socket.emit("create flag", flags[f]);
       }
     }
     socket.emit("c")
     for(i in players){
       if(players[i].id != player.id){
         player.socket.emit("new player", {id:players[i].id, position:players[i].position, name:players[i].name, color: players[i].color});
+        if(players[i].hasFlag){
+          player.socket.emit("flash player", players[i].id, "yellow");
+        }
         players[i].socket.emit("new player", {id:player.id, position:player.position, name:player.name, color: player.color});
       }
     }
@@ -332,7 +340,6 @@ function randomPlayerColor(){
 
 function randomTeam(){
   var team = Math.floor(Math.random() * numberOfTeams);
-  console.log(team);
   return team;
 }
 
@@ -354,7 +361,7 @@ function announceHit(hitPlayer, oPlayer){
 }
 
 function flagCollisionCheck(player){
-  if(player.hasFlag == -1){
+  if(!player.hasFlag){
     for(var i in flags){
       if(flags[i].show && flags[i].team != player.team){
         var smallPlayerPos = {x: player.position.x / 20.0, y: player.position.y / 20.0, z: player.position.z/20.0};
@@ -363,12 +370,15 @@ function flagCollisionCheck(player){
           if(smallPlayerPos.y > flags[i].position.y - 1 && smallPlayerPos.y < flags[i].position.y + 1){
             if(smallPlayerPos.z > flags[i].position.z-0.5 && smallPlayerPos.z < flags[i].position.z-0.5 + 1){
               //there is a collision. 
-              player.hasFlag = flags[i].id;
+              player.hasFlag = flags[i];
               flags[i].show = false;
               for(var p in players){
                 players[p].socket.emit("remove flag", flags[i]);
-                players[p].socket.emit("flash player", player.id, "yellow");
+                if(players[p].id != player.id){
+                  players[p].socket.emit("flash player", player.id, "yellow");
+                }
               }
+              tellEveryone(player.name + " has " + player.hasFlag.name + "!");
             }
           }
         }
@@ -376,6 +386,30 @@ function flagCollisionCheck(player){
     }
   }
   
+}
+
+function resetFlagPosition(flag){
+  flag.position.x = flag.originalPosition.x;
+  flag.position.y = flag.originalPosition.y;
+  flag.position.z = flag.originalPosition.z;
+}
+
+function moveFlagToPlayer(flag, player){
+  flag.position.x = Math.floor(player.position.x/20 +0.5);
+  flag.position.y = Math.floor(player.position.y/20 +0.5);
+  flag.position.z = Math.floor(player.position.z/20 +0.5);
+}
+
+function playerDropFlag(player){
+  player.hasFlag.show = true;
+  for(var j in players){
+    players[j].socket.emit("create flag", player.hasFlag);
+    if(players[j].id != player.id){
+      players[j].socket.emit("stop flash", player.id);
+    }
+  }
+  tellEveryone(player.name + " dropped " + player.hasFlag.name);
+  player.hasFlag = false;
 }
 
 function projCollisionWithMap(p, map){
@@ -414,24 +448,11 @@ function projCollision(p,map){
       
 
       //Drop the flag where the player is standing: 
-      if(players[i].hasFlag != -1){
-        console.log("got the dude with the flag!");
-        for(var f in flags){
-          if(flags[f].id = players[i].hasFlag){
-            console.log("he better drop it!");
-            flags[f].show = true;
-            flags[f].position.x = Math.floor(players[i].position.x/20);
-            flags[f].position.y = Math.floor(players[i].position.y/20);
-            flags[f].position.z = Math.floor(players[i].position.z/20);
-            players[i].hasFlag = -1;
-            for(var j in players){
-              players[j].socket.emit("create flag", flags[f]);
-              players[j].socket.emit("stop flash", players[i].id);
-            }
-          }
-        }
+      if(players[i].hasFlag){
+        moveFlagToPlayer(players[i].hasFlag, players[i]);
+        playerDropFlag(players[i]);
       }
-      
+
       // respawn after moving the flag to player position
       respawn(players[i]);
       updateLeaderboard();
@@ -453,17 +474,9 @@ function respawn(p){
   //But first, reset the flag if the player has one. 
   //If the player is shot, the flag is dropped in the projCollision method so this won't apply
   //this is only used if the player falls off the edge.
-  if(p.hasFlag != -1){
-    for(var f in flags){
-      if(flags[f].id = p.hasFlag){
-        flags[f].show = true;
-        p.hasFlag = -1;
-        for(var j in players){
-          players[j].socket.emit("create flag", flags[f]);
-          players[j].socket.emit("stop flash", p.id);
-        }
-      }
-    }
+  if(p.hasFlag){
+    resetFlagPosition(p.hasFlag);
+    playerDropFlag(p);
   }
 
 
