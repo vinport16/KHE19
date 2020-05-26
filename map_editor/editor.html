@@ -5,29 +5,18 @@
   </head>
   <body>
     <canvas id="canvas"></canvas>
-    <div class="floating">
+    <div id="sideBar" class="floating">
+      <div style="font-size: 29px">BlockBall Level Editor</div>
       <div class="layer" id="current-layer">layer: 0/0</div>
       <hr>
       <input type="number" class="size" id="xsize">by<input type="number" class="size" id="ysize"><br>
       <select id="gameType"></select>
       <button id="new">new map</button><br>
       <hr>
-      <input type="file" id="file"></input>
-      <button id="jsonImport">Import JSON</button>
-      <button id="import">Import CSV</button>
-      <hr>
-      <!-- <button id="export">export</button> -->
-      Map Name:
-      <input type="text" id="mapName"></input>
-      </br>
-      </br>
-      Your Name:
-      <input type="text" id="creatorName"></input>
-      <button id="jsonExport">jsonExport</button>
-      <hr>
-      square size:<br>
-      <button id="size-big">bigger</button>
-      <button id="size-small">smaller</button>
+      Navigation: <br>
+      <button id="size-big">Zoom In</button>
+      <button id="size-small">Zoom Out</button>
+      <p>Navigate with WASD. QE to move between layers. CMD-Z to undo.</p>
       <button id="new-layer">insert layer above</button><br>
       <button id="delete-layer">delete current layer</button><br>
       <button id="duplicate-layer">duplicate layer</button><br>
@@ -42,9 +31,10 @@
       <!-- <select id="color"></select> -->
       <br>
       <div id="colorSelect">
-        <div id="white" class="colorBox tooltip" style="height: 29px; width: 29px; display: inline-block; background-color: white"><span class="tooltipText tooltipRight">Eraser</span></div>
+        <div id="white" class="colorBox tooltip" style="height: 29px; width: 29px; display: inline-block; background-color: white"><span class="tooltipText tooltipRight">Eraser</span><img id="white" src="../images/32px-Eraser_icon.svg.png"></div>
       </div>
-      <br>
+      
+      <hr>
       Add a new color: <br>
       <input id="newColor" type="color"/>
       <br> Range:
@@ -57,7 +47,29 @@
       <br>
       <button id="addNewColor">Add Color</button>
 
-      <p>Navigate with WASD. QE to move between layers. CMD-Z to undo.</p>
+      
+    </div>
+    <div id="bottomBar" class="floating">
+      <table>
+        <!-- First column: Import 
+             Second column: Export -->
+        <tr>
+          <td>Import a map: </td>
+          <td>Export your map:</td>
+        </tr>
+        <tr>
+          <td><input type="file" id="file"></input></td>
+          <td><input type="text" id="mapName" placeholder="Map Name"></input> </td>
+        </tr>
+        <tr>
+          <td><button id="jsonImport">Import JSON</button></td>
+          <td><input type="text" id="creatorName" placeholder="Your Name"></input></td>
+        </tr>
+        <tr>
+          <td><button id="import">Import CSV</button></td>
+          <td><button id="jsonExport">jsonExport</button></td>
+        </tr>
+      </table>
     </div>
   </body>
   <script type="text/javascript" src="util.js"></script>
