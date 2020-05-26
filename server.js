@@ -411,15 +411,16 @@ function projCollision(p,map){
       announceHit(players[i], p.owner);
       players[i].deaths.push(p.owner.id);
       p.owner.kills.push(players[i].id);
-      respawn(players[i]);
-      updateLeaderboard();
+      
 
       //Drop the flag where the player is standing: 
       if(players[i].hasFlag != -1){
+        console.log("got the dude with the flag!");
         for(var f in flags){
           if(flags[f].id = players[i].hasFlag){
+            console.log("he better drop it!");
             flags[f].show = true;
-            flags[f].position.x = Math.floor(players[i].position.x / 20);
+            flags[f].position.x = Math.floor(players[i].position.x/20);
             flags[f].position.y = Math.floor(players[i].position.y/20);
             flags[f].position.z = Math.floor(players[i].position.z/20);
             players[i].hasFlag = -1;
@@ -430,6 +431,11 @@ function projCollision(p,map){
           }
         }
       }
+      
+      // respawn after moving the flag to player position
+      respawn(players[i]);
+      updateLeaderboard();
+
       return true;
     }
   }
