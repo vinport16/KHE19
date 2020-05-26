@@ -3,28 +3,41 @@ body{
 }
 canvas{
   background-color: black;
+  /* margin-top: 125px; */
 }
+
+#sideBar{
+  left: 15px;
+  top: 15px;
+  width: 150px;
+  height: 95%;
+}
+
+#bottomBar{
+  left: 176px;
+  top: 85%;
+  width: 400px;
+  height: 12%;
+}
+
 div.floating{
   color:red;
   background-color: #000;
   position: absolute;
-  left: 15px;
-  top: 15px;
-
   border: 1px solid red;
   padding: 5px;
-
-  width: 150px;
-  height: 95%;
-
   overflow-x: hidden;
 }
 div.layer{
-  font-size: 26px;
+  font-size: 22px;
 }
 
 input.size{
   width: 3em;
+}
+
+table{
+  color: red;
 }
 
 .colorBox{

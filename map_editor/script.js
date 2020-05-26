@@ -81,8 +81,9 @@ let gameType = [
   "King of the Hill"
 ]
 
-var map = blankMap(5, 40, 40);
+var map = blankMap(1, 0, 0);
 var previous_map;
+alert("Welcome to the BlockBall Map Editor. Create a new map in the upper left corner or import a map below to get started. ");
 
 function blankMap(zz,xx,yy){
   let map = [];
