@@ -45,6 +45,7 @@ let colors = [
 let brush = [
   "point",
   "three",
+  "five",
   "seven",
   "rectangle"
 ]
@@ -53,6 +54,14 @@ let three_brush = [
   [1,1,1],
   [1,1,1],
   [1,1,1]
+];
+
+let five_brush = [
+  [0,1,1,1,0],
+  [1,1,1,1,1],
+  [1,1,1,1,1],
+  [1,1,1,1,1],
+  [0,1,1,1,0]
 ];
 
 let seven_brush = [
@@ -258,6 +267,8 @@ function writeWithBrush(position, brush, colorIndex){
       writeTile(position, colorIndex);
     }else if(brush[brush_type] == "three"){
       writeArray(position, three_brush, colorIndex);
+    }else if(brush[brush_type] == "five"){
+      writeArray(position, five_brush, colorIndex);
     }else if(brush[brush_type] == "seven"){
       writeArray(position, seven_brush, colorIndex);
     }
