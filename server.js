@@ -276,6 +276,7 @@ io.on("connection", function(socket){
       if(!player.respawning){
           player.position = position;
           flagCollisionCheck(player);
+          flagSafeCheck(player);
       }
   });
 
@@ -286,6 +287,10 @@ io.on("connection", function(socket){
   });
 
   socket.on("disconnect",function(){
+    if(player.hasFlag){
+      resetFlagPosition(player.hasFlag);
+      playerDropFlag(player);
+    }
     for(i in players){
       if(players[i].id == player.id){
         players.splice(i,1);
@@ -358,6 +363,31 @@ function tellEveryone(messageText){
 function announceHit(hitPlayer, oPlayer){
   hitPlayer.socket.emit("message", {from: "server", text: oPlayer.name + " hit you!"});
   oPlayer.socket.emit("message", {from: "server", text: "you hit " + hitPlayer.name + "!"});
+}
+
+function flagSafeCheck(player){
+  if(player.hasFlag){
+    var smallPlayerPos = {x: Math.floor((player.position.x / 20.0) + 0.5), y: Math.floor(player.position.y / 20.0)-1, z: Math.floor((player.position.z/20.0) + 0.5)};
+    //If player is out of the map range, then can't be valid
+    if(map[smallPlayerPos.y] != undefined){
+      if(map[smallPlayerPos.y][smallPlayerPos.z] != undefined){
+        if(map[smallPlayerPos.y][smallPlayerPos.z][smallPlayerPos.x] != undefined){
+          var mapColorValue = map[smallPlayerPos.y][smallPlayerPos.z][smallPlayerPos.x];
+          if(mapColorValue > 0){
+            var mapColor = colors[mapColorValue][0];
+            if(spawnAreas[player.team].includes(mapColor)){
+              //Player back in spawn area
+              tellEveryone(player.name + " has returned with " + player.hasFlag.name + "!");
+              resetFlagPosition(player.hasFlag);
+              playerDropFlag(player);
+
+            }
+          }
+        }
+      }
+    }
+    
+  }
 }
 
 function flagCollisionCheck(player){
