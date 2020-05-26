@@ -46,7 +46,6 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
   spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
   validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
 
-  console.log(flags);
   http.listen(port);
 
 });
