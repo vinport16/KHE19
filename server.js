@@ -8,7 +8,7 @@ var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
 //Server Specific Values: 
-var MAPFILE = "maps/flagTest.json";
+var MAPFILE = "maps/treeHouse2.json";
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
 
@@ -38,7 +38,6 @@ var numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
 var spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
 var validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
 
-console.log(flags);
 http.listen(port);
 
 // this allows cross origin JSON requests (to get status message)
@@ -133,7 +132,6 @@ function json2spawn(inputSpawn, numberOfTeams){
     for(var i = 0; i < numberOfTeams; i++){
       spawnAreas.push(new Array());
     }
-    console.log(spawnAreas);
     inputSpawn.forEach(area => {
       spawnAreas[area.team].push(area.value);
     });
