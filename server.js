@@ -106,6 +106,15 @@ function json2Flags(flags){
   for(var i = 0; i < flags.length; i++){
     flags[i].id = i;
     flags[i].name = "FLAG" + flags[i].id;
+
+    var tempFlagY = flags[i].position.y;
+    var tempFlagZ = flags[i].position.z;
+
+    flags[i].position.y = tempFlagZ;
+    flags[i].position.z = tempFlagY;
+
+    flags[i].show = true;
+
   }
 
   return flags;
@@ -203,6 +212,7 @@ io.on("connection", function(socket){
   player.respawning = false;
   player.color = randomPlayerColor();
   player.team = randomTeam();
+  player.hasFlag = -1;
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -227,7 +237,9 @@ io.on("connection", function(socket){
   socket.on("map", function(){
     socket.emit("map",map, colors);
     for(var flag in flags){
-      socket.emit("create flag", flags[flag]);
+      if(flags[flag].show = true){
+        socket.emit("create flag", flags[flag]);
+      }
     }
     socket.emit("c")
     for(i in players){
@@ -255,6 +267,7 @@ io.on("connection", function(socket){
   socket.on("player position", function(position){
       if(!player.respawning){
           player.position = position;
+          flagCollisionCheck(player);
       }
   });
 
@@ -340,6 +353,31 @@ function announceHit(hitPlayer, oPlayer){
   oPlayer.socket.emit("message", {from: "server", text: "you hit " + hitPlayer.name + "!"});
 }
 
+function flagCollisionCheck(player){
+  if(player.hasFlag == -1){
+    for(var i in flags){
+      if(flags[i].show && flags[i].team != player.team){
+        var smallPlayerPos = {x: player.position.x / 20.0, y: player.position.y / 20.0, z: player.position.z/20.0};
+        //check for collision:
+        if(smallPlayerPos.x > flags[i].position.x-0.5 && smallPlayerPos.x < flags[i].position.x-0.5 + 1){
+          if(smallPlayerPos.y > flags[i].position.y - 1 && smallPlayerPos.y < flags[i].position.y + 1){
+            if(smallPlayerPos.z > flags[i].position.z-0.5 && smallPlayerPos.z < flags[i].position.z-0.5 + 1){
+              //there is a collision. 
+              player.hasFlag = flags[i].id;
+              flags[i].show = false;
+              for(var p in players){
+                players[p].socket.emit("remove flag", flags[i]);
+                players[p].socket.emit("flash player", player.id, "yellow");
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+}
+
 function projCollisionWithMap(p, map){
   mapPos = {};
   mapPos.x = Math.floor((p.position.x+10)/20);
@@ -375,6 +413,23 @@ function projCollision(p,map){
       p.owner.kills.push(players[i].id);
       respawn(players[i]);
       updateLeaderboard();
+
+      //Drop the flag where the player is standing: 
+      if(players[i].hasFlag != -1){
+        for(var f in flags){
+          if(flags[f].id = players[i].hasFlag){
+            flags[f].show = true;
+            flags[f].position.x = Math.floor(players[i].position.x / 20);
+            flags[f].position.y = Math.floor(players[i].position.y/20);
+            flags[f].position.z = Math.floor(players[i].position.z/20);
+            players[i].hasFlag = -1;
+            for(var j in players){
+              players[j].socket.emit("create flag", flags[f]);
+              players[j].socket.emit("stop flash", players[i].id);
+            }
+          }
+        }
+      }
       return true;
     }
   }
@@ -388,6 +443,24 @@ function respawn(p){
   //As this method finds and checks random spots, invalid spots are removed. 
   //Eventually only valid spots remain for each team. 
   //A spot is valid if it has two empty blocks above it and the colors matches one of p's team's spawn color. 
+  
+  //But first, reset the flag if the player has one. 
+  //If the player is shot, the flag is dropped in the projCollision method so this won't apply
+  //this is only used if the player falls off the edge.
+  if(p.hasFlag != -1){
+    for(var f in flags){
+      if(flags[f].id = p.hasFlag){
+        flags[f].show = true;
+        p.hasFlag = -1;
+        for(var j in players){
+          players[j].socket.emit("create flag", flags[f]);
+          players[j].socket.emit("stop flash", p.id);
+        }
+      }
+    }
+  }
+
+
   var x, y , z = 0;
   var validLocation = false;
   while(!validLocation){

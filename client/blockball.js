@@ -803,8 +803,8 @@ socket.on("create flag", function(f){
     let sprite = new THREE.Sprite( spriteMaterial );
 
     sprite.position.x = f.position.x * 20;
-    sprite.position.y = f.position.z * 20;
-    sprite.position.z = f.position.y * 20;
+    sprite.position.y = f.position.y * 20;
+    sprite.position.z = f.position.z * 20;
 
     console.log(sprite.position);
 
@@ -815,17 +815,8 @@ socket.on("create flag", function(f){
   }
 });
 
-socket.on("star position", function(position){
-    if(!scene.getObjectByName(star.name)){
-        scene.add(star);
-    }
-    star.position.x = position.x;
-    star.position.y = position.y + 20;
-    star.position.z = position.z;
-});
-
 socket.on("remove flag", function(f){
-    scene.remove(f.name);
+  removeEntity(f);
 });
 
 socket.on("leaderboard", function(board) {
