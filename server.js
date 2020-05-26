@@ -12,6 +12,16 @@ var MAPFILE = "maps/flagTest.json";
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
 
+
+var mapFileContents;
+var map;
+var colors;
+var gameType;
+var flags;
+var numberOfTeams;
+var spawnAreas;
+var validSpawnLocations;
+
 fs.readFile("config.txt", "utf-8", function(err, data) {
   if (err) {
     console.log(err);
@@ -26,20 +36,21 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
     SERVER_DESCRIPTION = content[1];
     MAPFILE = content[2];
   }
+
+  mapFileContents = json2contents(MAPFILE);
+  map = json2map(mapFileContents.map);
+  colors = mapFileContents.colors;
+  gameType = mapFileContents.mapInfo.gameType;
+  flags = json2Flags(mapFileContents.specialObjects.flags);
+  numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
+  spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
+  validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
+
+  console.log(flags);
+  http.listen(port);
+
 });
 
-var mapFileContents = json2contents(MAPFILE);
-
-const map = json2map(mapFileContents.map);
-var colors = mapFileContents.colors;
-var gameType = mapFileContents.mapInfo.gameType;
-var flags = json2Flags(mapFileContents.specialObjects.flags);
-var numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
-var spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
-var validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
-
-console.log(flags);
-http.listen(port);
 
 // this allows cross origin JSON requests (to get status message)
 app.use(function(req, res, next) {
