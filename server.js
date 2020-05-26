@@ -449,12 +449,16 @@ function projCollision(p,map){
 
       //Drop the flag where the player is standing: 
       if(players[i].hasFlag){
-        moveFlagToPlayer(players[i].hasFlag, players[i]);
+        let flag = players[i].hasFlag;
+        players[i].hasFlag = false;
+        moveFlagToPlayer(flag, players[i]);
+        respawn(players[i]);
+        players[i].hasFlag = flag;
         playerDropFlag(players[i]);
+      }else{
+        respawn(players[i]);
       }
 
-      // respawn after moving the flag to player position
-      respawn(players[i]);
       updateLeaderboard();
 
       return true;
