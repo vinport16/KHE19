@@ -21,6 +21,16 @@ var flags;
 var numberOfTeams;
 var spawnAreas;
 var validSpawnLocations;
+var teamScores;
+
+function allGameTypes(){
+  this.FFA = "Free For All";
+  this.CTF = "Capture The Flag";
+  this.TEAMS = "Teams";
+  this.KOTH = "King of the Hill";
+}
+
+var gameTypes = new allGameTypes();
 
 fs.readFile("config.txt", "utf-8", function(err, data) {
   if (err) {
@@ -45,8 +55,10 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
   numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
   spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
   validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
+  teamScores = new Array(numberOfTeams).fill(0);
 
   http.listen(port);
+  console.log(gameType);
 
 });
 
@@ -225,7 +237,7 @@ io.on("connection", function(socket){
   player.class = "scout";
   player.respawning = false;
   player.color = randomPlayerColor();
-  player.team = randomTeam();
+  player.team = randomTeam(player);
   player.hasFlag = false;
 
   respawn(player);
@@ -284,8 +296,10 @@ io.on("connection", function(socket){
   socket.on("player position", function(position){
       if(!player.respawning){
           player.position = position;
-          flagCollisionCheck(player);
-          flagSafeCheck(player);
+          if(gameType == gameTypes.CTF){
+            flagCollisionCheck(player);
+            flagSafeCheck(player);
+          }
       }
   });
 
@@ -352,8 +366,9 @@ function randomPlayerColor(){
   return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
 }
 
-function randomTeam(){
+function randomTeam(player){
   var team = Math.floor(Math.random() * numberOfTeams);
+  player.socket.emit("message", {from:"server", text:"Your team is "+team});
   return team;
 }
 
@@ -390,6 +405,9 @@ function flagSafeCheck(player){
               resetFlagPosition(player.hasFlag);
               playerDropFlag(player);
 
+              //Update score: 
+              teamScores[player.team]++;
+              updateLeaderboard();
             }
           }
         }
@@ -558,14 +576,34 @@ function respawn(p){
 }
 
 function updateLeaderboard(){
-  var board = players.map(function(p){
-    return {name:p.name,kills:p.kills,deaths:p.deaths};
-  });
-  board = board.sort(function(a,b){
-    return (b.kills.length * b.kills.length / b.deaths.length) - (a.kills.length * a.kills.length / a.deaths.length);
-  });
+  var leaderboard =  gameType + "<br> Leaderboard:<br>";
+
+  if(gameType == gameTypes.FFA){
+    var board = players.map(function(p){
+      return {name:p.name,kills:p.kills,deaths:p.deaths};
+    });
+    board = board.sort(function(a,b){
+      return (b.kills.length * b.kills.length / b.deaths.length) - (a.kills.length * a.kills.length / a.deaths.length);
+    });
+    //Add players to leaderboard string
+    for(var i = 0; i < board.length; i++) {
+        leaderboard += board[i].name + ": " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
+    }
+  }else if(gameType = gameTypes.CTF){
+    //var sortedScores = teamScores.sort();
+    //console.log(sortedScores);
+    for(var i = 0; i < teamScores.length; i++) {
+      if(teamScores[i] == 1){
+        leaderboard += "Team " + i + ": " + teamScores[i] + " point " + "<br>"
+      }else{
+        leaderboard += "Team " + i + ": " + teamScores[i] + " points " + "<br>"
+      }
+   }
+    
+  }
+
   for(i in players){
-    players[i].socket.emit("leaderboard",board);
+    players[i].socket.emit("leaderboard",leaderboard);
   }
 }
 
