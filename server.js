@@ -236,9 +236,14 @@ io.on("connection", function(socket){
   player.position = {x:0,y:0,z:1000};
   player.class = "scout";
   player.respawning = false;
-  player.color = randomPlayerColor();
   player.team = randomTeam(player);
+  player.color = randomPlayerColor(player.team);
   player.hasFlag = false;
+
+  //For KOTH: 
+  player.totalFlagTime = 0;
+  player.flagPickUpTime = 0;
+
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -297,8 +302,9 @@ io.on("connection", function(socket){
       if(!player.respawning){
           player.position = position;
           if(gameType == gameTypes.CTF){
-            flagCollisionCheck(player);
             flagSafeCheck(player);
+          }else if(gameType == gameTypes.KOTH){
+            flagCollisionCheck(player);
           }
       }
   });
@@ -362,8 +368,14 @@ io.on("connection", function(socket){
 
 });
 
-function randomPlayerColor(){
-  return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
+function randomPlayerColor(teamNum){
+  if(gameType == gameTypes.FFA || spawnAreas[0] == ["All Locations Valid"]){
+    return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
+  }else if(gameType == gameTypes.CTF){
+    return spawnAreas[teamNum][0];
+  }else{
+    return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
+  }
 }
 
 function randomTeam(player){
@@ -429,6 +441,8 @@ function flagCollisionCheck(player){
               //there is a collision. 
               player.hasFlag = flags[i];
               flags[i].show = false;
+              player.flagPickUpTime = new Date();
+              updateLeaderboard();
               for(var p in players){
                 players[p].socket.emit("remove flag", flags[i]);
                 if(players[p].id != player.id){
@@ -467,6 +481,8 @@ function playerDropFlag(player){
   }
   tellEveryone(player.name + " dropped " + player.hasFlag.name);
   player.hasFlag = false;
+  player.totalFlagTime += new Date() - player.flagPickUpTime;
+  player.flagPickUpTime = 0;
 }
 
 function projCollisionWithMap(p, map){
@@ -589,7 +605,7 @@ function updateLeaderboard(){
     for(var i = 0; i < board.length; i++) {
         leaderboard += board[i].name + ": " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
     }
-  }else if(gameType = gameTypes.CTF){
+  }else if(gameType == gameTypes.CTF){
     //var sortedScores = teamScores.sort();
     //console.log(sortedScores);
     for(var i = 0; i < teamScores.length; i++) {
@@ -598,8 +614,23 @@ function updateLeaderboard(){
       }else{
         leaderboard += "Team " + i + ": " + teamScores[i] + " points " + "<br>"
       }
-   }
-    
+    }
+  }else if(gameType == gameTypes.KOTH){
+    var board = players.map(function(p){
+      return {name:p.name,totalFlagTime:p.totalFlagTime,flagPickUpTime:p.flagPickUpTime,hasFlag:p.hasFlag};
+    });
+    board = board.sort(function(a,b){
+      return (b.totalFlagTime) - (a.totalFlagTime);
+    });
+    //Add players to leaderboard string
+    for(var i = 0; i < board.length; i++) {
+      if(board[i].hasFlag){
+        var currentTime = (new Date() - board[i].flagPickUpTime) + board[i].totalFlagTime;
+        leaderboard += "<span style=\"color: green;\">" + board[i].name + ": " + currentTime/1000.0 + " seconds </span> " + "<br>";
+      }else{
+        leaderboard += board[i].name + ": " + board[i].totalFlagTime/1000.0 + " seconds " + "<br>";
+      }
+    }
   }
 
   for(i in players){

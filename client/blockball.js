@@ -820,12 +820,6 @@ socket.on("remove flag", function(f){
 });
 
 socket.on("leaderboard", function(board) {
-    //List of objs with .name, .kills, .deaths
-    // var leaderboard = "Leaderboard:<br>";
-    // for(var i = 0; i < board.length; i++) {
-    //     leaderboard += board[i].name + ", " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
-    // }
-    console.log(board);
     document.getElementById('leaderboard').innerHTML = board;
 });
 
