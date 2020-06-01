@@ -307,6 +307,8 @@ io.on("connection", function(socket){
             flagCollisionCheck(player);
           }
       }
+
+      //check for game end here. 
   });
 
   socket.on("change class", function(newClass){
@@ -781,6 +783,39 @@ async function moveProjectile(p){
     }
   }
 
+}
+
+function restartGame(){
+  projectiles = [];
+  teamScores = new Array(numberOfTeams).fill(0);
+
+  resetFlags();
+  resetPlayers();
+  
+}
+
+function resetFlags(){
+  for(var i in flags){
+    resetFlagPosition(flags[i]);
+  }
+}
+
+function resetPlayers(){
+  for(var i in players){
+    players[i].kills = [];
+    players[i].deaths = [];
+    players[i].position = {x:0,y:0,z:1000};
+    players[i].class = "scout";
+    players[i].team = randomTeam(player);
+    players[i].respawning = false;
+    players[i].hasFlag = false;
+    players[i].totalFlagTime = 0;
+    players[i].flagPickUpTime = 0;
+
+    setClass(player, player.class);
+
+    respawn(player);
+  }
 }
 
 

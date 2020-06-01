@@ -757,7 +757,11 @@ nonBlockObjectSelect.addEventListener("click", function(){
     document.getElementById(selectednonBlockObject).style.border = "1px solid red";
     previousSelected = selectednonBlockObject;
 
-    currentFlagTeam = parseInt(prompt("What team is gaurding this flag?", currentFlagTeam+""));
+    if(selectedGameType == selectedGameType == "Capture The Flag"){
+      currentFlagTeam = parseInt(prompt("What team is gaurding this flag?", currentFlagTeam+""));
+    }else{
+      currentFlagTeam = 2;
+    }
   }
 });
 
