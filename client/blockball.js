@@ -823,6 +823,10 @@ socket.on("leaderboard", function(board) {
     document.getElementById('leaderboard').innerHTML = board;
 });
 
+socket.on("restart screen", function(){
+  controls.unlock();
+});
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

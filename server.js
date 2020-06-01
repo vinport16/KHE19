@@ -303,12 +303,43 @@ io.on("connection", function(socket){
           player.position = position;
           if(gameType == gameTypes.CTF){
             flagSafeCheck(player);
+            flagCollisionCheck(player);
           }else if(gameType == gameTypes.KOTH){
             flagCollisionCheck(player);
           }
       }
 
-      //check for game end here. 
+      //End came conditions for each gameType
+      if(gameType == gameTypes.FFA){
+        if(player.kills.length >= 20){
+          for(var i in players){
+            players[i].socket.emit("restart screen");
+            if(players[i].id != player.id){
+              //players[i].socket.emit("message", {from:"server", text: "Game Over + " + player.name + "won! New game starting soon."});
+            }else{
+              //players[i].socket.emit("message", {from:"server", text:"You win! New game starting soon."});
+            }
+          }
+          restartGame();
+        }
+      }else if(gameType == gameTypes.CTF){
+        if(teamScores[player.team] >= 5){
+          for(var i in players){
+            players[i].socket.emit("restart screen");
+          }
+          restartGame();
+        }
+      }else if(gameType == gameTypes.KOTH){
+        var currentTime = (new Date() - player.flagPickUpTime) + player.totalFlagTime;
+        if(currentTime >= 300000){//5 minutes
+          for(var i in players){
+            players[i].socket.emit("restart screen");
+          }
+          restartGame();
+        }
+      }else if(gameType == gameTypes.TEAMS){
+
+      }
   });
 
   socket.on("change class", function(newClass){
@@ -791,6 +822,7 @@ function restartGame(){
 
   resetFlags();
   resetPlayers();
+  updateLeaderboard();
   
 }
 
