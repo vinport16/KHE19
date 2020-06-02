@@ -11,6 +11,7 @@ console.log("running on port", port);
 var MAPFILE = "maps/treeHouse2.json";
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
+var ALLOWGAMERESTARTS = true;
 
 
 var mapFileContents;
@@ -22,6 +23,7 @@ var numberOfTeams;
 var spawnAreas;
 var validSpawnLocations;
 var teamScores;
+
 
 function allGameTypes(){
   this.FFA = "Free For All";
@@ -39,12 +41,18 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
     console.log("line 1: SERVER NAME");
     console.log("line 2: SERVER DESCRIPTION");
     console.log("line 3: MAP FILE");
+    console.log("line 4: true/false FOR GAME RESTARTS")
     console.log("--------");
   }else{
     content = data.split("\n");
     SERVER_NAME = content[0];
     SERVER_DESCRIPTION = content[1];
     MAPFILE = content[2];
+    if(content[3] == "true"){
+      ALLOWGAMERESTARTS = true;
+    }else{
+      ALLOWGAMERESTARTS = false;
+    }
   }
 
   mapFileContents = json2contents(MAPFILE);
@@ -309,37 +317,50 @@ io.on("connection", function(socket){
           }
       }
 
-      //End came conditions for each gameType
-      if(gameType == gameTypes.FFA){
-        if(player.kills.length >= 20){
-          for(var i in players){
-            players[i].socket.emit("restart screen");
-            if(players[i].id != player.id){
-              //players[i].socket.emit("message", {from:"server", text: "Game Over + " + player.name + "won! New game starting soon."});
-            }else{
-              //players[i].socket.emit("message", {from:"server", text:"You win! New game starting soon."});
+      if(ALLOWGAMERESTARTS){
+        //End came conditions for each gameType
+        if(gameType == gameTypes.FFA){
+          if(player.kills.length >= 20){
+            for(var i in players){
+              players[i].socket.emit("restart screen");
+              if(players[i].id != player.id){
+                players[i].socket.emit("message", {from:"server", text: "Game Over. " + player.name + " won! Press Play to start a new game."});
+              }else{
+                players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
+              }
             }
+            restartGame();
           }
-          restartGame();
-        }
-      }else if(gameType == gameTypes.CTF){
-        if(teamScores[player.team] >= 5){
-          for(var i in players){
-            players[i].socket.emit("restart screen");
+        }else if(gameType == gameTypes.CTF){
+          if(teamScores[player.team] >= 5){
+            for(var i in players){
+              players[i].socket.emit("restart screen");
+              if(players[i].team != player.team){
+                players[i].socket.emit("message", {from:"server", text: "Game Over. Team " + player.team + " won! Press Play to start a new game."});
+              }else{
+                players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
+              }
+            }
+            restartGame();
           }
-          restartGame();
-        }
-      }else if(gameType == gameTypes.KOTH){
-        var currentTime = (new Date() - player.flagPickUpTime) + player.totalFlagTime;
-        if(currentTime >= 300000){//5 minutes
-          for(var i in players){
-            players[i].socket.emit("restart screen");
+        }else if(gameType == gameTypes.KOTH){
+          var currentTime = (new Date() - player.flagPickUpTime) + player.totalFlagTime;
+          if(currentTime >= 300000){//5 minutes
+            for(var i in players){
+              players[i].socket.emit("restart screen");
+              if(players[i].id != player.id){
+                players[i].socket.emit("message", {from:"server", text: "Game Over. " + player.name + " won! Press Play to start a new game."});
+              }else{
+                players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
+              }
+            }
+            restartGame();
           }
-          restartGame();
-        }
-      }else if(gameType == gameTypes.TEAMS){
+        }else if(gameType == gameTypes.TEAMS){
 
+        }
       }
+      
   });
 
   socket.on("change class", function(newClass){
