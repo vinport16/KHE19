@@ -2,7 +2,7 @@ var list = document.getElementById("servers");
 
 // LIST ALL KNOWN SERVER ADDRESSES IN THIS ARRAY
 servers = [
-  "http://108.244.228.25:3030/",
+  "http://68.9.117.73:3030/",
   "http://localhost:3030/",
 ];
 
