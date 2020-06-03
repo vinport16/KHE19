@@ -24,7 +24,6 @@ var spawnAreas;
 var validSpawnLocations;
 var teamScores;
 
-
 function allGameTypes(){
   this.FFA = "Free For All";
   this.CTF = "Capture The Flag";
@@ -33,6 +32,8 @@ function allGameTypes(){
 }
 
 var gameTypes = new allGameTypes();
+
+
 
 fs.readFile("config.txt", "utf-8", function(err, data) {
   if (err) {
@@ -67,6 +68,8 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
 
   http.listen(port);
   console.log(gameType);
+
+  events[gameType]["game start"]();
 
 });
 
@@ -258,6 +261,8 @@ io.on("connection", function(socket){
   setClass(player, player.class);
   players.push(player);
 
+  events[gameType]["new player"](player);
+
   socket.on("setUser", function(user){
     if(player.name != user.name){
         console.log(player.name + " changed their name to " + user.name);
@@ -299,6 +304,7 @@ io.on("connection", function(socket){
   socket.on("playerFell", function(){
       player.deaths.push([player.id]);
       updateLeaderboard();
+      events[gameType]["player fell"](player);
       respawn(player);
   });
 
@@ -309,11 +315,16 @@ io.on("connection", function(socket){
   socket.on("player position", function(position){
       if(!player.respawning){
           player.position = position;
-          if(gameType == gameTypes.CTF){
-            flagSafeCheck(player);
-            flagCollisionCheck(player);
-          }else if(gameType == gameTypes.KOTH){
-            flagCollisionCheck(player);
+          if(flags.length > 0){
+            let flag = flagCollisionCheck(player);
+            if(flag){
+              events[gameType]["flag touch"](player, flag);
+            }
+            if(player.hasFlag){
+              if(flagReturned(player)){
+                events[gameType]["flag return"](player);
+              }
+            }
           }
       }
 
@@ -382,6 +393,7 @@ io.on("connection", function(socket){
         players[i].socket.emit("player left", player.id);
       }
     }
+    events[gameType]["player left"](player);
     console.log(player.name + " left");
     tellEveryone(player.name + " left");
     updateLeaderboard();
@@ -455,7 +467,7 @@ function announceHit(hitPlayer, oPlayer){
   oPlayer.socket.emit("message", {from: "server", text: "you hit " + hitPlayer.name + "!"});
 }
 
-function flagSafeCheck(player){
+function flagReturned(player){
   if(player.hasFlag){
     var smallPlayerPos = {x: Math.floor((player.position.x / 20.0) + 0.5), y: Math.floor(player.position.y / 20.0)-1, z: Math.floor((player.position.z/20.0) + 0.5)};
     //If player is out of the map range, then can't be valid
@@ -467,13 +479,7 @@ function flagSafeCheck(player){
             var mapColor = colors[mapColorValue][0];
             if(spawnAreas[player.team].includes(mapColor)){
               //Player back in spawn area
-              tellEveryone(player.name + " has returned with " + player.hasFlag.name + "!");
-              resetFlagPosition(player.hasFlag);
-              playerDropFlag(player);
-
-              //Update score: 
-              teamScores[player.team]++;
-              updateLeaderboard();
+              return true;
             }
           }
         }
@@ -481,36 +487,27 @@ function flagSafeCheck(player){
     }
     
   }
+  return false;
 }
 
 function flagCollisionCheck(player){
   if(!player.hasFlag){
     for(var i in flags){
-      if(flags[i].show && flags[i].team != player.team){
+      if(flags[i].show){
         var smallPlayerPos = {x: player.position.x / 20.0, y: player.position.y / 20.0, z: player.position.z/20.0};
         //check for collision:
         if(smallPlayerPos.x > flags[i].position.x-0.5 && smallPlayerPos.x < flags[i].position.x-0.5 + 1){
           if(smallPlayerPos.y > flags[i].position.y - 1 && smallPlayerPos.y < flags[i].position.y + 1){
             if(smallPlayerPos.z > flags[i].position.z-0.5 && smallPlayerPos.z < flags[i].position.z-0.5 + 1){
               //there is a collision. 
-              player.hasFlag = flags[i];
-              flags[i].show = false;
-              player.flagPickUpTime = new Date();
-              updateLeaderboard();
-              for(var p in players){
-                players[p].socket.emit("remove flag", flags[i]);
-                if(players[p].id != player.id){
-                  players[p].socket.emit("flash player", player.id, "yellow");
-                }
-              }
-              tellEveryone(player.name + " has " + player.hasFlag.name + "!");
+              return flags[i];
             }
           }
         }
       }
     }
   }
-  
+  return false;
 }
 
 function resetFlagPosition(flag){
@@ -569,24 +566,8 @@ function projCollision(p,map){
     var bottom = player.y - (35/2);
     var top = player.y + (35/2);
     if(Math.sqrt(dz*dz + dx*dx) < 7.5 && p.position.y < top && p.position.y > bottom && p.owner.id != players[i].id){
-      announceHit(players[i], p.owner);
-      players[i].deaths.push(p.owner.id);
-      p.owner.kills.push(players[i].id);
       
-
-      //Drop the flag where the player is standing: 
-      if(players[i].hasFlag){
-        let flag = players[i].hasFlag;
-        players[i].hasFlag = false;
-        moveFlagToPlayer(flag, players[i]);
-        respawn(players[i]);
-        players[i].hasFlag = flag;
-        playerDropFlag(players[i]);
-      }else{
-        respawn(players[i]);
-      }
-
-      updateLeaderboard();
+      events[gameType]["player hit"](players[i], p);
 
       return true;
     }
@@ -902,6 +883,172 @@ async function reportEverything(){
 }
 
 reportEverything();
+
+
+// !!--!!--!!--!!--!!--!!--!!--!!--!!--!! EVENTS !!--!!--!!--!!--!!--!!--!!--!!--!!--!!
+
+/* types of event:
+      game start ()
+      new player (player)
+      player left (player)
+      player hit (player, projectile)
+      player fell (player)
+      flag pickup (player, flag)
+      flag return (player)
+
+*/
+var events = {};
+
+
+//  ---------------------------------------------  Free For All ---------------
+events[gameTypes.FFA] = {};
+events[gameTypes.FFA]["game start"] = function(){
+  // nothing
+}
+events[gameTypes.FFA]["new player"] = function(player){
+  // nothing
+}
+events[gameTypes.FFA]["player left"] = function(player){
+  // nothing
+}
+events[gameTypes.FFA]["player hit"] = function(player, projectile){
+  announceHit(players[i], p.owner);
+  players[i].deaths.push(p.owner.id);
+  p.owner.kills.push(players[i].id);
+  
+  //Drop the flag where the player is standing: 
+  if(players[i].hasFlag){
+    let flag = players[i].hasFlag;
+    players[i].hasFlag = false;
+    moveFlagToPlayer(flag, players[i]);
+    respawn(players[i]);
+    players[i].hasFlag = flag;
+    playerDropFlag(players[i]);
+  }else{
+    respawn(players[i]);
+  }
+
+  updateLeaderboard();
+}
+events[gameTypes.FFA]["player fell"] = function(player){
+  // nothing
+}
+events[gameTypes.FFA]["flag touch"] = function(player, flag){
+  // nothing
+}
+events[gameTypes.FFA]["flag return"] = function(player){
+  // nothing
+}
+
+
+//  ---------------------------------------------  Capture The Flag ---------------
+events[gameTypes.CTF] = {};
+events[gameTypes.CTF]["game start"] = function(){
+  // nothing
+}
+events[gameTypes.CTF]["new player"] = function(player){
+  // nothing
+}
+events[gameTypes.CTF]["player left"] = function(player){
+  // nothing
+}
+
+events[gameTypes.CTF]["player hit"] = events[gameTypes.FFA]["player hit"];
+
+events[gameTypes.CTF]["player fell"] = function(player){
+  // nothing
+}
+
+events[gameTypes.CTF]["flag touch"] = function(player, flag){
+  if(flag.team != player.team){
+    player.hasFlag = flag;
+    flag.show = false;
+    player.flagPickUpTime = new Date();
+    updateLeaderboard();
+    for(var p in players){
+      players[p].socket.emit("remove flag", flag);
+      if(players[p].id != player.id){
+        players[p].socket.emit("flash player", player.id, "yellow");
+      }
+    }
+    tellEveryone(player.name + " has " + player.hasFlag.name + "!");
+  }
+}
+
+events[gameTypes.CTF]["flag return"] = function(player){
+  tellEveryone(player.name + " has returned with " + player.hasFlag.name + "!");
+  resetFlagPosition(player.hasFlag);
+  playerDropFlag(player);
+
+  //Update score: 
+  teamScores[player.team]++;
+  updateLeaderboard();
+}
+
+
+//  ---------------------------------------------  TEAMS ---------------
+
+events[gameTypes.TEAMS] = {};
+events[gameTypes.TEAMS]["game start"] = function(){
+  // nothing
+}
+events[gameTypes.TEAMS]["new player"] = function(player){
+  // nothing
+}
+events[gameTypes.TEAMS]["player left"] = function(player){
+  // nothing
+}
+
+events[gameTypes.TEAMS]["player hit"] = events[gameTypes.FFA]["player hit"];
+
+events[gameTypes.TEAMS]["player fell"] = function(player){
+  // nothing
+}
+events[gameTypes.TEAMS]["flag touch"] = function(player, flag){
+  // nothing
+}
+events[gameTypes.TEAMS]["flag return"] = function(player){
+  // nothing
+}
+
+
+//  ---------------------------------------------  King of the Hill ---------------
+
+events[gameTypes.KOTH] = {};
+events[gameTypes.KOTH]["game start"] = function(){
+  // nothing
+}
+events[gameTypes.KOTH]["new player"] = function(player){
+  // nothing
+}
+events[gameTypes.KOTH]["player left"] = function(player){
+  // nothing
+}
+
+events[gameTypes.KOTH]["player hit"] = events[gameTypes.FFA]["player hit"];
+
+events[gameTypes.KOTH]["player fell"] = function(player){
+  // nothing
+}
+
+events[gameTypes.KOTH]["flag touch"] = function(player, flag){
+  // pick up any flag
+  player.hasFlag = flag;
+  flag.show = false;
+  player.flagPickUpTime = new Date();
+  updateLeaderboard();
+  for(var p in players){
+    players[p].socket.emit("remove flag", flag);
+    if(players[p].id != player.id){
+      players[p].socket.emit("flash player", player.id, "yellow");
+    }
+  }
+  tellEveryone(player.name + " has " + player.hasFlag.name + "!");
+}
+
+events[gameTypes.KOTH]["flag return"] = function(player){
+  // nothing
+}
 
 
 
