@@ -251,10 +251,6 @@ io.on("connection", function(socket){
   player.color = randomPlayerColor(player.team);
   player.hasFlag = false;
 
-  //For KOTH: 
-  player.totalFlagTime = 0;
-  player.flagPickUpTime = 0;
-
 
   respawn(player);
   console.log("player "+player.id+" logged in");
@@ -1018,9 +1014,12 @@ events[gameTypes.KOTH] = {};
 events[gameTypes.KOTH]["game start"] = function(){
   // nothing
 }
+
 events[gameTypes.KOTH]["new player"] = function(player){
-  // nothing
+  player.totalFlagTime = 0;
+  player.flagPickUpTime = 0;
 }
+
 events[gameTypes.KOTH]["player left"] = function(player){
   // nothing
 }
