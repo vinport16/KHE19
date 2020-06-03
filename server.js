@@ -309,65 +309,20 @@ io.on("connection", function(socket){
   });
 
   socket.on("player position", function(position){
-      if(!player.respawning){
-          player.position = position;
-          if(flags.length > 0){
-            let flag = flagCollisionCheck(player);
-            if(flag){
-              events[gameType]["flag touch"](player, flag);
-            }
-            if(player.hasFlag){
-              if(flagReturned(player)){
-                events[gameType]["flag return"](player);
-              }
-            }
+    if(!player.respawning){
+      player.position = position;
+      if(flags.length > 0){
+        let flag = flagCollisionCheck(player);
+        if(flag){
+          events[gameType]["flag touch"](player, flag);
+        }
+        if(player.hasFlag){
+          if(flagReturned(player)){
+            events[gameType]["flag return"](player);
           }
-      }
-
-      if(ALLOWGAMERESTARTS){
-        //End came conditions for each gameType
-        if(gameType == gameTypes.FFA){
-          if(player.kills.length >= 20){
-            for(var i in players){
-              players[i].socket.emit("restart screen");
-              if(players[i].id != player.id){
-                players[i].socket.emit("message", {from:"server", text: "Game Over. " + player.name + " won! Press Play to start a new game."});
-              }else{
-                players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
-              }
-            }
-            restartGame();
-          }
-        }else if(gameType == gameTypes.CTF){
-          if(teamScores[player.team] >= 5){
-            for(var i in players){
-              players[i].socket.emit("restart screen");
-              if(players[i].team != player.team){
-                players[i].socket.emit("message", {from:"server", text: "Game Over. Team " + player.team + " won! Press Play to start a new game."});
-              }else{
-                players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
-              }
-            }
-            restartGame();
-          }
-        }else if(gameType == gameTypes.KOTH){
-          var currentTime = (new Date() - player.flagPickUpTime) + player.totalFlagTime;
-          if(currentTime >= 300000){//5 minutes
-            for(var i in players){
-              players[i].socket.emit("restart screen");
-              if(players[i].id != player.id){
-                players[i].socket.emit("message", {from:"server", text: "Game Over. " + player.name + " won! Press Play to start a new game."});
-              }else{
-                players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
-              }
-            }
-            restartGame();
-          }
-        }else if(gameType == gameTypes.TEAMS){
-
         }
       }
-      
+    }
   });
 
   socket.on("change class", function(newClass){
@@ -865,18 +820,19 @@ events[gameTypes.FFA]["player hit"] = function(player, p){
   player.deaths.push(p.owner.id);
   p.owner.kills.push(player.id);
   
-  //Drop the flag where the player is standing: 
-  if(player.hasFlag){
-    let flag = player.hasFlag;
-    player.hasFlag = false;
-    moveFlagToPlayer(flag, player);
-    respawn(player);
-    player.hasFlag = flag;
-    playerDropFlag(player);
-  }else{
-    respawn(player);
-  }
+  respawn(player);
 
+  if(ALLOWGAMERESTARTS && p.owner.kills.length >= 20){
+    for(var i in players){
+      players[i].socket.emit("restart screen");
+      if(players[i].id != p.owner.id){
+        players[i].socket.emit("message", {from:"server", text: "Game Over. " + player.name + " won! Press Play to start a new game."});
+      }else{
+        players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
+      }
+    }
+    restartGame();
+  }
   events[gameType]["update leaderboard"]();
 }
 events[gameTypes.FFA]["player fell"] = function(player){
@@ -920,7 +876,22 @@ events[gameTypes.CTF]["player left"] = function(player){
   // nothing
 }
 
-events[gameTypes.CTF]["player hit"] = events[gameTypes.FFA]["player hit"];
+events[gameTypes.CTF]["player hit"] = function(player, p){
+  announceHit(player, p.owner);
+  player.deaths.push(p.owner.id);
+  p.owner.kills.push(player.id);
+  
+  //Drop the flag where the player is standing: 
+  if(player.hasFlag){
+    let flag = player.hasFlag;
+    player.hasFlag = false;
+    moveFlagToPlayer(flag, player);
+    player.hasFlag = flag;
+    playerDropFlag(player);
+  }
+
+  respawn(player);
+}
 
 events[gameTypes.CTF]["player fell"] = function(player){
   // nothing
@@ -950,6 +921,19 @@ events[gameTypes.CTF]["flag return"] = function(player){
   //Update score: 
   teamScores[player.team]++;
   events[gameType]["update leaderboard"]();
+
+  //restart if necessary
+  if(ALLOWGAMERESTARTS && teamScores[player.team] >= 5){
+    for(var i in players){
+      players[i].socket.emit("restart screen");
+      if(players[i].team != player.team){
+        players[i].socket.emit("message", {from:"server", text: "Game Over. Team " + player.team + " won! Press Play to start a new game."});
+      }else{
+        players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
+      }
+    }
+    restartGame();
+  }
 }
 
 events[gameTypes.CTF]["update leaderboard"] = function(){
@@ -983,8 +967,10 @@ events[gameTypes.TEAMS]["player left"] = function(player){
 }
 
 events[gameTypes.TEAMS]["player hit"] = function(player, p){
+  announceHit(player, p.owner);
   teamScores[player.team]++;
-  events[gameTypes.FFA]["player hit"](player, p);
+  respawn(player);
+  events[gameType]["update leaderboard"]();
 }
 
 
@@ -1030,7 +1016,20 @@ events[gameTypes.KOTH]["player left"] = function(player){
   // nothing
 }
 
-events[gameTypes.KOTH]["player hit"] = events[gameTypes.FFA]["player hit"];
+events[gameTypes.KOTH]["player hit"] = function(player, p){
+  announceHit(player, p.owner);
+  if(player.hasFlag){
+    let flag = player.hasFlag;
+    player.hasFlag = false;
+    moveFlagToPlayer(flag, player);
+    respawn(player);
+    player.hasFlag = flag;
+    playerDropFlag(player);
+  }else{
+    respawn(player);
+  }
+  events[gameType]["update leaderboard"]();
+}
 
 events[gameTypes.KOTH]["player fell"] = function(player){
   // nothing
@@ -1055,7 +1054,7 @@ events[gameTypes.KOTH]["flag return"] = function(player){
   // nothing
 }
 
-events[gameTypes.TEAMS]["update leaderboard"] = function(){
+events[gameTypes.KOTH]["update leaderboard"] = function(){
   var leaderboard =  gameType + "<br> Leaderboard:<br>";
   var board = players.map(function(p){
     return {name:p.name, totalFlagTime:p.totalFlagTime, flagPickUpTime:p.flagPickUpTime, hasFlag:p.hasFlag};
@@ -1064,18 +1063,37 @@ events[gameTypes.TEAMS]["update leaderboard"] = function(){
     return (b.totalFlagTime) - (a.totalFlagTime);
   });
 
+  var gameOver = false;
   //Add players to leaderboard string
   for(var i = 0; i < board.length; i++) {
     if(board[i].hasFlag){
       var currentTime = (new Date() - board[i].flagPickUpTime) + board[i].totalFlagTime;
+      if(currentTime >= 300000){
+        gameOver = true;
+      }
       leaderboard += "<span style=\"color: green;\">" + board[i].name + ": " + currentTime/1000.0 + " seconds </span> " + "<br>";
     }else{
       leaderboard += board[i].name + ": " + board[i].totalFlagTime/1000.0 + " seconds " + "<br>";
+      if(board[i].totalFlagTime >= 300000){
+        gameOver = true;
+      }
     }
   }
 
   for(i in players){
     players[i].socket.emit("leaderboard",leaderboard);
+  }
+
+  if(ALLOWGAMERESTARTS && gameOver){
+    for(var i in players){
+      players[i].socket.emit("restart screen");
+      if(players[i].id != player.id){
+        players[i].socket.emit("message", {from:"server", text: "Game Over. " + player.name + " won! Press Play to start a new game."});
+      }else{
+        players[i].socket.emit("message", {from:"server", text:"You win! Press Play to start a new game."});
+      }
+    }
+    restartGame();
   }
 }
 
