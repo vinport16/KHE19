@@ -45,8 +45,7 @@ function init() {
 
     startButton.addEventListener( 'click', function () {
         var username = document.getElementById('userName').value;
-        var userColor = document.getElementById("userColor").value;
-        socket.emit("setUser", {name:username, color:userColor});
+        socket.emit("setUser", {name:username});
         controls.lock();
     }, false );
     controls.addEventListener( 'lock', function () {
@@ -577,7 +576,10 @@ function drawPlayer(player){
     cylinderGeometry = cylinderGeometry.toNonIndexed(); // ensure each face has unique vertices
 
     var material = new THREE.MeshLambertMaterial({ color: player.color });
-    //material.color.setHSL( p, 0.75, Math.random() * 0.25 + 0.75 );
+    
+    // to give the player a star texture, use newMaterial:
+    //const loader = new THREE.TextureLoader();
+    //let newMaterial = new THREE.MeshBasicMaterial({color: player.color, map: loader.load('/sprites/Star.png')});
 
     var model = new THREE.Mesh( cylinderGeometry, material );
     model.position.x = player.position.x;
@@ -712,7 +714,7 @@ function roundRect(ctx, x, y, w, h, r)
     ctx.quadraticCurveTo(x, y, x+r, y);
     ctx.closePath();
     ctx.fill();
-	ctx.stroke();   
+    ctx.stroke();   
 }
 
 function updatePlayer(player){
