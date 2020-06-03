@@ -907,21 +907,21 @@ events[gameTypes.FFA]["new player"] = function(player){
 events[gameTypes.FFA]["player left"] = function(player){
   // nothing
 }
-events[gameTypes.FFA]["player hit"] = function(player, projectile){
-  announceHit(players[i], p.owner);
-  players[i].deaths.push(p.owner.id);
-  p.owner.kills.push(players[i].id);
+events[gameTypes.FFA]["player hit"] = function(player, p){
+  announceHit(player, p.owner);
+  player.deaths.push(p.owner.id);
+  p.owner.kills.push(player.id);
   
   //Drop the flag where the player is standing: 
-  if(players[i].hasFlag){
-    let flag = players[i].hasFlag;
-    players[i].hasFlag = false;
-    moveFlagToPlayer(flag, players[i]);
-    respawn(players[i]);
-    players[i].hasFlag = flag;
-    playerDropFlag(players[i]);
+  if(player.hasFlag){
+    let flag = player.hasFlag;
+    player.hasFlag = false;
+    moveFlagToPlayer(flag, player);
+    respawn(player);
+    player.hasFlag = flag;
+    playerDropFlag(player);
   }else{
-    respawn(players[i]);
+    respawn(player);
   }
 
   updateLeaderboard();
