@@ -4,7 +4,9 @@ var sio = require('socket.io');
 var app = express();
 var http = require('http').createServer(app);
 var io = sio(http);
-var port = process.env.PORT || 3030; //runs on heroku or localhost:3030
+
+var portNum = Number.parseInt(process.argv[2]);
+var port = process.env.PORT || portNum; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
 //Server Specific Values: 
