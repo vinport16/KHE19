@@ -263,7 +263,7 @@ io.on("connection", function(socket){
     if(player.name != user.name){
         console.log(player.name + " changed their name to " + user.name);
         player.name = user.name;
-        updateLeaderboard();
+        events[gameType]["update leaderboard"]();
     }
 
     //player.color = user.color; //no longer allow player to set their own color
@@ -299,7 +299,7 @@ io.on("connection", function(socket){
 
   socket.on("playerFell", function(){
       player.deaths.push([player.id]);
-      updateLeaderboard();
+      events[gameType]["update leaderboard"]();
       events[gameType]["player fell"](player);
       respawn(player);
   });
@@ -392,7 +392,7 @@ io.on("connection", function(socket){
     events[gameType]["player left"](player);
     console.log(player.name + " left");
     tellEveryone(player.name + " left");
-    updateLeaderboard();
+    events[gameType]["update leaderboard"]();
   });
 
   socket.on("launch", function(angle){
@@ -622,53 +622,6 @@ function respawn(p){
   p.position = {x:1000, y:1000, z:1000};
 }
 
-function updateLeaderboard(){
-  var leaderboard =  gameType + "<br> Leaderboard:<br>";
-
-  if(gameType == gameTypes.FFA){
-    var board = players.map(function(p){
-      return {name:p.name,kills:p.kills,deaths:p.deaths};
-    });
-    board = board.sort(function(a,b){
-      return (b.kills.length * b.kills.length / b.deaths.length) - (a.kills.length * a.kills.length / a.deaths.length);
-    });
-    //Add players to leaderboard string
-    for(var i = 0; i < board.length; i++) {
-        leaderboard += board[i].name + ": " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
-    }
-  }else if(gameType == gameTypes.CTF){
-    //var sortedScores = teamScores.sort();
-    //console.log(sortedScores);
-    for(var i = 0; i < teamScores.length; i++) {
-      if(teamScores[i] == 1){
-        leaderboard += "Team " + i + ": " + teamScores[i] + " point " + "<br>"
-      }else{
-        leaderboard += "Team " + i + ": " + teamScores[i] + " points " + "<br>"
-      }
-    }
-  }else if(gameType == gameTypes.KOTH){
-    var board = players.map(function(p){
-      return {name:p.name,totalFlagTime:p.totalFlagTime,flagPickUpTime:p.flagPickUpTime,hasFlag:p.hasFlag};
-    });
-    board = board.sort(function(a,b){
-      return (b.totalFlagTime) - (a.totalFlagTime);
-    });
-    //Add players to leaderboard string
-    for(var i = 0; i < board.length; i++) {
-      if(board[i].hasFlag){
-        var currentTime = (new Date() - board[i].flagPickUpTime) + board[i].totalFlagTime;
-        leaderboard += "<span style=\"color: green;\">" + board[i].name + ": " + currentTime/1000.0 + " seconds </span> " + "<br>";
-      }else{
-        leaderboard += board[i].name + ": " + board[i].totalFlagTime/1000.0 + " seconds " + "<br>";
-      }
-    }
-  }
-
-  for(i in players){
-    players[i].socket.emit("leaderboard",leaderboard);
-  }
-}
-
 function announcePosition(p){
   for(i in players){
     players[i].socket.emit("projectile",{id:p.id, x:p.position.x, y:p.position.y, z:p.position.z});
@@ -820,7 +773,7 @@ function restartGame(){
 
   resetFlags();
   resetPlayers();
-  updateLeaderboard();
+  events[gameType]["update leaderboard"]();
   
 }
 
@@ -924,7 +877,7 @@ events[gameTypes.FFA]["player hit"] = function(player, p){
     respawn(player);
   }
 
-  updateLeaderboard();
+  events[gameType]["update leaderboard"]();
 }
 events[gameTypes.FFA]["player fell"] = function(player){
   // nothing
@@ -934,6 +887,24 @@ events[gameTypes.FFA]["flag touch"] = function(player, flag){
 }
 events[gameTypes.FFA]["flag return"] = function(player){
   // nothing
+}
+
+events[gameTypes.FFA]["update leaderboard"] = function(){
+  var leaderboard =  gameType + "<br> Leaderboard:<br>";
+  var board = players.map(function(p){
+    return {name:p.name,kills:p.kills,deaths:p.deaths};
+  });
+  board = board.sort(function(a,b){
+    return (b.kills.length * b.kills.length / b.deaths.length) - (a.kills.length * a.kills.length / a.deaths.length);
+  });
+
+  //Add players to leaderboard string
+  for(var i = 0; i < board.length; i++) {
+    leaderboard += board[i].name + ": " + board[i].kills.length + " K, " + board[i].deaths.length + " D" + "<br>"
+  }
+  for(i in players){
+    players[i].socket.emit("leaderboard",leaderboard);
+  }
 }
 
 
@@ -960,7 +931,7 @@ events[gameTypes.CTF]["flag touch"] = function(player, flag){
     player.hasFlag = flag;
     flag.show = false;
     player.flagPickUpTime = new Date();
-    updateLeaderboard();
+    events[gameType]["update leaderboard"]();
     for(var p in players){
       players[p].socket.emit("remove flag", flag);
       if(players[p].id != player.id){
@@ -978,8 +949,24 @@ events[gameTypes.CTF]["flag return"] = function(player){
 
   //Update score: 
   teamScores[player.team]++;
-  updateLeaderboard();
+  events[gameType]["update leaderboard"]();
 }
+
+events[gameTypes.CTF]["update leaderboard"] = function(){
+  var leaderboard =  gameType + "<br> Leaderboard:<br>";
+  for(var i = 0; i < teamScores.length; i++) {
+    if(teamScores[i] == 1){
+      leaderboard += "Team " + i + ": " + teamScores[i] + " point " + "<br>"
+    }else{
+      leaderboard += "Team " + i + ": " + teamScores[i] + " points " + "<br>"
+    }
+  }
+
+  for(i in players){
+    players[i].socket.emit("leaderboard",leaderboard);
+  }
+}
+
 
 
 //  ---------------------------------------------  TEAMS ---------------
@@ -995,7 +982,11 @@ events[gameTypes.TEAMS]["player left"] = function(player){
   // nothing
 }
 
-events[gameTypes.TEAMS]["player hit"] = events[gameTypes.FFA]["player hit"];
+events[gameTypes.TEAMS]["player hit"] = function(player, p){
+  teamScores[player.team]++;
+  events[gameTypes.FFA]["player hit"](player, p);
+}
+
 
 events[gameTypes.TEAMS]["player fell"] = function(player){
   // nothing
@@ -1005,6 +996,21 @@ events[gameTypes.TEAMS]["flag touch"] = function(player, flag){
 }
 events[gameTypes.TEAMS]["flag return"] = function(player){
   // nothing
+}
+
+events[gameTypes.TEAMS]["update leaderboard"] = function(){
+  var leaderboard =  gameType + "<br> Leaderboard:<br>";
+  for(var i = 0; i < teamScores.length; i++) {
+    if(teamScores[i] == 1){
+      leaderboard += "Team " + i + ": " + teamScores[i] + " point " + "<br>"
+    }else{
+      leaderboard += "Team " + i + ": " + teamScores[i] + " points " + "<br>"
+    }
+  }
+
+  for(i in players){
+    players[i].socket.emit("leaderboard",leaderboard);
+  }
 }
 
 
@@ -1035,7 +1041,7 @@ events[gameTypes.KOTH]["flag touch"] = function(player, flag){
   player.hasFlag = flag;
   flag.show = false;
   player.flagPickUpTime = new Date();
-  updateLeaderboard();
+  events[gameType]["update leaderboard"]();
   for(var p in players){
     players[p].socket.emit("remove flag", flag);
     if(players[p].id != player.id){
@@ -1048,6 +1054,33 @@ events[gameTypes.KOTH]["flag touch"] = function(player, flag){
 events[gameTypes.KOTH]["flag return"] = function(player){
   // nothing
 }
+
+events[gameTypes.TEAMS]["update leaderboard"] = function(){
+  var leaderboard =  gameType + "<br> Leaderboard:<br>";
+  var board = players.map(function(p){
+    return {name:p.name, totalFlagTime:p.totalFlagTime, flagPickUpTime:p.flagPickUpTime, hasFlag:p.hasFlag};
+  });
+  board = board.sort(function(a,b){
+    return (b.totalFlagTime) - (a.totalFlagTime);
+  });
+
+  //Add players to leaderboard string
+  for(var i = 0; i < board.length; i++) {
+    if(board[i].hasFlag){
+      var currentTime = (new Date() - board[i].flagPickUpTime) + board[i].totalFlagTime;
+      leaderboard += "<span style=\"color: green;\">" + board[i].name + ": " + currentTime/1000.0 + " seconds </span> " + "<br>";
+    }else{
+      leaderboard += board[i].name + ": " + board[i].totalFlagTime/1000.0 + " seconds " + "<br>";
+    }
+  }
+
+  for(i in players){
+    players[i].socket.emit("leaderboard",leaderboard);
+  }
+}
+
+
+
 
 
 
