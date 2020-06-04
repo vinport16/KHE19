@@ -8,15 +8,15 @@ BEGIN{
   print "" > "pids.txt"
   #system("sed -i "" '/^[[:space:]]*$/d' pids.txt");
 
-  #FFA server: 
-  system("npm start 3031 maps/islands.json &");
+  #Port 3030:
+  system("npm start config3030.txt &");
 
-  #CTF server: 
-  system("npm start 3032 maps/treeHouse.json &");
+  #Port 3031: 
+  system("npm start config3031.txt &");
 
-  #TEAMS server: 
-  #system("npm start 3033 maps/islands.json &");
+  #Port 3032: 
+  system("npm start config3032.txt &");
 
-  #KOTH server: 
-  system("npm start 3034 maps/KOTHMountian.json &");
+  #Port 3033
+  system("npm start config3033.txt &");
 }

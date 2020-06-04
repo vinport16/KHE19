@@ -5,12 +5,7 @@ var app = express();
 var http = require('http').createServer(app);
 var io = sio(http);
 
-var portNum = Number.parseInt(process.argv[2]);
-if(isNaN(portNum)){
-  portNum = 3030;
-}
-var port = process.env.PORT || portNum; //runs on heroku or localhost:3030
-console.log("running on port", port);
+var port; //runs on heroku or localhost:3030
 
 //Server Specific Values: 
 var MAPFILE = "";
@@ -38,13 +33,15 @@ function allGameTypes(){
 }
 
 var gameTypes = new allGameTypes();
-
 fs.appendFileSync('pids.txt', process.pid + "\n");
 
-fs.readFile("config.txt", "utf-8", function(err, data) {
+var configFile = process.argv[2];
+
+fs.readFile(configFile, "utf-8", function(err, data) {
   if (err) {
     console.log(err);
     console.log("!!!\nPlease Create a config.txt file with the following format:");
+    console.log("line 0: PORT NUMBER");
     console.log("line 1: SERVER NAME");
     console.log("line 2: SERVER DESCRIPTION");
     console.log("line 3: MAP FILE");
@@ -52,12 +49,11 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
     console.log("--------");
   }else{
     content = data.split("\n");
-    SERVER_NAME = content[0];
-    SERVER_DESCRIPTION = content[1];
-    if(MAPFILE == undefined){
-      MAPFILE = content[2];
-    }
-    if(content[3] == "true"){
+    port = content[0];
+    SERVER_NAME = content[1];
+    SERVER_DESCRIPTION = content[2];
+    MAPFILE = content[3];
+    if(content[4] == "true"){
       ALLOWGAMERESTARTS = true;
     }else{
       ALLOWGAMERESTARTS = false;
@@ -73,6 +69,8 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
   spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
   validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
   teamScores = new Array(numberOfTeams).fill(0);
+
+  console.log("running on port", port);
 
   http.listen(port);
   console.log(gameType);
