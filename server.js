@@ -39,7 +39,7 @@ function allGameTypes(){
 
 var gameTypes = new allGameTypes();
 
-
+fs.appendFileSync('pids.txt', process.pid + "\n");
 
 fs.readFile("config.txt", "utf-8", function(err, data) {
   if (err) {
@@ -54,7 +54,7 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
     content = data.split("\n");
     SERVER_NAME = content[0];
     SERVER_DESCRIPTION = content[1];
-    if(MAPFILE == ""){
+    if(MAPFILE == undefined){
       MAPFILE = content[2];
     }
     if(content[3] == "true"){

@@ -3,7 +3,11 @@ var list = document.getElementById("servers");
 // LIST ALL KNOWN SERVER ADDRESSES IN THIS ARRAY
 servers = [
   "http://68.9.117.73:3030/",
-  "http://localhost:3030/",
+  "http://68.9.117.73:3031/",
+  "http://68.9.117.73:3032/",
+  "http://68.9.117.73:3033/",
+  "http://68.9.117.73:3034/",
+  "http://localhost:3030/"
 ];
 
 for(let idx = 0; idx < servers.length; idx++){
