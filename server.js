@@ -6,11 +6,15 @@ var http = require('http').createServer(app);
 var io = sio(http);
 
 var portNum = Number.parseInt(process.argv[2]);
+if(isNaN(portNum)){
+  portNum = 3030;
+}
 var port = process.env.PORT || portNum; //runs on heroku or localhost:3030
 console.log("running on port", port);
 
 //Server Specific Values: 
-var MAPFILE = "maps/treeHouse2.json";
+var MAPFILE = "";
+MAPFILE = process.argv[3];
 var SERVER_NAME = 'UNSET SERVER NAME';
 var SERVER_DESCRIPTION = "NO DESCRIPTION";
 var ALLOWGAMERESTARTS = true;
@@ -50,7 +54,9 @@ fs.readFile("config.txt", "utf-8", function(err, data) {
     content = data.split("\n");
     SERVER_NAME = content[0];
     SERVER_DESCRIPTION = content[1];
-    MAPFILE = content[2];
+    if(MAPFILE == ""){
+      MAPFILE = content[2];
+    }
     if(content[3] == "true"){
       ALLOWGAMERESTARTS = true;
     }else{
