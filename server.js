@@ -36,6 +36,11 @@ var gameTypes = new allGameTypes();
 fs.appendFileSync('pids.txt', process.pid + "\n");
 
 var configFile = process.argv[2];
+if(configFile == undefined){
+  //console.error()
+  console.error("Please specify a config file to use in the form: npm start config.txt");
+  process.exit(1);
+}
 
 fs.readFile(configFile, "utf-8", function(err, data) {
   if (err) {
