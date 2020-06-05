@@ -9,6 +9,7 @@ servers = [
   "http://68.9.117.73:3034/",
   "http://68.9.117.73:3035/",
   "http://localhost:3030/",
+  "http://localhost:3031/",
 ];
 
 for(let idx = 0; idx < servers.length; idx++){
@@ -29,7 +30,7 @@ for(let idx = 0; idx < servers.length; idx++){
   xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
           let status = JSON.parse(this.responseText);
-          update(server, servers[idx], status);
+          update(server, servers[idx] + "play", status);
       }else if(this.readyState == 4 && this.status == 0){
           offline(server, servers[idx]);
       }

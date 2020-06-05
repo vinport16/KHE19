@@ -125,8 +125,12 @@ app.get('/client/messaging.js', function(req, res){
     res.sendFile(__dirname + '/client/messaging.js');
 });
 
-app.get("/", function(req, res){
+app.get("/play", function(req, res){
   res.sendFile(__dirname + '/client/index.html');
+});
+
+app.get("/", function(req, res){
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.get("/status.json", function(req, res){
