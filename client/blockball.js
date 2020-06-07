@@ -356,8 +356,8 @@ function animate() {
 
         var time = performance.now();
         var delta = ( time - prevTime ) / 1000;
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
+        velocity.x -= velocity.x * 4.0 * delta;
+        velocity.z -= velocity.z * 4.0 * delta;
         velocity.y -= 9.8 * 50.0 * delta; // 100.0 = mass
         if(velocity.y < terminalVelocityY) {
             velocity.y = terminalVelocityY;
@@ -366,10 +366,10 @@ function animate() {
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
         if(sprint && (moveForward || moveBackward)){
-            velocity.z -= direction.z * 1600.0 * delta;
+            velocity.z -= direction.z * 1400.0 * delta;
         }
-        else if ( moveForward || moveBackward ){velocity.z -= direction.z * 800.0 * delta;}
-        if ( moveLeft || moveRight ) velocity.x -= direction.x * 800.0 * delta;
+        else if ( moveForward || moveBackward ){velocity.z -= direction.z * 700.0 * delta;}
+        if ( moveLeft || moveRight ) velocity.x -= direction.x * 700.0 * delta;
         if ( onObject === true ) {
             velocity.y = Math.max( 0, velocity.y );
             canJump = true;
