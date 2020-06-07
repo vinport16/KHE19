@@ -366,10 +366,10 @@ function animate() {
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
         if(sprint && (moveForward || moveBackward)){
-            velocity.z -= direction.z * 1400.0 * delta;
+            velocity.z -= direction.z * 600.0 * delta;
         }
-        else if ( moveForward || moveBackward ){velocity.z -= direction.z * 700.0 * delta;}
-        if ( moveLeft || moveRight ) velocity.x -= direction.x * 700.0 * delta;
+        else if ( moveForward || moveBackward ){velocity.z -= direction.z * 350.0 * delta;}
+        if ( moveLeft || moveRight ) velocity.x -= direction.x * 350.0 * delta;
         if ( onObject === true ) {
             velocity.y = Math.max( 0, velocity.y );
             canJump = true;
