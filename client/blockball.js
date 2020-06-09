@@ -809,7 +809,7 @@ socket.on("create item", function(item, type){
       spriteMap = new THREE.TextureLoader().load( "/sprites/Star.png" );
     }else if(type == "snowballPile"){
       //TODO: change this sprite
-      spriteMap = new THREE.TextureLoader().load( "/sprites/Star.png" );
+      spriteMap = new THREE.TextureLoader().load( "/sprites/snowballPile.png" );
     }
     let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
     let sprite = new THREE.Sprite( spriteMaterial );
