@@ -20,6 +20,7 @@ var map;
 var colors;
 var gameType;
 var flags;
+var snowballPiles;
 var numberOfTeams;
 var spawnAreas;
 var validSpawnLocations;
@@ -70,6 +71,7 @@ fs.readFile(configFile, "utf-8", function(err, data) {
   colors = mapFileContents.colors;
   gameType = mapFileContents.mapInfo.gameType;
   flags = json2Flags(mapFileContents.specialObjects.flags);
+  snowballPiles = json2SnowballPiles(mapFileContents.specialObjects.snowballPiles);
   numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
   spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
   validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
@@ -173,6 +175,31 @@ function json2Flags(flags){
   return flags;
 }
 
+function json2SnowballPiles(snowballPiles){
+  for(var i = 0; i < snowballPiles.length; i++){
+    snowballPiles[i].id = i;
+    snowballPiles[i].name = "SNOWBALLPILE" + snowballPiles[i].id;
+
+    var tempSnowballPileY = snowballPiles[i].position.y;
+    var tempSnowballPileZ = snowballPiles[i].position.z;
+
+    snowballPiles[i].position.y = tempSnowballPileZ;
+    snowballPiles[i].position.z = tempSnowballPileY;
+
+    //leaving in the original position value in case we want them to respawn in the same spot every time.
+    //Maybe thats someting that the map maker can decide.
+    snowballPiles[i].originalPosition = {};
+    snowballPiles[i].originalPosition.x = snowballPiles[i].position.x;
+    snowballPiles[i].originalPosition.y = snowballPiles[i].position.y;
+    snowballPiles[i].originalPosition.z = snowballPiles[i].position.z;
+
+    snowballPiles[i].show = true;
+
+  }
+
+  return snowballPiles;
+}
+
 function json2spawn(inputSpawn, numberOfTeams){
   if(inputSpawn.length == 0){
     return ["All Locations Valid"];
@@ -199,9 +226,9 @@ function cloneArray(inputArr){
 function setUpValidSpawnLocations(teamNum){
   var spawnLoc = [];
   var mapCoordinates = [];
-  for(var z = 1; z < map.length - 2; z++){
-    for(var y = 1; y < map[0].length - 1; y++){
-      for(var x = 1; x < map[0][0].length - 1; x++){
+  for(var z = 0; z < map.length - 1; z++){
+    for(var y = 0; y < map[0].length - 1; y++){
+      for(var x = 0; x < map[0][0].length - 1; x++){
         mapCoordinates.push([z, y, x]);
       }
     }
@@ -257,6 +284,7 @@ io.on("connection", function(socket){
   player.id = nextId++;
   player.name = "player " + player.id;
   player.socket = socket;
+  player.snowballCount = 20;
   player.kills = [];
   player.deaths = [];
   player.position = {x:0,y:0,z:1000};
@@ -293,7 +321,12 @@ io.on("connection", function(socket){
     socket.emit("map", map, colors);
     for(var f in flags){
       if(flags[f].show){
-        socket.emit("create flag", flags[f]);
+        socket.emit("create item", flags[f], "flag");
+      }
+    }
+    for(var s in snowballPiles){
+      if(snowballPiles[s].show){
+        socket.emit("create item", snowballPiles[s], "snowballPile");
       }
     }
     socket.emit("c")
@@ -337,6 +370,9 @@ io.on("connection", function(socket){
           }
         }
       }
+      if(snowballPiles.length > 0){
+        snowballCollisionCheck(player);
+      }
     }
   });
 
@@ -366,30 +402,32 @@ io.on("connection", function(socket){
   });
 
   socket.on("launch", function(angle){
-    var p = getNewProjectile(player.class);
-    p.id = nextId++;
-    p.owner = player;
-    p.count = 0;
+    if(player.snowballCount > 0){
+      player.snowballCount--;
+      var p = getNewProjectile(player.class);
+      p.id = nextId++;
+      p.owner = player;
+      p.count = 0;
 
-    p.position = {};
-    p.position.x = player.position.x;
-    p.position.y = player.position.y + 14;
-    p.position.z = player.position.z;
+      p.position = {};
+      p.position.x = player.position.x;
+      p.position.y = player.position.y + 14;
+      p.position.z = player.position.z;
 
-    p.velocity = {};
-    p.velocity.x = angle.dx * p.speed;
-    p.velocity.y = angle.dy * p.speed + 1;
-    p.velocity.z = angle.dz * p.speed;
+      p.velocity = {};
+      p.velocity.x = angle.dx * p.speed;
+      p.velocity.y = angle.dy * p.speed + 1;
+      p.velocity.z = angle.dz * p.speed;
 
-    p.position.x += angle.dx * 10;
-    p.position.y += angle.dy * 10;
-    p.position.z += angle.dz * 10;
+      p.position.x += angle.dx * 10;
+      p.position.y += angle.dy * 10;
+      p.position.z += angle.dz * 10;
 
-    if(p.position.x != NaN && p.position.y != NaN && p.position.z != NaN){
-      projectiles.push(p);
-      moveProjectile(p);
+      if(p.position.x != NaN && p.position.y != NaN && p.position.z != NaN){
+        projectiles.push(p);
+        moveProjectile(p);
+      }
     }
-
   });
 
   socket.on("message", function(message){
@@ -403,7 +441,7 @@ io.on("connection", function(socket){
 function randomPlayerColor(teamNum){
   if(gameType == gameTypes.FFA || spawnAreas[0] == ["All Locations Valid"]){
     return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
-  }else if(gameType == gameTypes.CTF){
+  }else if(gameType == gameTypes.CTF || gameType == gameTypes.TEAMS){
     return spawnAreas[teamNum][0];
   }else{
     return "hsl(" +(Math.random()*360)+ ", 50%, 50%)";
@@ -412,7 +450,9 @@ function randomPlayerColor(teamNum){
 
 function randomTeam(player){
   var team = Math.floor(Math.random() * numberOfTeams);
-  player.socket.emit("message", {from:"server", text:"Your team is "+team});
+  if(gameType == gameTypes.CTF || gameType == gameTypes.TEAMS){
+    player.socket.emit("message", {from:"server", text:"Your team is "+team});
+  }
   return team;
 }
 
@@ -476,6 +516,38 @@ function flagCollisionCheck(player){
   return false;
 }
 
+function snowballCollisionCheck(player){
+  for(var i in snowballPiles){
+    if(snowballPiles[i].show){
+      var smallPlayerPos = {x: player.position.x / 20.0, y: player.position.y / 20.0, z: player.position.z/20.0};
+      //check for collision:
+      if(smallPlayerPos.x > snowballPiles[i].position.x-0.5 && smallPlayerPos.x < snowballPiles[i].position.x-0.5 + 1){
+        if(smallPlayerPos.y > snowballPiles[i].position.y - 1 && smallPlayerPos.y < snowballPiles[i].position.y + 1){
+          if(smallPlayerPos.z > snowballPiles[i].position.z-0.5 && smallPlayerPos.z < snowballPiles[i].position.z-0.5 + 1){
+            //there is a collision. 
+            respawnSnowballPile(snowballPiles[i]);
+            player.snowballCount += snowballPiles[i].amount;
+            player.socket.emit("update snowball count", player.snowballCount);
+          }
+        }
+      }
+    }
+  }
+}
+
+function respawnSnowballPile(snowballPile){
+  for(var p in players){
+    players[p].socket.emit("remove item", snowballPile);
+  }
+  var newPos = getValidSpawnLocation(-1);
+  snowballPile.position.x = newPos.x;
+  snowballPile.position.y = newPos.z + 1;
+  snowballPile.position.z = newPos.y;
+  for(var p in players){
+    players[p].socket.emit("create item", snowballPile, "snowballPile");
+  }
+}
+
 function resetFlagPosition(flag){
   flag.position.x = flag.originalPosition.x;
   flag.position.y = flag.originalPosition.y;
@@ -491,7 +563,7 @@ function moveFlagToPlayer(flag, player){
 function playerDropFlag(player){
   player.hasFlag.show = true;
   for(var j in players){
-    players[j].socket.emit("create flag", player.hasFlag);
+    players[j].socket.emit("create item", player.hasFlag, "flag");
     if(players[j].id != player.id){
       players[j].socket.emit("stop flash", player.id);
     }
@@ -557,14 +629,26 @@ function respawn(p){
     playerDropFlag(p);
   }
 
+  var newLocation = getValidSpawnLocation(p.team);
 
-  var x, y , z = 0;
+  //console.log("found new point");
+
+  p.socket.emit("updateRespawnLocation", newLocation);
+  p.position = {x:1000, y:1000, z:1000};
+}
+
+function getValidSpawnLocation(team){
+  var originalTeam = team;
+  if(team == -1){ //Team is -1 when an item respawn calls this method
+    team = parseInt(Math.random() * numberOfTeams);
+  }
+  var x, y, z = 0;
   var validLocation = false;
   while(!validLocation){
-    var teamSpawnMap = validSpawnLocations[p.team];
+    var teamSpawnMap = validSpawnLocations[team];
 
     if(teamSpawnMap.length == 0){
-      console.err("No valid spawn areas for team: " + p.team);
+      console.err("No valid spawn areas for team: " + team);
     }
 
     var randomLocation = Math.floor(Math.random()*teamSpawnMap.length)
@@ -575,10 +659,9 @@ function respawn(p){
     
     if(map[z][y][x] != null){
       if(map[z][y][x] > 0 && map[z+1][y][x] == 0 && map[z+2][y][x] == 0){
-        if(spawnAreas[p.team].includes(colors[map[z][y][x]][0]) || spawnAreas[0] == ["All Locations Valid"]){
+        if(spawnAreas[team].includes(colors[map[z][y][x]][0]) || spawnAreas[0] == ["All Locations Valid"] || originalTeam == -1){
           validLocation = true;
-          // console.log("valid length:");
-          // console.log(teamSpawnMap.length);
+          return {x: x, y: y, z: z};
         }
       }
     }
@@ -586,10 +669,6 @@ function respawn(p){
       teamSpawnMap.splice(randomLocation, 1);
     }
   }
-  //console.log("found new point");
-
-  p.socket.emit("updateRespawnLocation", {x:x, y:y, z:z});
-  p.position = {x:1000, y:1000, z:1000};
 }
 
 function announcePosition(p){
@@ -755,6 +834,7 @@ function resetFlags(){
 
 function resetPlayers(){
   for(var i in players){
+    players[i].snowballCount = 20;
     players[i].kills = [];
     players[i].deaths = [];
     players[i].position = {x:0,y:0,z:1000};
@@ -919,7 +999,7 @@ events[gameTypes.CTF]["flag touch"] = function(player, flag){
     player.flagPickUpTime = new Date();
     events[gameType]["update leaderboard"]();
     for(var p in players){
-      players[p].socket.emit("remove flag", flag);
+      players[p].socket.emit("remove item", flag);
       if(players[p].id != player.id){
         players[p].socket.emit("flash player", player.id, "yellow");
       }
@@ -1057,7 +1137,7 @@ events[gameTypes.KOTH]["flag touch"] = function(player, flag){
   player.flagPickUpTime = new Date();
   events[gameType]["update leaderboard"]();
   for(var p in players){
-    players[p].socket.emit("remove flag", flag);
+    players[p].socket.emit("remove item", flag);
     if(players[p].id != player.id){
       players[p].socket.emit("flash player", player.id, "yellow");
     }

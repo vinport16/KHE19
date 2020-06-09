@@ -15,11 +15,11 @@ var color = new THREE.Color();
 var sprint = false;
 var startTime = Date.now();
 var player_radius = 7.5;
-var flags = [];
 var playerJustFell = false;
 var loadStatus = 1;
 var playerClass = "scout";
 var reloadTime = 100;
+var playerSnowballCount = 20;
 
 init();
 animate();
@@ -64,11 +64,15 @@ function init() {
     socket.emit("respawn");
     scene.add( controls.getObject() );
     var onClick = function ( event ) {
-        if(loadStatus > 0.999 && controls.isLocked){
+        if(loadStatus > 0.999 && controls.isLocked && playerSnowballCount > 0){
             var vector = new THREE.Vector3( 0, 0, - 1 );
             vector.applyQuaternion( camera.quaternion );
+            
             socket.emit("launch", {dx:vector.x, dy:vector.y, dz:vector.z});
             loadStatus = 0;
+
+            playerSnowballCount--;
+            document.getElementById('snowballCount').innerHTML = playerSnowballCount;
         }
     }
     var onKeyDown = function ( event ) {
@@ -798,27 +802,38 @@ socket.on("projectile burst", function(p){
 
 });
 
-socket.on("create flag", function(f){
-  if(!scene.getObjectByName(f.name)){
-    let spriteMap = new THREE.TextureLoader().load( "/sprites/Star.png" );
+socket.on("create item", function(item, type){
+  if(!scene.getObjectByName(item.name)){
+    let spriteMap;
+    if(type == "flag"){
+      spriteMap = new THREE.TextureLoader().load( "/sprites/Star.png" );
+    }else if(type == "snowballPile"){
+      //TODO: change this sprite
+      spriteMap = new THREE.TextureLoader().load( "/sprites/Star.png" );
+    }
     let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
     let sprite = new THREE.Sprite( spriteMaterial );
 
-    sprite.position.x = f.position.x * 20;
-    sprite.position.y = f.position.y * 20;
-    sprite.position.z = f.position.z * 20;
+    sprite.position.x = item.position.x * 20;
+    sprite.position.y = item.position.y * 20;
+    sprite.position.z = item.position.z * 20;
 
-    console.log(sprite.position);
+    //console.log(sprite.position);
 
-    sprite.name = f.name;
-    //sprite.id = f.id;
+    sprite.name = item.name;
+    //sprite.id = item.id;
     sprite.scale.set(20,20,1);
     scene.add(sprite);
   }
 });
 
-socket.on("remove flag", function(f){
+socket.on("remove item", function(f){
   removeEntity(f);
+});
+
+socket.on("update snowball count", function(count){
+  playerSnowballCount = count;
+  document.getElementById('snowballCount').innerHTML = playerSnowballCount;
 });
 
 socket.on("leaderboard", function(board) {

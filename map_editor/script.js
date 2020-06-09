@@ -15,13 +15,14 @@ var previousSelected;
 
 let spawnAreas = [];
 
-//TODO: When a flag is added, add it's id and position to this array! 
 let flags = [];
 var currentFlagTeam = 1;
 
+let snowballPiles = [];
 
 let nonBlockObjectTypes = [
-  "F"
+  "F", //Flag
+  "S" //Snowball Pile
 ]
 
 let emptyColor = ["white", 0.0]
@@ -490,6 +491,7 @@ jsonImport.onclick = function(){
     //console.log(jsonContents);
 
     flags = jsonContents.specialObjects.flags;
+    snowballPiles = jsonContents.specialObjects.snowballPiles;
     spawnAreas = jsonContents.specialObjects.spawnAreas;
     numberOfTeams = jsonContents.mapInfo.numberOfTeams;
     refreshPageForTeamNum();
@@ -589,6 +591,7 @@ import_file.onclick = function(){
 
 jsonExport.onclick = function(){
   var tempFlags = [];
+  var tempSnowballPiles = [];
 
   let flipped_map = flipMap(map);  
   //convert all string values to int values
@@ -605,6 +608,12 @@ jsonExport.onclick = function(){
                 tempFlags.push(flags[i]);
               }
             }
+          }else if(flipped_map[z][x][y] == -2){
+            for(var i = 0; i < snowballPiles.length; i++){
+              if(x == snowballPiles[i].position.y && y == snowballPiles[i].position.x && z == snowballPiles[i].position.z){
+                tempSnowballPiles.push(snowballPiles[i]);
+              }
+            }
           }
         }
       }
@@ -612,11 +621,12 @@ jsonExport.onclick = function(){
   }
 
   flags = tempFlags;
+  snowballPiles = tempSnowballPiles;
   
   var tempMap = map;
   map = flipped_map;
 
-  var json = {"mapInfo": {}, "specialObjects":{flags, spawnAreas}, colors, map};
+  var json = {"mapInfo": {}, "specialObjects":{flags, spawnAreas, snowballPiles}, colors, map};
   
   map = tempMap;
 
@@ -728,7 +738,7 @@ function refreshPageForTeamNum(){
   }
 }
 
-
+//TODO: update this method to just check the value when comparing it to and adding it to the array.
 function storeObjectPosition(position, value){
   if(value == -1){
     //console.log("Adding new flag");
@@ -742,6 +752,18 @@ function storeObjectPosition(position, value){
       }
     }
     flags.push(flagObj);
+  }else if(value == -2){
+    //console.log("Adding new snowball Pile");
+    var snowballPileObj = {};
+    snowballPileObj.amount = parseInt(Math.random() * 10 + 1);
+    snowballPileObj.position = {x: position.x, y: position.y, z: view_height};
+    //Check for snowball Piles in the same spot and replace them
+    for(var i = 0; i < snowballPiles.length; i++){
+      if(snowballPileObj.position.x == snowballPiles[i].position.x && snowballPileObj.position.y == snowballPiles[i].position.y && snowballPileObj.position.z == snowballPiles[i].position.z){
+        snowballPiles.splice(i,1);
+      }
+    }
+    snowballPiles.push(snowballPileObj);
   }
   //add other types here. 
 }
