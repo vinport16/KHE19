@@ -180,7 +180,7 @@ function json2Flags(flags){
 function json2SnowballPiles(snowballPiles){
   if(snowballPiles == [] || snowballPiles == undefined){
     snowballPiles = [];
-    var numberOfSnowballs = parseInt(map.length / 20 + map[0].length / 20 + map[0][0].length / 20);
+    var numberOfSnowballs = Math.max(2, parseInt(map.length / 20 + map[0].length / 20 + map[0][0].length / 20));
     for(var i = 0; i < numberOfSnowballs; i++){
       var newSnowballPile = {};
       newSnowballPile.id = i;
