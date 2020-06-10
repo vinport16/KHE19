@@ -71,11 +71,13 @@ fs.readFile(configFile, "utf-8", function(err, data) {
   colors = mapFileContents.colors;
   gameType = mapFileContents.mapInfo.gameType;
   flags = json2Flags(mapFileContents.specialObjects.flags);
-  snowballPiles = json2SnowballPiles(mapFileContents.specialObjects.snowballPiles);
   numberOfTeams = mapFileContents.mapInfo.numberOfTeams;
   spawnAreas = json2spawn(mapFileContents.specialObjects.spawnAreas, numberOfTeams);
   validSpawnLocations = setUpValidSpawnLocations(numberOfTeams);
   teamScores = new Array(numberOfTeams).fill(0);
+
+  snowballPiles = json2SnowballPiles(mapFileContents.specialObjects.snowballPiles);
+
 
   console.log("running on port", port);
 
@@ -176,27 +178,42 @@ function json2Flags(flags){
 }
 
 function json2SnowballPiles(snowballPiles){
-  for(var i = 0; i < snowballPiles.length; i++){
-    snowballPiles[i].id = i;
-    snowballPiles[i].name = "SNOWBALLPILE" + snowballPiles[i].id;
-
-    var tempSnowballPileY = snowballPiles[i].position.y;
-    var tempSnowballPileZ = snowballPiles[i].position.z;
-
-    snowballPiles[i].position.y = tempSnowballPileZ;
-    snowballPiles[i].position.z = tempSnowballPileY;
-
-    //leaving in the original position value in case we want them to respawn in the same spot every time.
-    //Maybe thats someting that the map maker can decide.
-    snowballPiles[i].originalPosition = {};
-    snowballPiles[i].originalPosition.x = snowballPiles[i].position.x;
-    snowballPiles[i].originalPosition.y = snowballPiles[i].position.y;
-    snowballPiles[i].originalPosition.z = snowballPiles[i].position.z;
-
-    snowballPiles[i].show = true;
-
+  if(snowballPiles == [] || snowballPiles == undefined){
+    snowballPiles = [];
+    var numberOfSnowballs = parseInt(map.length / 20 + map[0].length / 20 + map[0][0].length / 20);
+    for(var i = 0; i < numberOfSnowballs; i++){
+      var newSnowballPile = {};
+      newSnowballPile.id = i;
+      newSnowballPile.name = "SNOWBALLPILE" + newSnowballPile.id
+      newSnowballPile.amount = parseInt(Math.random() * 10 + 1);
+      newSnowballPile.show = true;
+      newSnowballPile.position = {x: 0, y: 0, z: 0};
+      respawnSnowballPile(newSnowballPile)
+      snowballPiles.push(newSnowballPile);
+    }
+  }else{
+    for(var i = 0; i < snowballPiles.length; i++){
+      snowballPiles[i].id = i;
+      snowballPiles[i].name = "SNOWBALLPILE" + snowballPiles[i].id;
+  
+      var tempSnowballPileY = snowballPiles[i].position.y;
+      var tempSnowballPileZ = snowballPiles[i].position.z;
+  
+      snowballPiles[i].position.y = tempSnowballPileZ;
+      snowballPiles[i].position.z = tempSnowballPileY;
+  
+      //leaving in the original position value in case we want them to respawn in the same spot every time.
+      //Maybe thats someting that the map maker can decide.
+      snowballPiles[i].originalPosition = {};
+      snowballPiles[i].originalPosition.x = snowballPiles[i].position.x;
+      snowballPiles[i].originalPosition.y = snowballPiles[i].position.y;
+      snowballPiles[i].originalPosition.z = snowballPiles[i].position.z;
+  
+      snowballPiles[i].show = true;
+  
+    }
   }
-
+  
   return snowballPiles;
 }
 
@@ -226,7 +243,7 @@ function cloneArray(inputArr){
 function setUpValidSpawnLocations(teamNum){
   var spawnLoc = [];
   var mapCoordinates = [];
-  for(var z = 0; z < map.length - 1; z++){
+  for(var z = 0; z < map.length - 2; z++){
     for(var y = 0; y < map[0].length - 1; y++){
       for(var x = 0; x < map[0][0].length - 1; x++){
         mapCoordinates.push([z, y, x]);
@@ -525,6 +542,9 @@ function snowballCollisionCheck(player){
         if(smallPlayerPos.y > snowballPiles[i].position.y - 1 && smallPlayerPos.y < snowballPiles[i].position.y + 1){
           if(smallPlayerPos.z > snowballPiles[i].position.z-0.5 && smallPlayerPos.z < snowballPiles[i].position.z-0.5 + 1){
             //there is a collision. 
+            for(var p in players){
+              players[p].socket.emit("remove item", snowballPiles[i]);
+            }
             respawnSnowballPile(snowballPiles[i]);
             player.snowballCount += snowballPiles[i].amount;
             player.socket.emit("update snowball count", player.snowballCount);
@@ -536,9 +556,6 @@ function snowballCollisionCheck(player){
 }
 
 function respawnSnowballPile(snowballPile){
-  for(var p in players){
-    players[p].socket.emit("remove item", snowballPile);
-  }
   var newPos = getValidSpawnLocation(-1);
   snowballPile.position.x = newPos.x;
   snowballPile.position.y = newPos.z + 1;
